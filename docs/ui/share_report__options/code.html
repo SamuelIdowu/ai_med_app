@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Share Report: Options</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#e53734",
+              "background-light": "#f8f6f6",
+              "background-dark": "#211111",
+            },
+            fontFamily: {
+              "display": ["Lexend", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-[844px] w-full max-w-[390px] mx-auto flex-col bg-background-light dark:bg-background-dark group/design-root overflow-hidden">
+<!-- Background Screen (Dimmed) -->
+<div class="flex-1 flex flex-col absolute top-0 left-0 w-full h-full">
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between">
+<div class="text-black dark:text-white flex size-12 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</div>
+<h2 class="text-black dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">First Aid Report</h2>
+</div>
+<div class="px-4">
+<h1 class="text-black dark:text-white tracking-tight text-[32px] font-bold leading-tight pt-6 pb-3">Incident Report: 14 Aug 2024</h1>
+<p class="text-black/70 dark:text-white/70 text-base font-normal leading-normal">A detailed summary of the incident, including steps taken, timestamps, and AI-guided advice provided. This document provides a comprehensive overview for medical professionals or for personal records.</p>
+</div>
+<div class="px-4 pt-8 space-y-4">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined text-2xl">emergency</span>
+</div>
+<p class="text-black dark:text-white text-base font-normal leading-normal flex-1">Initial Assessment</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined text-2xl">call</span>
+</div>
+<p class="text-black dark:text-white text-base font-normal leading-normal flex-1">Emergency Call Made</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined text-2xl">healing</span>
+</div>
+<p class="text-black dark:text-white text-base font-normal leading-normal flex-1">First Aid Applied</p>
+</div>
+</div>
+</div>
+<!-- Share Sheet Overlay -->
+<div class="absolute inset-0 flex h-full w-full flex-col justify-end items-stretch bg-black/40 dark:bg-black/60">
+<div class="flex flex-col items-stretch bg-[#f1f1f1] dark:bg-[#1c1c1e] rounded-t-2xl pt-4">
+<!-- Content Preview -->
+<div class="flex items-center gap-4 bg-transparent px-4 pb-4 border-b border-gray-300/50 dark:border-gray-600/50">
+<div class="text-[#e53734] flex items-center justify-center rounded-lg bg-white dark:bg-gray-700 shrink-0 size-14 shadow-sm">
+<span class="material-symbols-outlined !text-4xl">description</span>
+</div>
+<div class="flex-1">
+<p class="text-black dark:text-white text-base font-semibold leading-tight">First Aid Incident Report.pdf</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal">PDF Document</p>
+</div>
+</div>
+<!-- App Actions Row -->
+<div class="px-4 py-4 border-b border-gray-300/50 dark:border-gray-600/50">
+<div class="flex items-center gap-5 overflow-x-auto pb-2 -mb-2 no-scrollbar">
+<div class="flex flex-col items-center gap-1.5 w-16 text-center">
+<img alt="Messages app icon" class="w-14 h-14 rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC062bSSuVHySSPwAdHTKw0CU697N7zw8e4HFJMuobSvSpYqWgCkvXzRF79BN1ZRN17QOG2Z4KoRhLQxukXBCnf7S4SRARttXJLRB50DhUcd2FB30LiIRQgQoVkuH5B87H_PkqMVLZQem4_3XdaILcavSmdiWDLnRC6HStHFdlBThkYP7zr308H2e2KAwWWsCWfH62OeFGSJin9jYgxup1KA7qYL0mIesDEotd19AGHX6hziwEr2uRfwpFrSnrPcrf6nwgihpgtZdo"/>
+<p class="text-black dark:text-white text-xs font-normal leading-tight truncate w-full">Messages</p>
+</div>
+<div class="flex flex-col items-center gap-1.5 w-16 text-center">
+<img alt="Mail app icon" class="w-14 h-14 rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDjaRmZzdGEh7bFCqb6SuQdsZHx-aVo-iNdhWoLSDpSyM_ZUe5_b0mCckS2ain4pc2VfgDjQwfYIJOaY9pK816JUstjfHNJmWzmPbv7h-QR7rfdZxiVRcCS6tMSw1LRU6SA52ndE4S5ZvtQvGi93ABnA8Mnb8jI7d6IlekQo5x8v8Vp3Fe0AOFAHSbqhrxdtgvAL2dkVqp2RhI5IkGe7MVBD_6IcZU1OXVJ0GjBBGARnOVtkgL1Td5XdoBum685N2hKIE-MgAkpxU"/>
+<p class="text-black dark:text-white text-xs font-normal leading-tight truncate w-full">Mail</p>
+</div>
+<div class="flex flex-col items-center gap-1.5 w-16 text-center">
+<img alt="WhatsApp app icon" class="w-14 h-14 rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX469nWdZ6zkWz4pOyjGxy0pUTg_nipD_abptTwU_Id3y3a3QVBU5RNtM1zVD94bug81PoMXc3ga0LYQtv63hWc4MCEBFwS8HWni3lotRJcBdLAkwj0a8I1at_VtrpV-xkA5IoJrw-sYkXeXwINRsqE2oIxY4xUe6PeIJvzYDsl-wjmUtyRGsb5EhkeGLwNyrYdqFpfzAV4e8G6JTqsk5qJLU0mCsl6PZQavQMn3eqKPZJtekyFahlMs4w6rKRMyGnzt9xWtc1ScY"/>
+<p class="text-black dark:text-white text-xs font-normal leading-tight truncate w-full">WhatsApp</p>
+</div>
+<div class="flex flex-col items-center gap-1.5 w-16 text-center">
+<img alt="Telegram app icon" class="w-14 h-14 rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtsVTrWP9Q-pzQGyitSzXKVgzqwAsQMoRJao3j1I0_dWmTz-q6e2d7ar76mGtsgkLluai5XDsK0qLRZZjFojF-hbOHjF3Prv2-CTkUSOJpLC2xq8tRf-q4V1ZcsV2PW026QVYfvBDFNEldyBxPAsjVtWVdULoAGEB8Y53kWcwKkw5uUbJoup6d379ZEpnVODanaEBZZwNDvwhKE-QRX2Xlh-KvAE0Voi60fDXdRDYukkTZbCyZAkvIQbwv3CG1LG9W5bWqsbOwA24"/>
+<p class="text-black dark:text-white text-xs font-normal leading-tight truncate w-full">Telegram</p>
+</div>
+<div class="flex flex-col items-center gap-1.5 w-16 text-center">
+<img alt="Slack app icon" class="w-14 h-14 rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-YuuSBk7zABHsmFsf8Q6teK34rT-qD_BN39hmIzbsaeqerGJpgbm_ctUwmfBSUWSFA1eUjJ2RB40Z3s7d0Fh8idb8eryK-R_8Ta1Nc4ut0AIuUsc3GSjtrkQEyYj_wXvdNjAZnauYx1TrLNne1JItoNUtqwn3k7CY0e15Hy8cKwVkywQuzEURtwmZWyXNDys6yx0sOudqiHtZP3McJyU56I1BBKXWKT0rsf2n9ccBs_XrB0Z68foGTwVrHe4aCjGSzSOSsMkPOp4"/>
+<p class="text-black dark:text-white text-xs font-normal leading-tight truncate w-full">Slack</p>
+</div>
+</div>
+</div>
+<!-- Action List -->
+<div class="flex flex-col bg-white dark:bg-[#2c2c2e] rounded-xl m-4">
+<div class="flex items-center gap-4 px-4 h-14">
+<span class="material-symbols-outlined text-blue-500 dark:text-blue-400 !text-2xl w-8 text-center">content_copy</span>
+<p class="text-blue-500 dark:text-blue-400 text-base font-normal leading-normal flex-1">Copy</p>
+</div>
+<div class="h-px bg-gray-200 dark:bg-gray-700 ml-16"></div>
+<div class="flex items-center gap-4 px-4 h-14">
+<span class="material-symbols-outlined text-blue-500 dark:text-blue-400 !text-2xl w-8 text-center">folder_open</span>
+<p class="text-blue-500 dark:text-blue-400 text-base font-normal leading-normal flex-1">Save to Files</p>
+</div>
+<div class="h-px bg-gray-200 dark:bg-gray-700 ml-16"></div>
+<div class="flex items-center gap-4 px-4 h-14">
+<span class="material-symbols-outlined text-blue-500 dark:text-blue-400 !text-2xl w-8 text-center">print</span>
+<p class="text-blue-500 dark:text-blue-400 text-base font-normal leading-normal flex-1">Print</p>
+</div>
+</div>
+<!-- Cancel Button -->
+<div class="p-4 pt-0 pb-8">
+<button class="flex items-center justify-center w-full h-14 bg-white dark:bg-[#2c2c2e] rounded-xl">
+<p class="text-blue-500 dark:text-blue-400 text-base font-bold leading-normal">Cancel</p>
+</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

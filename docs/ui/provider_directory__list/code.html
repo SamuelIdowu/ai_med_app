@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Provider Directory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#e53734",
+              "background-light": "#f8f6f6",
+              "background-dark": "#211111",
+            },
+            fontFamily: {
+              "display": ["Lexend", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-gray-800 dark:text-gray-200">arrow_back_ios_new</span>
+</div>
+<h2 class="text-gray-900 dark:text-gray-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Provider Directory</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-gray-800 dark:text-gray-200 gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined">map</span>
+</button>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="px-4 py-3 sticky top-[68px] z-10 bg-background-light dark:bg-background-dark">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
+<div class="text-gray-500 dark:text-gray-400 flex border-none bg-white dark:bg-gray-800 items-center justify-center pl-4 rounded-l-xl border-r-0">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl text-gray-900 dark:text-gray-100 focus:outline-0 focus:ring-0 border-none bg-white dark:bg-gray-800 focus:border-none h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 pl-2 text-base font-normal leading-normal" placeholder="Search providers..." value=""/>
+</div>
+</label>
+</div>
+<!-- Chips / Filters -->
+<div class="flex gap-3 px-4 py-2 overflow-x-auto">
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary text-white pl-5 pr-5 shadow">
+<p class="text-sm font-medium leading-normal">All</p>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 pl-5 pr-5 border border-gray-200 dark:border-gray-700">
+<p class="text-sm font-medium leading-normal">Hospitals</p>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 pl-5 pr-5 border border-gray-200 dark:border-gray-700">
+<p class="text-sm font-medium leading-normal">Clinics</p>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 pl-5 pr-5 border border-gray-200 dark:border-gray-700">
+<p class="text-sm font-medium leading-normal">Pharmacies</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 p-4">
+<!-- Provider Card 1 -->
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm cursor-pointer">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-2 flex-1">
+<p class="text-gray-900 dark:text-gray-100 text-base font-bold leading-tight">City General Hospital</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">1.2 mi away</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-red-100 dark:bg-red-900/50 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-300 ring-1 ring-inset ring-red-600/10 dark:ring-red-500/30">Emergency Room</span>
+</div>
+</div>
+<button class="flex items-center justify-center overflow-hidden rounded-full h-12 w-12 bg-primary/20 dark:bg-primary/30 text-primary dark:text-red-400">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+</div>
+<!-- Provider Card 2 -->
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm cursor-pointer">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-2 flex-1">
+<p class="text-gray-900 dark:text-gray-100 text-base font-bold leading-tight">Downtown Urgent Care</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">2.5 mi away</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-blue-100 dark:bg-blue-900/50 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-600/10 dark:ring-blue-500/30">General Practice</span>
+</div>
+</div>
+<button class="flex items-center justify-center overflow-hidden rounded-full h-12 w-12 bg-primary/20 dark:bg-primary/30 text-primary dark:text-red-400">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+</div>
+<!-- Provider Card 3 -->
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm cursor-pointer">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-2 flex-1">
+<p class="text-gray-900 dark:text-gray-100 text-base font-bold leading-tight">Wellness Pharmacy</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">3.1 mi away</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-green-100 dark:bg-green-900/50 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300 ring-1 ring-inset ring-green-600/10 dark:ring-green-500/30">Pharmacy</span>
+</div>
+</div>
+<button class="flex items-center justify-center overflow-hidden rounded-full h-12 w-12 bg-primary/20 dark:bg-primary/30 text-primary dark:text-red-400">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+</div>
+<!-- Provider Card 4 -->
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm cursor-pointer">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-2 flex-1">
+<p class="text-gray-900 dark:text-gray-100 text-base font-bold leading-tight">Oak Valley Clinic</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">4.8 mi away</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-blue-100 dark:bg-blue-900/50 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-600/10 dark:ring-blue-500/30">Pediatrics</span>
+</div>
+</div>
+<button class="flex items-center justify-center overflow-hidden rounded-full h-12 w-12 bg-primary/20 dark:bg-primary/30 text-primary dark:text-red-400">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

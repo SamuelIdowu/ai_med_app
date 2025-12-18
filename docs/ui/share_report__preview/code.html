@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Share Report: Preview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e53734",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211111",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<button class="text-neutral-800 dark:text-neutral-200 flex size-12 shrink-0 items-center justify-center -ml-4">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<h2 class="text-neutral-800 dark:text-neutral-200 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Preview Report</h2>
+<div class="w-8 shrink-0"></div> <!-- Spacer for centering title -->
+</div>
+<main class="flex-1 pb-28 px-4">
+<h1 class="text-neutral-900 dark:text-neutral-100 tracking-tight text-[32px] font-bold leading-tight text-left pb-3 pt-4">Emergency Report</h1>
+<div class="flex items-center gap-4 bg-white dark:bg-neutral-800/50 p-4 min-h-[72px] rounded-xl my-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14 shrink-0" data-alt="Profile picture of John Doe" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAB9SOQ8kjrcKUgdbi0u-_6m6MoekDee1ONUHXFA3LopL9eC92V_BiDdu9XibjsMrsOT-lbu_560W41GBoxbrHORvpZpCbJdsbZLHe1GKFOUuQ4I2X_0m3QhPKEJAp5NnJkX2_Oe2f1YyCxcVDELPDaPJXUM_yNOHO1WAFgBmrrSVrJuLjuSbzcfUqAOWujEtXh1oiPQaMN9dr_mKo07kj9V937r_YCWMsY4Jwkus40Y_6qF4jcxCdTJxglR2KtR6__0e827I9e6RE");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-neutral-900 dark:text-neutral-100 text-base font-medium leading-normal line-clamp-1">John Doe</p>
+<p class="text-neutral-600 dark:text-neutral-400 text-sm font-normal leading-normal line-clamp-2">34 years old, Allergy: Penicillin</p>
+</div>
+</div>
+<div class="bg-white dark:bg-neutral-800/50 p-4 rounded-xl my-4">
+<div class="grid grid-cols-[auto_1fr] gap-x-6">
+<div class="col-span-2 grid grid-cols-subgrid py-3">
+<p class="text-neutral-500 dark:text-neutral-400 text-sm font-normal leading-normal">Timestamp</p>
+<p class="text-neutral-800 dark:text-neutral-200 text-sm font-normal leading-normal">15 August 2023, 10:45 AM</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-neutral-200 dark:border-t-neutral-700 py-3">
+<p class="text-neutral-500 dark:text-neutral-400 text-sm font-normal leading-normal">Location</p>
+<p class="text-neutral-800 dark:text-neutral-200 text-sm font-normal leading-normal">Central Park, New York</p>
+</div>
+</div>
+</div>
+<div class="my-6">
+<h3 class="text-neutral-900 dark:text-neutral-100 text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Added Notes</h3>
+<p class="text-neutral-700 dark:text-neutral-300 text-base font-normal leading-relaxed">Patient tripped and fell, sustaining a deep cut on the right forearm. Bleeding was controlled with direct pressure. Patient is conscious and alert, but experiencing moderate pain.</p>
+</div>
+<div class="my-6">
+<h3 class="text-neutral-900 dark:text-neutral-100 text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Attached Photos</h3>
+<div class="flex gap-3 overflow-x-auto pt-2 -mx-4 px-4 pb-2">
+<div class="aspect-square w-28 shrink-0 rounded-lg bg-cover bg-center" data-alt="Photo of the injury on the forearm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCif0MWu2Z34rM1NA8PKKIeRYTqfPYqkl78Jru6VLPv0IRTMgHswrJycqtvOZnQKwcDt6CQ_lGQVw9hruiznVzNt68ELjnXyypdkGdy9IzVaa9YADFxeE_8EmYsY3SXUfcjgYLEeet4PIx6EiYfXepb9l4skTeqw1VF4LzMTF3dxmyzGHfeVEEj1xObVN-BFSD7DaWd5_G-T7edNXg48himoe_G6_tZdASHukQdRu4xQ4jW8sMk8N4pKutqWtLnlLMAK_It39WzeaI")'></div>
+<div class="aspect-square w-28 shrink-0 rounded-lg bg-cover bg-center" data-alt="Photo of the surrounding area" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB7om8lC4MhNSBfBqXF8RrzlEpgOHkVft8k677y2zDbtnxDGv-wEbQJ73FgO4iQVKjux5ZDGo5ZUsNKWNdkJ2uRKujOYKdMQ8kGa6QSBDoCWhiOMFLv5ipHrIR3W6pJHK5XIxwVDbT9ut1FlCp_IHqRQgF9xACN_hRaNH1D2c7GuC2O5NM9xvBu1_GOo8e8G9Id75UHrZfyZE7Zk1trVSDqsJfaR_yCr5kVOKl8osbmUqb4plhLfmO96yTSC28U5ZBeEclQXl26dVc")'></div>
+<div class="aspect-square w-28 shrink-0 rounded-lg bg-cover bg-center" data-alt="Photo of the first aid kit used" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA-nC42bLv4caUqWR7b6ozzbnu08C5wi7Lp4j_c8dqMhMqCldt25cLUst78OQzPLB2ojio_nkF4HyGwil-z22enOMECt2gjb2Hz4HQI-_UP1qWekhPRgw0GTXv9Qi7K0w4tgJZqw4FffLTxXXeomwoEV5DlgckqjLsNCrgts4_2SkKObAtD1hakrs1SIMKS0Ick1UPRvH3BR35tpdlh4WVSAvrUPTfA8dncjl8CJw44Veljlrxfh-HhX83VKWrkFVH5D0StdZJphCA")'></div>
+<div class="aspect-square w-28 shrink-0 rounded-lg bg-cover bg-center" data-alt="Another angle of the injury" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC0mOtP78SdHMk7Scm-XezJjLs9YGFIb-0t-UrzioFtD8rJaTbuqn-erIVYHrB-tdR80nxiuURWHE1L5Ljgt9X8iryJGyfMIL5wwZTDHVvlF22blAdvCNl7yrxAlLqxPrF6_EW4hOHS5Na508Qg-VltZgEv2mxDSqg9zSI6FRAek1LX63Uf_VPcKvvSy8DpM2JZTY3zwp7ifTHHC5kullwZlYIArQ-EqCiw4iqjm6C6qlIAMJeoab0knCv0ljL8dT_slOGZxl27ZSA")'></div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-background-light dark:bg-background-dark border-t border-neutral-200 dark:border-neutral-800">
+<button class="w-full bg-primary text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">share</span>
+                Share Report
+            </button>
+</div>
+</div>
+</body></html>

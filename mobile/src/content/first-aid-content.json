@@ -1,0 +1,167 @@
+{
+    "version": "1.0.0",
+    "categories": [
+        {
+            "id": "cpr",
+            "title": "CPR (Cardiopulmonary Resuscitation)",
+            "icon": "heart-pulse",
+            "color": "#E53935",
+            "steps": [
+                {
+                    "step_number": 1,
+                    "title": "Check Safety",
+                    "content": "Ensure the scene is safe for you and the victim. Do not put yourself in danger.",
+                    "illustration": "cpr_step_1"
+                },
+                {
+                    "step_number": 2,
+                    "title": "Check Responsiveness",
+                    "content": "Tap the victim's shoulder and shout 'Are you okay?'. If no response, call emergency services immediately.",
+                    "illustration": "cpr_step_2"
+                },
+                {
+                    "step_number": 3,
+                    "title": "Start Chest Compressions",
+                    "content": "Place the heel of one hand on the center of the chest. Place the other hand on top. Push hard and fast (100-120 beats per minute).",
+                    "illustration": "cpr_step_3"
+                },
+                {
+                    "step_number": 4,
+                    "title": "Rescue Breaths",
+                    "content": "If trained, give 2 rescue breaths after every 30 compressions. Otherwise, continue hands-only CPR until help arrives.",
+                    "illustration": "cpr_step_4"
+                }
+            ]
+        },
+        {
+            "id": "bleeding",
+            "title": "Severe Bleeding",
+            "icon": "water",
+            "color": "#D32F2F",
+            "steps": [
+                {
+                    "step_number": 1,
+                    "title": "Apply Pressure",
+                    "content": "Apply direct pressure to the wound using a clean cloth or gauze. Keep applying pressure continuously.",
+                    "illustration": "bleeding_step_1"
+                },
+                {
+                    "step_number": 2,
+                    "title": "Elevate",
+                    "content": "If possible, raise the injured area above the level of the heart to slow bleeding.",
+                    "illustration": "bleeding_step_2"
+                },
+                {
+                    "step_number": 3,
+                    "title": "Bandage",
+                    "content": "Once bleeding fits, wrap the wound tightly with a bandage. If blood soaks through, add more layers—do not remove the first layer.",
+                    "illustration": "bleeding_step_3"
+                }
+            ]
+        },
+        {
+            "id": "burns",
+            "title": "Burns",
+            "icon": "fire",
+            "color": "#F57C00",
+            "steps": [
+                {
+                    "step_number": 1,
+                    "title": "Cool the Burn",
+                    "content": "Hold the burned area under cool (not cold) running water for at least 10-20 minutes. Do not use ice.",
+                    "illustration": "burns_step_1"
+                },
+                {
+                    "step_number": 2,
+                    "title": "Remove Constrictions",
+                    "content": "Remove rings, watches, or tight clothing around the burn before swelling starts.",
+                    "illustration": "burns_step_2"
+                },
+                {
+                    "step_number": 3,
+                    "title": "Cover",
+                    "content": "Cover the burn with a clean, non-stick bandage or plastic wrap. Do not apply creams or butter.",
+                    "illustration": "burns_step_3"
+                }
+            ]
+        },
+        {
+            "id": "choking",
+            "title": "Choking",
+            "icon": "alert-circle",
+            "color": "#FBC02D",
+            "steps": [
+                {
+                    "step_number": 1,
+                    "title": "Encourage Coughing",
+                    "content": "If the person can cough, encourage them to keep coughing.",
+                    "illustration": "choking_step_1"
+                },
+                {
+                    "step_number": 2,
+                    "title": "Back Blows",
+                    "content": "If they cannot breathe, lean them forward and give 5 sharp back blows between the shoulder blades.",
+                    "illustration": "choking_step_2"
+                },
+                {
+                    "step_number": 3,
+                    "title": "Abdominal Thrusts",
+                    "content": "If back blows fail, stand behind them and perform 5 abdominal thrusts (Heimlich maneuver). Repeat cycle.",
+                    "illustration": "choking_step_3"
+                }
+            ]
+        },
+        {
+            "id": "unconsciousness",
+            "title": "Unconsciousness",
+            "icon": "eye-off",
+            "color": "#5D4037",
+            "steps": [
+                {
+                    "step_number": 1,
+                    "title": "Check Breathing",
+                    "content": "Tilt head back and lift chin. Look, listen, and feel for breathing for no more than 10 seconds.",
+                    "illustration": "unconscious_step_1"
+                },
+                {
+                    "step_number": 2,
+                    "title": "Recovery Position",
+                    "content": "If breathing, place them on their side (recovery position) to keep airway open.",
+                    "illustration": "unconscious_step_2"
+                },
+                {
+                    "step_number": 3,
+                    "title": "Monitor",
+                    "content": "Stay with them and keep checking breathing until help arrives.",
+                    "illustration": "unconscious_step_3"
+                }
+            ]
+        },
+        {
+            "id": "fractures",
+            "title": "Fractures",
+            "icon": "bone",
+            "color": "#546E7A",
+            "steps": [
+                {
+                    "step_number": 1,
+                    "title": "Immobilize",
+                    "content": "Keep the injured area still. Support it with a splint if available.",
+                    "illustration": "fracture_step_1"
+                },
+                {
+                    "step_number": 2,
+                    "title": "Cold Compress",
+                    "content": "Apply an ice pack wrapped in a cloth for 10 minutes to reduce swelling.",
+                    "illustration": "fracture_step_2"
+                },
+                {
+                    "step_number": 3,
+                    "title": "Treat for Shock",
+                    "content": "Help them lie down comfortably. Cover with a blanket to keep warm.",
+                    "illustration": "fracture_step_3"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,47 @@
+import express from 'express';
+import { createEncounter, getEncounter } from '../services/encounterService';
+import { getUploadUrl } from '../services/storageService';
+import { authenticateUser } from '../middleware/auth';
+
+const router = express.Router();
+
+router.use(authenticateUser);
+
+router.post('/', async (req, res) => {
+    try {
+        const encounter = await createEncounter(req.user.id, req.body);
+        res.status(201).json(encounter);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const encounter = await getEncounter(req.params.id, req.user.id);
+        if (!encounter) {
+            return res.status(404).json({ message: 'Encounter not found' });
+        }
+        res.json(encounter);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/:id/photos', async (req, res) => {
+    try {
+        const { fileName } = req.body;
+        if (!fileName) {
+            return res.status(400).json({ error: 'fileName is required' });
+        }
+        // Verify encounter ownership/existence if needed, but storage path is user-isolated usually.
+        // For strictness, could check getEncounter first.
+
+        const uploadData = await getUploadUrl(req.user.id, fileName);
+        res.json(uploadData);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+export default router;

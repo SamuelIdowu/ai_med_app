@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Chat Assistance</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for chips */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 h-screen overflow-hidden flex flex-col">
+<!-- Top App Bar -->
+<header class="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#15202b] shadow-sm z-10 shrink-0">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex flex-col items-center">
+<h1 class="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-white">AI Assistant</h1>
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">Offline Ready</span>
+</div>
+</div>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</header>
+<!-- Chat Area -->
+<main class="flex-1 overflow-y-auto p-4 space-y-6 bg-background-light dark:bg-background-dark" id="chat-container">
+<!-- Disclaimer/Date Divider -->
+<div class="flex justify-center my-4">
+<span class="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">
+                Emergency Mode • 14:02 PM
+            </span>
+</div>
+<!-- AI Message (Welcome) -->
+<div class="flex items-end gap-3 group">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center border border-slate-300 dark:border-slate-600">
+<div class="bg-center bg-no-repeat bg-cover w-full h-full" data-alt="Medical AI assistant avatar icon" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDsjrFjD7zVbian8ZzifDt0lPQ04ojV0-hK1LOqPHoE1dZcjx-kHN-qbwfmpUm8J6oGRfOXHQ0EVk8o9jiWwwstO3Hs9RKu-PEEO-eOo-CESz3VILQDr0jgI0-UuLK5y2J53NxHsbK8uc3GkCvpCzl4b0-gHKEgCNCx-QxNoQ3eVv6mIrr4QVPkOu4fUjdy-HN8OB9D1SIXbWD2QuBljZiTnKWBXWJe0J1ge2t1v1vv9b9tqaNu4w0fEDPlpnNIEnEFPo4MMpy1Frs");'></div>
+</div>
+<div class="flex flex-col gap-1 max-w-[85%]">
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">AI Assistant</span>
+<div class="p-3.5 bg-white dark:bg-[#1e2933] rounded-2xl rounded-bl-sm shadow-sm border border-slate-100 dark:border-slate-800">
+<p class="text-[15px] leading-relaxed text-slate-800 dark:text-slate-200">
+                        I am ready to help. Describe the injury or situation, or upload a photo. 
+                    </p>
+</div>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex items-end gap-3 justify-end group">
+<div class="flex flex-col gap-1 items-end max-w-[85%]">
+<div class="p-3.5 bg-primary rounded-2xl rounded-br-sm shadow-md text-white">
+<p class="text-[15px] leading-relaxed">
+                        My friend cut his hand deeply and it won't stop bleeding.
+                    </p>
+</div>
+<span class="text-xs font-medium text-slate-400 dark:text-slate-500 mr-1">You • Just now</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-600">
+<div class="bg-center bg-no-repeat bg-cover w-full h-full" data-alt="User profile avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVBL3JFFsIw0Za6GfjrZWXe0AhVzqRKutcgFaxtyrurZctfJpIbjFZS2M0_S5AsUKQcnrVrSeBaW0dJ-xQAbGc4iWI6qeAu6eQcedIVi7ZWcQEuxFqg51tB2tqKjlDZyXGz9Vqtt72T6VDF5KTi1mZ3YzT6g2G4M7MaXwCmhUzSU7DN0mkSJ_HrDjkhGmBH-kKUG7P3sdOuF837rFTh1OUsy_fZI-asnxsjm2nXCI6opGcMs8-J-g9qDuOUVsrNmf07qx_R0pdHmg");'></div>
+</div>
+</div>
+<!-- AI Message (Response with Steps) -->
+<div class="flex items-end gap-3 group">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center border border-slate-300 dark:border-slate-600">
+<div class="bg-center bg-no-repeat bg-cover w-full h-full" data-alt="Medical AI assistant avatar icon" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4O_OmHT0sMsWFxuiOscH0G9-qbiavqaeZqF5GAKoXNH4DgTvndu4aEOSY1wLL_clSVsaJ9hj5II1TjryJRAYKHbiyixmlPMalAoVIqf2_AoPTHLL8JlQeGqrwsLy3O9I6-L4vCZg_YAn8lArYX-4B2ULB8edAzhMaqGNdSRFGg7NaiPAfBIFZnQV6aXYXo0ampT8ulV8cwhas28eYXNCrKjhgeZ0kZ3Z7q9BFd-kb3NWGtpmXR2U8XcMM-x0wlMXgf7vtMwWJxIU");'></div>
+</div>
+<div class="flex flex-col gap-1 max-w-[90%]">
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">AI Assistant</span>
+<div class="p-4 bg-white dark:bg-[#1e2933] rounded-2xl rounded-bl-sm shadow-sm border border-slate-100 dark:border-slate-800">
+<p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Severe Bleeding Protocol</p>
+<ol class="list-decimal list-outside ml-4 space-y-3 text-[15px] text-slate-800 dark:text-slate-200">
+<li class="pl-1"><span class="font-bold text-slate-900 dark:text-white">Apply direct pressure</span> to the wound immediately using a clean cloth or gauze.</li>
+<li class="pl-1"><span class="font-bold text-slate-900 dark:text-white">Elevate the hand</span> above heart level to reduce blood flow.</li>
+<li class="pl-1"><span class="font-bold text-slate-900 dark:text-white">Do not remove the cloth</span> if it soaks through; add more material on top.</li>
+</ol>
+</div>
+</div>
+</div>
+<!-- AI Warning Card -->
+<div class="flex items-end gap-3 group">
+<!-- Spacer for avatar alignment -->
+<div class="w-8 shrink-0"></div>
+<div class="flex flex-col gap-1 max-w-[90%] w-full">
+<div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3 items-start">
+<span class="material-symbols-outlined text-red-600 dark:text-red-400 shrink-0 mt-0.5" style="font-size: 20px;">warning</span>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-red-800 dark:text-red-300 uppercase tracking-wide mb-1">Critical Warning</span>
+<p class="text-sm text-red-900 dark:text-red-100 leading-snug">
+                            If bleeding is spurting or won't stop after 10 minutes of pressure, call emergency services immediately. Do not use a tourniquet unless trained.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Spacer for bottom input area -->
+<div class="h-2"></div>
+</main>
+<!-- Bottom Actions Area -->
+<footer class="bg-white dark:bg-[#15202b] border-t border-slate-200 dark:border-slate-800 pb-safe shrink-0">
+<!-- Quick Chips -->
+<div class="pt-3 pb-2 px-4 overflow-x-auto no-scrollbar flex gap-2 w-full">
+<button class="shrink-0 flex items-center justify-center h-8 px-4 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-transparent active:border-primary">
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">CPR Guide</span>
+</button>
+<button class="shrink-0 flex items-center justify-center h-8 px-4 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-transparent active:border-primary">
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Shock</span>
+</button>
+<button class="shrink-0 flex items-center justify-center h-8 px-4 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-transparent active:border-primary">
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Choking</span>
+</button>
+<button class="shrink-0 flex items-center justify-center h-8 px-4 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-transparent active:border-primary">
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Burn</span>
+</button>
+</div>
+<!-- Input Bar -->
+<div class="p-3 px-4 flex items-end gap-3">
+<button class="shrink-0 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-primary transition-all mb-[1px]">
+<span class="material-symbols-outlined" style="font-size: 24px;">add_a_photo</span>
+</button>
+<div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center min-h-[48px] px-4 py-2 focus-within:ring-2 focus-within:ring-primary/50 transition-shadow">
+<input class="w-full bg-transparent border-none p-0 text-[16px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-0" placeholder="Describe the emergency..." type="text"/>
+<button class="ml-2 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 22px;">mic</span>
+</button>
+</div>
+<button class="shrink-0 h-12 w-12 rounded-full bg-primary hover:bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all active:scale-95 mb-[1px]">
+<span class="material-symbols-outlined fill-1" style="font-size: 24px;">send</span>
+</button>
+</div>
+<!-- Bottom safe area padding for modern phones -->
+<div class="h-4 w-full bg-white dark:bg-[#15202b]"></div>
+</footer>
+</body></html>

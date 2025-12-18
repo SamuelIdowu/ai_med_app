@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Home Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#e53734",
+            "background-light": "#f8f6f6",
+            "background-dark": "#211111",
+            "text-light": "#1b0e0e",
+            "text-dark": "#f8f6f6",
+            "card-light": "#ffffff",
+            "card-dark": "#2a1a1a",
+            "secondary-text-light": "#6b5f5f",
+            "secondary-text-dark": "#a19898"
+          },
+          fontFamily: {
+            "display": ["Lexend", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-light dark:text-text-dark">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Sticky Header -->
+<div class="sticky top-0 z-10 w-full bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<!-- Top App Bar -->
+<div class="flex items-center p-4 pt-6 pb-2">
+<div class="flex size-12 shrink-0 items-center">
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User profile picture of Alex" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuATadtnpGLy0gIduxb0wLuTjC4m3cugufnBvj_-eDt3VcCWxmlDfo-iJkZw2SQdXjMuzPDU6Lh4u8Ezc112KvkuSrZrU5o3yvW_pCzkvWCxeapuIOEPGj6rFXqgQiye46fwjvKwuLuZpnuQSpvNIBVmKGmMncLEBc0z_cZXIR5yoYCqfFcve26iQ3iqg2Y71PRKR3Cf8u5maCzGJEY-arVr4f3Je-7BAp-X31YCVJViOsoMN5Q5lHWLcP82NFa5nqAFJn7X23037JQ");'></div>
+</div>
+<h2 class="flex-1 text-lg font-bold leading-tight tracking-[-0.015em] text-text-light dark:text-text-dark">Hello, Alex</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex h-12 min-w-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg bg-transparent p-0 text-base font-bold leading-normal tracking-[0.015em]">
+<span class="material-symbols-outlined text-text-light dark:text-text-dark text-2xl">notifications</span>
+</button>
+</div>
+</div>
+<!-- Emergency Button -->
+<div class="flex justify-center px-4 py-3">
+<button class="flex h-12 min-w-[84px] max-w-[480px] flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-primary px-5 text-base font-bold leading-normal tracking-[0.015em] text-white">
+<span class="truncate">EMERGENCY</span>
+</button>
+</div>
+</div>
+<div class="flex-1 pb-24">
+<!-- First Aid Categories Section -->
+<h3 class="px-4 pb-2 pt-4 text-lg font-bold leading-tight tracking-[-0.015em] text-text-light dark:text-text-dark">First Aid Categories</h3>
+<div class="grid grid-cols-2 gap-4 p-4">
+<div class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-card-light dark:bg-card-dark p-4 shadow-sm transition-transform hover:scale-105">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+<span class="material-symbols-outlined text-3xl text-primary">bloodtype</span>
+</div>
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Bleeding</p>
+</div>
+<div class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-card-light dark:bg-card-dark p-4 shadow-sm transition-transform hover:scale-105">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+<span class="material-symbols-outlined text-3xl text-primary">local_fire_department</span>
+</div>
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Burns</p>
+</div>
+<div class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-card-light dark:bg-card-dark p-4 shadow-sm transition-transform hover:scale-105">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+<span class="material-symbols-outlined text-3xl text-primary">air</span>
+</div>
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Choking</p>
+</div>
+<div class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-card-light dark:bg-card-dark p-4 shadow-sm transition-transform hover:scale-105">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+<span class="material-symbols-outlined text-3xl text-primary">cardiology</span>
+</div>
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">CPR</p>
+</div>
+<div class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-card-light dark:bg-card-dark p-4 shadow-sm transition-transform hover:scale-105">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+<span class="material-symbols-outlined text-3xl text-primary">personal_injury</span>
+</div>
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Fractures</p>
+</div>
+<div class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-card-light dark:bg-card-dark p-4 shadow-sm transition-transform hover:scale-105">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+<span class="material-symbols-outlined text-3xl text-primary">sick</span>
+</div>
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Unconscious</p>
+</div>
+</div>
+<!-- Quick Actions Section -->
+<h3 class="px-4 pb-2 pt-4 text-lg font-bold leading-tight tracking-[-0.015em] text-text-light dark:text-text-dark">Quick Actions</h3>
+<div class="flex flex-col gap-3 p-4">
+<button class="flex w-full cursor-pointer items-center gap-4 rounded-xl bg-card-light dark:bg-card-dark p-4 text-left shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-card-dark/80">
+<span class="material-symbols-outlined text-2xl text-primary">photo_camera</span>
+<span class="flex-1 truncate text-base font-medium text-text-light dark:text-text-dark">Photo Upload</span>
+<span class="material-symbols-outlined text-xl text-secondary-text-light dark:text-secondary-text-dark">chevron_right</span>
+</button>
+<button class="flex w-full cursor-pointer items-center gap-4 rounded-xl bg-card-light dark:bg-card-dark p-4 text-left shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-card-dark/80">
+<span class="material-symbols-outlined text-2xl text-primary">share</span>
+<span class="flex-1 truncate text-base font-medium text-text-light dark:text-text-dark">Share Report</span>
+<span class="material-symbols-outlined text-xl text-secondary-text-light dark:text-secondary-text-dark">chevron_right</span>
+</button>
+<button class="flex w-full cursor-pointer items-center gap-4 rounded-xl bg-card-light dark:bg-card-dark p-4 text-left shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-card-dark/80">
+<span class="material-symbols-outlined text-2xl text-primary">local_hospital</span>
+<span class="flex-1 truncate text-base font-medium text-text-light dark:text-text-dark">Provider Directory</span>
+<span class="material-symbols-outlined text-xl text-secondary-text-light dark:text-secondary-text-dark">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200/50 bg-background-light/80 dark:border-white/10 dark:bg-background-dark/80 backdrop-blur-sm">
+<div class="flex h-20 items-center justify-around px-4">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-xs font-semibold">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-secondary-text-light dark:text-secondary-text-dark" href="#">
+<span class="material-symbols-outlined text-2xl">history</span>
+<span class="text-xs font-semibold">History</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-secondary-text-light dark:text-secondary-text-dark" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<span class="text-xs font-semibold">Profile</span>
+</a>
+</div>
+</div>
+</div>
+</body></html>

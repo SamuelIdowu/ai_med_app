@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings &amp; Privacy</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#e53734",
+            "background-light": "#f8f6f6",
+            "background-dark": "#121212",
+            "text-light": "#1c1c1e",
+            "text-dark": "#e1e1e1",
+            "text-secondary-light": "#6c6c6e",
+            "text-secondary-dark": "#a0a0a0",
+            "container-light": "#ffffff",
+            "container-dark": "#1c1c1c",
+            "border-light": "#e5e5e5",
+            "border-dark": "#383838",
+          },
+          fontFamily: {
+            "display": ["Lexend"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "0.75rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<div class="flex h-16 items-center px-4 pb-2 pt-4">
+<button class="flex size-10 items-center justify-center text-text-light dark:text-text-dark">
+<span class="material-symbols-outlined !text-3xl">arrow_back_ios_new</span>
+</button>
+<h1 class="flex-1 text-center text-lg font-bold leading-tight tracking-tight text-text-light dark:text-text-dark pr-10">Settings &amp; Privacy</h1>
+</div>
+</header>
+<main class="flex-1 px-4 py-6">
+<div class="flex flex-col gap-8">
+<!-- Account Section -->
+<section>
+<h2 class="px-4 pb-2 text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark">ACCOUNT</h2>
+<div class="overflow-hidden rounded-xl bg-container-light dark:bg-container-dark">
+<div class="flex flex-col divide-y divide-border-light dark:divide-border-dark">
+<a class="flex min-h-[3.5rem] items-center justify-between gap-4 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5" href="#">
+<div class="flex items-center gap-4">
+<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined !text-xl">person</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-text-light dark:text-text-dark">Edit Profile</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>
+</div>
+</a>
+<a class="flex min-h-[3.5rem] items-center justify-between gap-4 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5" href="#">
+<div class="flex items-center gap-4">
+<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined !text-xl">logout</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-primary">Logout</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>
+</div>
+</a>
+</div>
+</div>
+</section>
+<!-- Privacy & Data Section -->
+<section>
+<h2 class="px-4 pb-2 text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark">PRIVACY &amp; DATA</h2>
+<div class="overflow-hidden rounded-xl bg-container-light dark:bg-container-dark">
+<div class="flex flex-col divide-y divide-border-light dark:divide-border-dark">
+<a class="flex min-h-[3.5rem] items-center justify-between gap-4 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5" href="#">
+<div class="flex items-center gap-4">
+<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined !text-xl">verified_user</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-text-light dark:text-text-dark">Manage Consent</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>
+</div>
+</a>
+<a class="flex min-h-[3.5rem] items-center justify-between gap-4 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5" href="#">
+<div class="flex items-center gap-4">
+<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined !text-xl">download_for_offline</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-text-light dark:text-text-dark">Export My Data</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>
+</div>
+</a>
+<a class="flex min-h-[3.5rem] items-center justify-between gap-4 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5" href="#">
+<div class="flex items-center gap-4">
+<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined !text-xl">delete</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-primary">Delete My Data</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>
+</div>
+</a>
+</div>
+</div>
+</section>
+<!-- About Section -->
+<section>
+<h2 class="px-4 pb-2 text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark">ABOUT</h2>
+<div class="overflow-hidden rounded-xl bg-container-light dark:bg-container-dark">
+<div class="flex flex-col divide-y divide-border-light dark:divide-border-dark">
+<a class="flex min-h-[3.5rem] items-center justify-between gap-4 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5" href="#">
+<div class="flex items-center gap-4">
+<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined !text-xl">info</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-text-light dark:text-text-dark">About &amp; Disclaimer</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>
+</div>
+</a>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

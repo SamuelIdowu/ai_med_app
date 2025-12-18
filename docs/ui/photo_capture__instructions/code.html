@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Photo Capture: Instructions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#e53734",
+              "background-light": "#f8f6f6",
+              "background-dark": "#211111",
+            },
+            fontFamily: {
+              "display": ["Lexend"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24;
+            font-size: 24px; /* Default size */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="flex size-12 shrink-0 items-center justify-start text-stone-800 dark:text-stone-200">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</div>
+<h2 class="text-stone-800 dark:text-stone-200 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Take a Photo</h2>
+<div class="size-12 shrink-0"></div>
+</div>
+<div class="flex flex-col flex-grow px-4">
+<!-- Body Text -->
+<p class="text-stone-600 dark:text-stone-400 text-base font-normal leading-normal pb-6 pt-2 text-center">
+                For the AI to analyze the injury correctly, please take a clear photo. Ensure good lighting and hold the phone steady.
+            </p>
+<!-- List of Instructions -->
+<div class="flex flex-col gap-3">
+<!-- List Item 1 -->
+<div class="flex items-center gap-4 bg-white dark:bg-neutral-800/50 p-4 min-h-14 justify-between rounded-xl">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined">light_mode</span>
+</div>
+<p class="text-stone-800 dark:text-stone-200 text-base font-normal leading-normal flex-1">Use bright, even light</p>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="flex items-center gap-4 bg-white dark:bg-neutral-800/50 p-4 min-h-14 justify-between rounded-xl">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined">phone_iphone</span>
+</div>
+<p class="text-stone-800 dark:text-stone-200 text-base font-normal leading-normal flex-1">Hold your phone steady</p>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="flex items-center gap-4 bg-white dark:bg-neutral-800/50 p-4 min-h-14 justify-between rounded-xl">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined">center_focus_strong</span>
+</div>
+<p class="text-stone-800 dark:text-stone-200 text-base font-normal leading-normal flex-1">Ensure the entire injury is in frame</p>
+</div>
+</div>
+</div>
+<div class="flex-grow"></div> <!-- Spacer -->
+<!-- CTA Button -->
+<div class="py-6 sticky bottom-0 bg-background-light dark:bg-background-dark">
+<button class="flex w-full items-center justify-center rounded-xl bg-primary px-4 py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-primary/90">
+                    Open Camera
+                </button>
+</div>
+</div>
+</div>
+</body></html>

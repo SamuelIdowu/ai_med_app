@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Consent &amp; Permissions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#e53734",
+            "background-light": "#f8f6f6",
+            "background-dark": "#1a1010",
+            "foreground-light": "#1b0e0e",
+            "foreground-dark": "#f8f6f6",
+            "subtle-light": "#96504f",
+            "subtle-dark": "#a18f8f",
+            "card-light": "#ffffff",
+            "card-dark": "#211111",
+            "card-border-light": "#e6d1d0",
+            "card-border-dark": "#3a2a2a",
+            "toggle-bg-light": "#f3e8e8",
+            "toggle-bg-dark": "#4a3535"
+          },
+          fontFamily: {
+            "display": ["Lexend", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "0.75rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-size: 24px;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-foreground-light dark:text-foreground-dark">
+<div class="relative flex min-h-screen w-full flex-col">
+<div class="sticky top-0 z-10 flex items-center justify-between bg-background-light/80 p-4 pb-2 backdrop-blur-sm dark:bg-background-dark/80">
+<div class="flex size-10 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined text-foreground-light dark:text-foreground-dark">arrow_back_ios_new</span>
+</div>
+<h1 class="flex-1 text-center text-lg font-bold leading-tight tracking-[-0.015em] text-foreground-light dark:text-foreground-dark">Consent &amp; Permissions</h1>
+<div class="size-10 shrink-0"></div>
+</div>
+<main class="flex flex-1 flex-col px-4 pt-4">
+<div class="flex flex-col items-center text-center">
+<div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/20">
+<span class="material-symbols-outlined !text-4xl">health_and_safety</span>
+</div>
+<h2 class="text-[32px] font-bold leading-tight tracking-tight text-foreground-light dark:text-foreground-dark">Your Privacy Matters</h2>
+<p class="mt-2 max-w-sm text-base font-normal leading-normal text-subtle-light dark:text-subtle-dark">To provide effective emergency guidance, we need your consent for the following.</p>
+</div>
+<div class="mt-8 flex flex-col gap-3">
+<div class="flex flex-col gap-4 rounded-xl border border-card-border-light bg-card-light p-5 dark:border-card-border-dark dark:bg-card-dark @container">
+<div class="flex flex-row items-center justify-between gap-4">
+<div class="flex flex-col gap-1.5 pr-4">
+<p class="text-base font-bold leading-tight text-foreground-light dark:text-foreground-dark">Anonymous Data Usage</p>
+<p class="text-sm font-normal leading-normal text-subtle-light dark:text-subtle-dark">We use anonymized data to improve our AI model and overall app performance. Your personal information is never collected.</p>
+</div>
+<label class="relative flex h-[31px] w-[51px] shrink-0 cursor-pointer items-center rounded-full border-none bg-toggle-bg-light p-0.5 has-[:checked]:bg-primary dark:bg-toggle-bg-dark">
+<input checked="" class="peer absolute h-full w-full cursor-pointer opacity-0" type="checkbox"/>
+<div class="absolute left-0.5 top-0.5 h-full w-[27px] transform rounded-full bg-white shadow-sm transition-transform duration-300 ease-in-out peer-checked:translate-x-[20px]" style="box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 8px, rgba(0, 0, 0, 0.04) 0px 3px 1px;"></div>
+</label>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-card-border-light bg-card-light p-5 dark:border-card-border-dark dark:bg-card-dark @container">
+<div class="flex flex-row items-center justify-between gap-4">
+<div class="flex flex-col gap-1.5 pr-4">
+<p class="text-base font-bold leading-tight text-foreground-light dark:text-foreground-dark">Camera &amp; Photos Access</p>
+<p class="text-sm font-normal leading-normal text-subtle-light dark:text-subtle-dark">Allow the app to access your camera to analyze injuries from photos for better, real-time guidance.</p>
+</div>
+<label class="relative flex h-[31px] w-[51px] shrink-0 cursor-pointer items-center rounded-full border-none bg-toggle-bg-light p-0.5 has-[:checked]:bg-primary dark:bg-toggle-bg-dark">
+<input checked="" class="peer absolute h-full w-full cursor-pointer opacity-0" type="checkbox"/>
+<div class="absolute left-0.5 top-0.5 h-full w-[27px] transform rounded-full bg-white shadow-sm transition-transform duration-300 ease-in-out peer-checked:translate-x-[20px]" style="box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 8px, rgba(0, 0, 0, 0.04) 0px 3px 1px;"></div>
+</label>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-card-border-light bg-card-light p-5 dark:border-card-border-dark dark:bg-card-dark @container">
+<div class="flex flex-row items-center justify-between gap-4">
+<div class="flex flex-col gap-1.5 pr-4">
+<p class="text-base font-bold leading-tight text-foreground-light dark:text-foreground-dark">Emergency Report Sharing</p>
+<p class="text-sm font-normal leading-normal text-subtle-light dark:text-subtle-dark">Optionally share generated incident reports with your emergency contacts or first responders.</p>
+</div>
+<label class="relative flex h-[31px] w-[51px] shrink-0 cursor-pointer items-center rounded-full border-none bg-toggle-bg-light p-0.5 has-[:checked]:bg-primary dark:bg-toggle-bg-dark">
+<input class="peer absolute h-full w-full cursor-pointer opacity-0" type="checkbox"/>
+<div class="absolute left-0.5 top-0.5 h-full w-[27px] transform rounded-full bg-white shadow-sm transition-transform duration-300 ease-in-out peer-checked:translate-x-[20px]" style="box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 8px, rgba(0, 0, 0, 0.04) 0px 3px 1px;"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="flex-grow"></div>
+<div class="sticky bottom-0 w-full bg-background-light py-4 dark:bg-background-dark">
+<button class="flex h-14 w-full items-center justify-center rounded-xl bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20 transition-opacity hover:opacity-90 disabled:opacity-50">
+          I Agree &amp; Continue
+        </button>
+<p class="mt-4 px-4 text-center text-xs leading-relaxed text-subtle-light dark:text-subtle-dark">
+          By continuing, you agree to our
+          <a class="font-medium text-primary underline" href="#">Terms of Service</a> and
+          <a class="font-medium text-primary underline" href="#">Privacy Policy</a>.
+        </p>
+</div>
+</main>
+</div>
+
+</body></html>
