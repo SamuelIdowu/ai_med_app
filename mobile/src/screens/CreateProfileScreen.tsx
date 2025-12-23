@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Switch, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabase';
 import { MedicalProfileService } from '../services/medicalProfileService';
 
@@ -23,8 +25,13 @@ export const CreateProfileScreen = () => {
 
     // Profile State
     const [fullName, setFullName] = useState('');
-    const [dob, setDob] = useState(''); // Simple text for MVP
-    const [bloodType, setBloodType] = useState('');
+    const [dob, setDob] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [bloodType, setBloodType] = useState('O+'); // Default
+    const [genotype, setGenotype] = useState('AA'); // Default
+    const [gender, setGender] = useState('Male'); // Default
+    const [weight, setWeight] = useState('');
+    const [height, setHeight] = useState('');
     const [allergies, setAllergies] = useState<string[]>([]);
     const [conditions, setConditions] = useState<string[]>([]);
     const [medications, setMedications] = useState<string[]>([]);
@@ -35,6 +42,12 @@ export const CreateProfileScreen = () => {
     const [allergyInput, setAllergyInput] = useState('');
     const [conditionInput, setConditionInput] = useState('');
     const [medicationInput, setMedicationInput] = useState('');
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        const currentDate = selectedDate || dob;
+        setShowDatePicker(Platform.OS === 'ios');
+        setDob(currentDate);
+    };
 
     const addChip = (list: string[], setList: (l: string[]) => void, value: string, setValue: (v: string) => void) => {
         if (value.trim()) {
@@ -48,8 +61,8 @@ export const CreateProfileScreen = () => {
     };
 
     const handleCreateProfile = async () => {
-        if (!email || !password || !fullName) {
-            Alert.alert('Missing Fields', 'Please fill in at least Email, Password, and Full Name.');
+        if (!email || !password || !fullName || !gender || !genotype) {
+            Alert.alert('Missing Fields', 'Please fill in Email, Password, Name, Gender and Genotype.');
             return;
         }
 
@@ -67,8 +80,12 @@ export const CreateProfileScreen = () => {
             // 2. Save Medical Profile (Local)
             const profileData = {
                 fullName,
-                dob,
+                dob: dob.toISOString().split('T')[0],
                 bloodType,
+                genotype,
+                gender,
+                weight,
+                height,
                 allergies,
                 conditions,
                 medications,
@@ -110,7 +127,16 @@ export const CreateProfileScreen = () => {
         >
             <StatusBar style="dark" />
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <TouchableOpacity
+                    onPress={() => {
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                        } else {
+                            navigation.navigate('Permissions');
+                        }
+                    }}
+                    style={styles.backButton}
+                >
                     <MaterialIcons name="arrow-back-ios" size={20} color={TEXT_DARK} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Create Profile</Text>
@@ -149,18 +175,103 @@ export const CreateProfileScreen = () => {
                         onChangeText={setFullName}
                     />
                     <View style={styles.row}>
-                        <TextInput
-                            style={[styles.input, styles.halfInput]}
-                            placeholder="Date of Birth (YYYY-MM-DD)"
-                            value={dob}
-                            onChangeText={setDob}
-                        />
-                        <TextInput
-                            style={[styles.input, styles.halfInput]}
-                            placeholder="Blood Type (e.g. O+)"
-                            value={bloodType}
-                            onChangeText={setBloodType}
-                        />
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                            <Text style={styles.inputLabel}>Date of Birth</Text>
+                            <TouchableOpacity
+                                style={styles.dateButton}
+                                onPress={() => setShowDatePicker((prev) => !prev)}
+                            >
+                                <Text style={styles.inputText}>{dob.toISOString().split('T')[0]}</Text>
+                            </TouchableOpacity>
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    testID="dateTimePicker"
+                                    value={dob}
+                                    mode="date"
+                                    display="default"
+                                    onChange={onDateChange}
+                                />
+                            )}
+                        </View>
+                    </View>
+
+                    <View style={styles.row}>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                            <Text style={styles.inputLabel}>Gender</Text>
+                            <View style={styles.pickerWrapper}>
+                                <Picker
+                                    selectedValue={gender}
+                                    onValueChange={(itemValue) => setGender(itemValue)}
+                                    style={styles.picker}
+                                >
+                                    <Picker.Item label="Male" value="Male" />
+                                    <Picker.Item label="Female" value="Female" />
+                                    <Picker.Item label="Other" value="Other" />
+                                </Picker>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.row}>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                            <Text style={styles.inputLabel}>Weight (kg)</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="0"
+                                value={weight}
+                                onChangeText={setWeight}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                            <Text style={styles.inputLabel}>Height (cm)</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="0"
+                                value={height}
+                                onChangeText={setHeight}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.row}>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                            <Text style={styles.inputLabel}>Blood Type</Text>
+                            <View style={styles.pickerWrapper}>
+                                <Picker
+                                    selectedValue={bloodType}
+                                    onValueChange={(itemValue) => setBloodType(itemValue)}
+                                    style={styles.picker}
+                                >
+                                    <Picker.Item label="O+" value="O+" />
+                                    <Picker.Item label="O-" value="O-" />
+                                    <Picker.Item label="A+" value="A+" />
+                                    <Picker.Item label="A-" value="A-" />
+                                    <Picker.Item label="B+" value="B+" />
+                                    <Picker.Item label="B-" value="B-" />
+                                    <Picker.Item label="AB+" value="AB+" />
+                                    <Picker.Item label="AB-" value="AB-" />
+                                </Picker>
+                            </View>
+                        </View>
+                        <View style={[styles.inputContainer, styles.halfInput]}>
+                            <Text style={styles.inputLabel}>Genotype</Text>
+                            <View style={styles.pickerWrapper}>
+                                <Picker
+                                    selectedValue={genotype}
+                                    onValueChange={(itemValue) => setGenotype(itemValue)}
+                                    style={styles.picker}
+                                >
+                                    <Picker.Item label="AA" value="AA" />
+                                    <Picker.Item label="AS" value="AS" />
+                                    <Picker.Item label="SS" value="SS" />
+                                    <Picker.Item label="AC" value="AC" />
+                                    <Picker.Item label="SC" value="SC" />
+                                    <Picker.Item label="CC" value="CC" />
+                                </Picker>
+                            </View>
+                        </View>
                     </View>
                 </View>
 
@@ -319,6 +430,37 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: TEXT_DARK,
         marginBottom: 12,
+    },
+    inputContainer: {
+        marginBottom: 12,
+    },
+    inputLabel: {
+        fontSize: 12,
+        color: TEXT_SECONDARY,
+        marginBottom: 4,
+        marginLeft: 4,
+    },
+    inputText: {
+        fontSize: 16,
+        color: TEXT_DARK,
+    },
+    dateButton: {
+        backgroundColor: '#FFF',
+        borderWidth: 1,
+        borderColor: BORDER_COLOR,
+        borderRadius: 12,
+        padding: 16,
+    },
+    pickerWrapper: {
+        backgroundColor: '#FFF',
+        borderWidth: 1,
+        borderColor: BORDER_COLOR,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    picker: {
+        height: 54, // Approx align with inputs
+        width: '100%',
     },
     row: {
         flexDirection: 'row',

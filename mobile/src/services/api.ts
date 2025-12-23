@@ -11,6 +11,7 @@ api.interceptors.request.use(async (config) => {
     if (session?.access_token) {
         config.headers.Authorization = `Bearer ${session.access_token}`;
     }
+    console.log('[API Request]', config.method?.toUpperCase(), config.baseURL, config.url);
     return config;
 }, (error) => {
     return Promise.reject(error);

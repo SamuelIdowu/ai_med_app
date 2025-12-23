@@ -137,15 +137,21 @@ export const EncounterService = {
 
             // Mark as synced (in local storage logic - handled by caller or state mgmt)
             // Here we just return success
-        } catch (e) {
-            console.error('Sync failed', e);
+        } catch (e: any) {
+            console.error('Sync failed', e.response?.data || e.message);
             throw e;
         }
     },
 
     getEncounters: async () => {
-        const json = await AsyncStorage.getItem(LOCAL_ENCOUNTERS_KEY);
-        return json != null ? JSON.parse(json) : [];
+        try {
+            const response = await api.get('/encounters');
+            return response.data;
+        } catch (e) {
+            console.warn('Failed to fetch remote encounters, falling back to local', e);
+            const json = await AsyncStorage.getItem(LOCAL_ENCOUNTERS_KEY);
+            return json != null ? JSON.parse(json) : [];
+        }
     },
 
     clearEncounters: async () => {

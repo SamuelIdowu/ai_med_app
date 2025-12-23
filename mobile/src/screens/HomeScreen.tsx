@@ -1,39 +1,48 @@
-
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, Easing, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, Easing, FlatList, Platform, StatusBar as RNStatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBar } from '../components/BottomTabBar';
 import firstAidData from '../content/first-aid-content.json';
 import { AnalyticsService } from '../services/analyticsService';
+import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { ScreenWrapper } from '../components/ScreenWrapper';
+import { MedicalProfileService, MedicalProfile } from '../services/medicalProfileService';
 
-const PRIMARY_COLOR = '#e53734';
-const BG_LIGHT = '#f8f6f6';
-const CARD_LIGHT = '#ffffff';
-const TEXT_LIGHT = '#1b0e0e';
-const SECONDARY_TEXT_LIGHT = '#6b5f5f';
-
-// Design-spec mapping for icons
 const ICON_MAP: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
-    'blood-bag': 'water', // closest to bloodtype
-    'fire': 'fire', // local_fire_department
-    'breathe': 'weather-windy', // closest to air/choking
-    'heart-pulse': 'heart-pulse', // cardiology
-    'bone': 'bone', // personal_injury/fractures
-    'account-alert': 'alert-circle', // sick/unconscious
+    'blood-bag': 'water',
+    'fire': 'fire',
+    'breathe': 'weather-windy',
+    'heart-pulse': 'heart-pulse',
+    'bone': 'bone',
+    'account-alert': 'alert-circle',
 };
 
 export const HomeScreen = () => {
     const navigation = useNavigation<any>();
-    // No pulse animation in the static design, but keeping refined version for "alive" feel
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const [profile, setProfile] = React.useState<MedicalProfile | null>(null);
+
+    useEffect(() => {
+        loadProfile();
+        // Add listener to reload profile when screen comes into focus
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadProfile();
+        });
+        return unsubscribe;
+    }, [navigation]);
+
+    const loadProfile = async () => {
+        const data = await MedicalProfileService.getProfile();
+        setProfile(data);
+    };
 
     useEffect(() => {
         const pulse = Animated.loop(
             Animated.sequence([
                 Animated.timing(pulseAnim, {
-                    toValue: 1.02,
+                    toValue: 1.05,
                     duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.inOut(Easing.ease),
@@ -51,258 +60,337 @@ export const HomeScreen = () => {
     }, [pulseAnim]);
 
     const getIconName = (originalIcon: string) => {
-        // Map content.json icons to MaterialCommunityIcons if needed, or pass through if they match
-        // content.json has: blood-bag, fire, breathe, heart-pulse, bone, account-alert
         return ICON_MAP[originalIcon] || 'help-circle';
     };
 
-    return (
-        <View style={styles.container}>
-            <StatusBar style="dark" backgroundColor="transparent" />
+    const renderCategoryItem = ({ item }: { item: any }) => (
+        <TouchableOpacity
+            style={styles.categoryCard}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('EmergencySteps', { categoryId: item.id })}
+        >
+            <View style={styles.catIconContainer}>
+                <MaterialCommunityIcons name={getIconName(item.icon)} size={32} color={COLORS.primary} />
+            </View>
+            <Text style={styles.categoryText} numberOfLines={2}>{item.title}</Text>
+        </TouchableOpacity>
+    );
 
-            {/* Sticky Header */}
+    return (
+        <ScreenWrapper>
+
+            {/* Enhanced Header */}
             <View style={styles.header}>
-                {/* Top App Bar */}
-                <View style={styles.topBar}>
-                    <View style={styles.profileSection}>
+                <View style={styles.headerTop}>
+                    <View style={styles.profileContainer}>
                         <Image
-                            source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuATadtnpGLy0gIduxb0wLuTjC4m3cugufnBvj_-eDt3VcCWxmlDfo-iJkZw2SQdXjMuzPDU6Lh4u8Ezc112KvkuSrZrU5o3yvW_pCzkvWCxeapuIOEPGj6rFXqgQiye46fwjvKwuLuZpnuQSpvNIBVmKGmMncLEBc0z_cZXIR5yoYCqfFcve26iQ3iqg2Y71PRKR3Cf8u5maCzGJEY-arVr4f3Je-7BAp-X31YCVJViOsoMN5Q5lHWLcP82NFa5nqAFJn7X23037JQ" }}
+                            source={{ uri: profile?.photoUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuATadtnpGLy0gIduxb0wLuTjC4m3cugufnBvj_-eDt3VcCWxmlDfo-iJkZw2SQdXjMuzPDU6Lh4u8Ezc112KvkuSrZrU5o3yvW_pCzkvWCxeapuIOEPGj6rFXqgQiye46fwjvKwuLuZpnuQSpvNIBVmKGmMncLEBc0z_cZXIR5yoYCqfFcve26iQ3iqg2Y71PRKR3Cf8u5maCzGJEY-arVr4f3Je-7BAp-X31YCVJViOsoMN5Q5lHWLcP82NFa5nqAFJn7X23037JQ" }}
                             style={styles.avatar}
                         />
-                        <Text style={styles.welcomeText}>Hello, Alex</Text>
+                        <View style={styles.greetingTextContainer}>
+                            <Text style={styles.greetingSub}>Welcome back,</Text>
+                            <Text style={styles.greetingName}>{profile?.fullName || 'User'}</Text>
+                        </View>
                     </View>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <MaterialCommunityIcons name="bell-outline" size={24} color={TEXT_LIGHT} />
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <TouchableOpacity
+                            style={styles.notificationButton}
+                            onPress={() => navigation.navigate('Settings')}
+                        >
+                            <MaterialCommunityIcons name="cog-outline" size={24} color={COLORS.textPrimary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.notificationButton}
+                            onPress={() => navigation.navigate('Notifications')}
+                        >
+                            <MaterialCommunityIcons name="bell-badge-outline" size={24} color={COLORS.textPrimary} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                {/* Emergency Button */}
-                <View style={styles.emergencyContainer}>
-                    <Animated.View style={{ transform: [{ scale: pulseAnim }], width: '100%', alignItems: 'center' }}>
+                {/* Prominent Emergency Button */}
+                <View style={styles.emergencyWrapper}>
+                    <Animated.View style={{ transform: [{ scale: pulseAnim }], width: '100%' }}>
                         <TouchableOpacity
                             style={styles.emergencyButton}
                             activeOpacity={0.9}
                             onPress={() => {
                                 AnalyticsService.track('emergency_start');
-                                // Determine where to go - usually to a list or wizard. 
-                                // Design flow implies picking a category.
-                                // For now, we can stay here or scroll to categories, 
-                                // but typically "Emergency" big button might go to a specific "Quick Help" or "SOS" mode.
-                                // Based on existing code, it went to 'EmergencyCategories' which is basically this screen's list.
-                                // Let's just create a slight haptic feedback visual or scroll to grid.
-                                // Or if there is a dedicated SOS flow, navigate there. 
-                                // For this implementation, let's assume it highlights the categories.
                             }}
                         >
-                            <Text style={styles.emergencyText}>EMERGENCY</Text>
+                            <View style={styles.emergencyBtnContent}>
+                                <MaterialCommunityIcons name="alert-octagon" size={28} color={COLORS.white} />
+                                <Text style={styles.emergencyText}>EMERGENCY HELP</Text>
+                            </View>
                         </TouchableOpacity>
                     </Animated.View>
                 </View>
             </View>
 
-            <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                {/* First Aid Categories Section */}
-                <Text style={styles.sectionTitle}>First Aid Categories</Text>
-                <View style={styles.categoriesGrid}>
-                    {firstAidData.categories.map((cat) => (
-                        <TouchableOpacity
-                            key={cat.id}
-                            style={styles.categoryCard}
-                            activeOpacity={0.7}
-                            onPress={() => navigation.navigate('EmergencySteps', { categoryId: cat.id })}
-                        >
-                            <View style={styles.catIconContainer}>
-                                <MaterialCommunityIcons name={getIconName(cat.icon)} size={32} color={PRIMARY_COLOR} />
-                            </View>
-                            <Text style={styles.categoryText}>{cat.title}</Text>
-                        </TouchableOpacity>
-                    ))}
+            <ScrollView
+                style={styles.scrollContainer}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Horizontal First Aid Categories */}
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>First Aid Guide</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('FirstAidList')}>
+                        <Text style={styles.seeAllText}>See All</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Quick Actions Section */}
-                <Text style={styles.sectionTitle}>Quick Actions</Text>
-                <View style={styles.quickActionsContainer}>
+                <FlatList
+                    data={firstAidData.categories}
+                    renderItem={renderCategoryItem}
+                    keyExtractor={(item) => item.id}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.categoriesList}
+                />
+
+                {/* Quick Services */}
+                <Text style={[styles.sectionTitle, { marginTop: 24, marginLeft: 20 }]}>Quick Services</Text>
+                <View style={styles.actionsGrid}>
                     <QuickActionButton
-                        icon="camera-outline"
-                        label="Assess Injury (AI)"
-                        onPress={() => navigation.navigate('AIAnalysis')}
+                        icon="file-document-outline"
+                        label="History & Reports"
+                        subLabel="View past logs"
+                        onPress={() => navigation.navigate('History')}
+                        color="#4A90E2"
                     />
                     <QuickActionButton
-                        icon="robot"
-                        label="AI Assistant"
-                        onPress={() => navigation.navigate('AIChat')}
-                    />
-                    <QuickActionButton
-                        icon="share-variant-outline"
-                        label="Share Report"
-                        onPress={() => navigation.navigate('History')} // Go to history to select report
-                    />
-                    <QuickActionButton
-                        icon="hospital-building"
-                        label="Provider Directory"
+                        icon="hospital-marker"
+                        label="Find Providers"
+                        subLabel="Connect with doctors"
                         onPress={() => navigation.navigate('ProviderList')}
+                        color="#50C878"
                     />
                 </View>
 
-                {/* Spacer for bottom nav */}
+                {/* Daily Tip Card */}
+                <View style={styles.tipCard}>
+                    <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color="#FFA500" />
+                    <View style={styles.tipContent}>
+                        <Text style={styles.tipTitle}>Daily Health Tip</Text>
+                        <Text style={styles.tipText}>Stay hydrated! Drinking water helps maintain the balance of body fluids.</Text>
+                    </View>
+                </View>
+
                 <View style={{ height: 100 }} />
             </ScrollView>
 
-            {/* Bottom Navigation Bar
-            <View style={styles.bottomNav}>
-                <BottomNavItem icon="home" label="Home" active />
-                <BottomNavItem icon="history" label="History" />
-                <BottomNavItem icon="account" label="Profile" onPress={() => navigation.navigate('MedicalProfile')} />
-            </View> */}
             <BottomTabBar activeRoute="Home" />
-        </View>
+        </ScreenWrapper>
     );
 };
 
-const QuickActionButton = ({ icon, label, onPress }: { icon: any, label: string, onPress: () => void }) => (
-    <TouchableOpacity style={styles.actionButton} onPress={onPress} activeOpacity={0.7}>
-        <MaterialCommunityIcons name={icon} size={24} color={PRIMARY_COLOR} />
-        <Text style={styles.actionText}>{label}</Text>
-        <MaterialCommunityIcons name="chevron-right" size={24} color={SECONDARY_TEXT_LIGHT} />
+const QuickActionButton = ({ icon, label, subLabel, onPress, color }: any) => (
+    <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
+        <View style={[styles.actionIconBox, { backgroundColor: (color || COLORS.primary) + '20' }]}>
+            <MaterialCommunityIcons name={icon} size={28} color={color || COLORS.primary} />
+        </View>
+        <View style={styles.actionInfo}>
+            <Text style={styles.actionLabel}>{label}</Text>
+            <Text style={styles.actionSubLabel}>{subLabel}</Text>
+        </View>
+        <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.gray} />
     </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: BG_LIGHT,
+        backgroundColor: COLORS.background,
     },
     header: {
-        backgroundColor: 'rgba(248, 246, 246, 0.95)',
-        paddingTop: Platform.OS === 'android' ? 40 : 60, // Safe area approximation
-        paddingBottom: 12,
+        backgroundColor: COLORS.white,
+        paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 40) + 10 : 60,
+        paddingBottom: 20,
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        ...SHADOWS.light,
         zIndex: 10,
-        // Sticky behavior is handled by ScrollView usually, but here it's a fixed view above ScrollView
-        // essentially "sticky" to top of screen.
     },
-    topBar: {
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        marginBottom: 12,
-        height: 48,
-    },
-    profileSection: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12, // gap support in RN? Yes, recent versions. If not, use marginLeft.
     },
     avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#ddd',
-    },
-    welcomeText: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: TEXT_LIGHT,
-        marginLeft: 12, // fallback if gap fails
-    },
-    iconButton: {
         width: 48,
         height: 48,
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderRadius: 24,
+        borderWidth: 2,
+        borderColor: COLORS.primary,
     },
-    emergencyContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+    greetingTextContainer: {
+        marginLeft: 12,
+    },
+    greetingSub: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+    },
+    greetingName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+    },
+    notificationButton: {
+        padding: 10,
+        backgroundColor: COLORS.inputBackground,
+        borderRadius: 12,
+    },
+    emergencyWrapper: {
         alignItems: 'center',
     },
     emergencyButton: {
-        backgroundColor: PRIMARY_COLOR,
-        height: 48,
-        borderRadius: 12,
+        backgroundColor: '#FF3B30',
+        borderRadius: 20,
+        paddingVertical: 18,
+        paddingHorizontal: 24,
         width: '100%',
-        maxWidth: 480,
-        justifyContent: 'center',
         alignItems: 'center',
-        // No shadow in simple flat design or minimal
+        shadowColor: '#FF3B30',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    emergencyBtnContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
     },
     emergencyText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '800',
+        letterSpacing: 1,
     },
-    content: {
+    scrollContainer: {
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 24,
+        paddingTop: 24,
+        paddingBottom: 40,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        marginBottom: 16,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '700',
-        color: TEXT_LIGHT,
-        marginLeft: 16,
-        marginTop: 16,
-        marginBottom: 8,
+        color: COLORS.textPrimary,
     },
-    categoriesGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        paddingHorizontal: 12,
+    seeAllText: {
+        color: COLORS.primary,
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    categoriesList: {
+        paddingHorizontal: 14,
+        paddingBottom: 10,
     },
     categoryCard: {
-        width: '45%', // approx for 2 col
-        flexGrow: 1,
-        backgroundColor: CARD_LIGHT,
-        borderRadius: 12,
+        backgroundColor: COLORS.white,
+        borderRadius: 20,
         padding: 16,
-        margin: 4,
+        marginHorizontal: 6,
+        width: 120,
+        height: 140,
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        justifyContent: 'space-between',
+        ...SHADOWS.medium,
+        shadowOpacity: 0.1,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.03)',
     },
     catIconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(229, 55, 52, 0.1)',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#F2F8FF',
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 8,
     },
     categoryText: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: TEXT_LIGHT,
+        fontSize: 13,
+        fontWeight: '600',
+        color: COLORS.textPrimary,
+        textAlign: 'center',
+        lineHeight: 18,
     },
-    quickActionsContainer: {
-        paddingHorizontal: 16,
+    actionsGrid: {
+        paddingHorizontal: 20,
+        marginTop: 12,
         gap: 12,
     },
-    actionButton: {
+    actionCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: CARD_LIGHT,
+        backgroundColor: COLORS.white,
+        borderRadius: 20,
         padding: 16,
-        borderRadius: 12,
-        marginBottom: 12, // in case gap doesn't work
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        ...SHADOWS.light,
+        marginBottom: 8,
     },
-    actionText: {
+    actionIconBox: {
+        width: 52,
+        height: 52,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    actionInfo: {
         flex: 1,
-        fontSize: 16,
-        fontWeight: '500',
-        color: TEXT_LIGHT,
-        marginLeft: 16,
     },
-
+    actionLabel: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.textPrimary,
+        marginBottom: 2,
+    },
+    actionSubLabel: {
+        fontSize: 13,
+        color: COLORS.textSecondary,
+    },
+    tipCard: {
+        flexDirection: 'row',
+        backgroundColor: '#FFF8E1',
+        marginHorizontal: 20,
+        marginTop: 24,
+        padding: 20,
+        borderRadius: 20,
+        alignItems: 'flex-start',
+        gap: 12,
+        borderWidth: 1,
+        borderColor: '#FFE0B2',
+    },
+    tipContent: {
+        flex: 1,
+    },
+    tipTitle: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#E65100',
+        marginBottom: 4,
+    },
+    tipText: {
+        fontSize: 13,
+        color: '#5D4037',
+        lineHeight: 19,
+    },
 });

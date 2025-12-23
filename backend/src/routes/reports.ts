@@ -8,7 +8,15 @@ router.use(authenticateUser);
 
 router.post('/:id/generate', async (req, res) => {
     try {
-        const pdfBytes = await generateReport(req.user.id, req.params.id);
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            res.status(401).json({ error: 'Token missing' });
+            return;
+        }
+
+        const pdfBytes = await generateReport(req.user.id, req.params.id, token);
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=report-${req.params.id}.pdf`);

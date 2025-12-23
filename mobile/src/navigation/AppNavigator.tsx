@@ -24,11 +24,14 @@ import { ProviderDetailScreen } from '../screens/ProviderDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AIAnalysisScreen } from '../screens/AIAnalysisScreen';
 import { AIChatScreen } from '../screens/AIChatScreen';
+import { AIToolsScreen } from '../screens/AIToolsScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { FirstAidListScreen } from '../screens/FirstAidListScreen';
 
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
-    const { session, loading } = useAuth();
+    const { session, loading, isGuest } = useAuth();
 
     if (loading) {
         return <SplashScreen />;
@@ -37,7 +40,7 @@ export const AppNavigator = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {!session ? (
+                {!session && !isGuest ? (
                     // Auth Stack
                     <>
                         <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -63,6 +66,9 @@ export const AppNavigator = () => {
                         <Stack.Screen name="PhotoPreview" component={PhotoPreviewScreen} />
                         <Stack.Screen name="AIAnalysis" component={AIAnalysisScreen} />
                         <Stack.Screen name="AIChat" component={AIChatScreen} />
+                        <Stack.Screen name="AITools" component={AIToolsScreen} />
+                        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                        <Stack.Screen name="FirstAidList" component={FirstAidListScreen} />
                     </>
                 )}
             </Stack.Navigator>

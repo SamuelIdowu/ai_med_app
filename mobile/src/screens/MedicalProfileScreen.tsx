@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Image, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 import { MedicalProfileService, MedicalProfile } from '../services/medicalProfileService';
 
 const PRIMARY_COLOR = '#e53734';
@@ -17,15 +19,23 @@ const BORDER_COLOR = '#e5e7eb';
 export const MedicalProfileScreen = () => {
     const navigation = useNavigation<any>();
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
     const [profile, setProfile] = useState<MedicalProfile>({
+        email: '',
         fullName: '',
-        dob: '',
-        bloodType: '',
+        dob: new Date().toISOString().split('T')[0], // Default to specific format if needed, usually string from backend
+        bloodType: 'O+',
+        gender: 'Male',
+        genotype: 'AA',
+        weight: '',
+        height: '',
         allergies: [],
         medications: [],
         conditions: [],
         emergencyContact: { name: '', relationship: '', phone: '' },
-        photoUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBJA9LSpd2KSkkgCREqeITv1KwHr5lafiLSeZfGHAP1FAiqSw2UIcMoAU0hk6J6tmyJ6Oynqte1ZEQpXdibIhFAI4fEf_UeYkLFREEzUX_ox4G3lfqDzwy4Z096KAg0GzhrqHUhnvkPKHEelsPnze8wUpzFymzsvCn3jwJiqr_0mWP4ibABKR538A7Lq_zH0StNQ0JZxAHxZdArKwrQaQb6f2kgxZ2OKu7dr0aYDdGLLu04kVy2Uu8pcIPNZ7rTZ3GDEhWeo0eMhI0',
+        photoUrl: '',
     });
 
     // Input states for chips
@@ -40,7 +50,11 @@ export const MedicalProfileScreen = () => {
     const loadProfile = async () => {
         const savedProfile = await MedicalProfileService.getProfile();
         if (savedProfile) {
-            setProfile(savedProfile);
+            // Ensure compatibility with old data that might miss new fields
+            setProfile(prev => ({
+                ...prev, // Use defaults
+                ...savedProfile,
+            }));
         }
         setLoading(false);
     };
@@ -48,6 +62,7 @@ export const MedicalProfileScreen = () => {
     const handleSave = async () => {
         try {
             await MedicalProfileService.saveProfile(profile);
+            setIsEditing(false);
             Alert.alert('Success', 'Profile saved successfully');
         } catch (error) {
             Alert.alert('Error', 'Failed to save profile');
@@ -85,7 +100,7 @@ export const MedicalProfileScreen = () => {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -116,6 +131,10 @@ export const MedicalProfileScreen = () => {
                                 fullName: '',
                                 dob: '',
                                 bloodType: '',
+                                gender: 'Male',
+                                genotype: 'AA',
+                                weight: '',
+                                height: '',
                                 allergies: [],
                                 medications: [],
                                 conditions: [],
@@ -153,8 +172,10 @@ export const MedicalProfileScreen = () => {
                     <MaterialCommunityIcons name="chevron-left" size={32} color={TEXT_LIGHT} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Medical Profile</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-                    <MaterialCommunityIcons name="cog" size={28} color={TEXT_LIGHT} />
+                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
+                    <Text style={{ color: PRIMARY_COLOR, fontSize: 16, fontWeight: '600' }}>
+                        {isEditing ? 'Cancel' : 'Edit'}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
@@ -163,16 +184,16 @@ export const MedicalProfileScreen = () => {
                 <View style={styles.profileHeader}>
                     <View style={styles.avatarContainer}>
                         <Image
-                            source={{ uri: profile.photoUrl }}
+                            source={profile.photoUrl ? { uri: profile.photoUrl } : { uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuATadtnpGLy0gIduxb0wLuTjC4m3cugufnBvj_-eDt3VcCWxmlDfo-iJkZw2SQdXjMuzPDU6Lh4u8Ezc112KvkuSrZrU5o3yvW_pCzkvWCxeapuIOEPGj6rFXqgQiye46fwjvKwuLuZpnuQSpvNIBVmKGmMncLEBc0z_cZXIR5yoYCqfFcve26iQ3iqg2Y71PRKR3Cf8u5maCzGJEY-arVr4f3Je-7BAp-X31YCVJViOsoMN5Q5lHWLcP82NFa5nqAFJn7X23037JQ" }}
                             style={styles.avatar}
                         />
-                        <TouchableOpacity style={styles.editAvatarButton} onPress={handlePickImage}>
-                            <MaterialCommunityIcons name="pencil" size={20} color="white" />
+                        <TouchableOpacity style={styles.editAvatarButton} onPress={handlePickImage} disabled={!isEditing}>
+                            {isEditing && <MaterialCommunityIcons name="pencil" size={20} color="white" />}
                         </TouchableOpacity>
                     </View>
                     <View style={styles.profileInfo}>
-                        <Text style={styles.profileName}>{profile.fullName || 'Alex Doe'}</Text>
-                        <Text style={styles.profileEmail}>alex.doe@email.com</Text>
+                        <Text style={styles.profileName}>{profile.fullName || 'Guest'}</Text>
+                        <Text style={styles.profileEmail}>{profile.email || ''}</Text>
                     </View>
                 </View>
 
@@ -180,34 +201,137 @@ export const MedicalProfileScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Personal Information</Text>
 
+                    {/* Name */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Full Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Alex Doe"
-                            value={profile.fullName}
-                            onChangeText={(text) => setProfile({ ...profile, fullName: text })}
-                        />
+                        {isEditing ? (
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Your Name"
+                                value={profile.fullName}
+                                onChangeText={(text) => setProfile({ ...profile, fullName: text })}
+                            />
+                        ) : (
+                            <Text style={styles.valueText}>{profile.fullName}</Text>
+                        )}
                     </View>
 
+                    {/* DOB & Blood Type */}
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                             <Text style={styles.label}>Date of Birth</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="YYYY-MM-DD"
-                                value={profile.dob}
-                                onChangeText={(text) => setProfile({ ...profile, dob: text })}
-                            />
+                            {isEditing ? (
+                                <>
+                                    <TouchableOpacity
+                                        style={styles.input}
+                                        onPress={() => setShowDatePicker(prev => !prev)}
+                                    >
+                                        <Text style={{ color: TEXT_LIGHT }}>{profile.dob}</Text>
+                                    </TouchableOpacity>
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={new Date(profile.dob || Date.now())}
+                                            mode="date"
+                                            display="default"
+                                            onChange={(event, date) => {
+                                                setShowDatePicker(Platform.OS === 'ios');
+                                                if (date) {
+                                                    setProfile({ ...profile, dob: date.toISOString().split('T')[0] });
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <Text style={styles.valueText}>{profile.dob}</Text>
+                            )}
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                             <Text style={styles.label}>Blood Type</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="O+"
-                                value={profile.bloodType}
-                                onChangeText={(text) => setProfile({ ...profile, bloodType: text })}
-                            />
+                            {isEditing ? (
+                                <View style={styles.pickerContainer}>
+                                    <Picker
+                                        selectedValue={profile.bloodType}
+                                        onValueChange={(itemValue) => setProfile({ ...profile, bloodType: itemValue })}
+                                    >
+                                        {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(type => (
+                                            <Picker.Item key={type} label={type} value={type} />
+                                        ))}
+                                    </Picker>
+                                </View>
+                            ) : (
+                                <Text style={styles.valueText}>{profile.bloodType}</Text>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Gender & Genotype */}
+                    <View style={styles.row}>
+                        <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                            <Text style={styles.label}>Gender</Text>
+                            {isEditing ? (
+                                <View style={styles.pickerContainer}>
+                                    <Picker
+                                        selectedValue={profile.gender}
+                                        onValueChange={(val) => setProfile({ ...profile, gender: val })}
+                                    >
+                                        <Picker.Item label="Male" value="Male" />
+                                        <Picker.Item label="Female" value="Female" />
+                                        <Picker.Item label="Other" value="Other" />
+                                    </Picker>
+                                </View>
+                            ) : (
+                                <Text style={styles.valueText}>{profile.gender}</Text>
+                            )}
+                        </View>
+                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                            <Text style={styles.label}>Genotype</Text>
+                            {isEditing ? (
+                                <View style={styles.pickerContainer}>
+                                    <Picker
+                                        selectedValue={profile.genotype}
+                                        onValueChange={(val) => setProfile({ ...profile, genotype: val })}
+                                    >
+                                        {['AA', 'AS', 'SS', 'AC', 'SC', 'CC'].map(g => (
+                                            <Picker.Item key={g} label={g} value={g} />
+                                        ))}
+                                    </Picker>
+                                </View>
+                            ) : (
+                                <Text style={styles.valueText}>{profile.genotype}</Text>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Weight & Height */}
+                    <View style={styles.row}>
+                        <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                            <Text style={styles.label}>Weight (kg)</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="kg"
+                                    keyboardType="numeric"
+                                    value={profile.weight}
+                                    onChangeText={(val) => setProfile({ ...profile, weight: val })}
+                                />
+                            ) : (
+                                <Text style={styles.valueText}>{profile.weight ? `${profile.weight} kg` : '-'}</Text>
+                            )}
+                        </View>
+                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                            <Text style={styles.label}>Height (cm)</Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="cm"
+                                    keyboardType="numeric"
+                                    value={profile.height}
+                                    onChangeText={(val) => setProfile({ ...profile, height: val })}
+                                />
+                            ) : (
+                                <Text style={styles.valueText}>{profile.height ? `${profile.height} cm` : '-'}</Text>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -219,24 +343,28 @@ export const MedicalProfileScreen = () => {
                         {profile.allergies.map((item, index) => (
                             <View key={index} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <TouchableOpacity onPress={() => removeChip('allergies', index)}>
-                                    <MaterialCommunityIcons name="close" size={16} color={PRIMARY_COLOR} />
-                                </TouchableOpacity>
+                                {isEditing && (
+                                    <TouchableOpacity onPress={() => removeChip('allergies', index)}>
+                                        <MaterialCommunityIcons name="close" size={16} color={PRIMARY_COLOR} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
                     </View>
-                    <View style={styles.addChipContainer}>
-                        <TextInput
-                            style={styles.chipInput}
-                            placeholder="Add allergy..."
-                            value={allergyInput}
-                            onChangeText={setAllergyInput}
-                            onSubmitEditing={() => addChip('allergies', allergyInput, setAllergyInput)}
-                        />
-                        <TouchableOpacity onPress={() => addChip('allergies', allergyInput, setAllergyInput)}>
-                            <MaterialCommunityIcons name="plus-circle" size={32} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
+                    {isEditing && (
+                        <View style={styles.addChipContainer}>
+                            <TextInput
+                                style={styles.chipInput}
+                                placeholder="Add allergy..."
+                                value={allergyInput}
+                                onChangeText={setAllergyInput}
+                                onSubmitEditing={() => addChip('allergies', allergyInput, setAllergyInput)}
+                            />
+                            <TouchableOpacity onPress={() => addChip('allergies', allergyInput, setAllergyInput)}>
+                                <MaterialCommunityIcons name="plus-circle" size={32} color={PRIMARY_COLOR} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
 
                 {/* Chronic Conditions */}
@@ -246,24 +374,28 @@ export const MedicalProfileScreen = () => {
                         {profile.conditions.map((item, index) => (
                             <View key={index} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <TouchableOpacity onPress={() => removeChip('conditions', index)}>
-                                    <MaterialCommunityIcons name="close" size={16} color={PRIMARY_COLOR} />
-                                </TouchableOpacity>
+                                {isEditing && (
+                                    <TouchableOpacity onPress={() => removeChip('conditions', index)}>
+                                        <MaterialCommunityIcons name="close" size={16} color={PRIMARY_COLOR} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
                     </View>
-                    <View style={styles.addChipContainer}>
-                        <TextInput
-                            style={styles.chipInput}
-                            placeholder="Add condition..."
-                            value={conditionInput}
-                            onChangeText={setConditionInput}
-                            onSubmitEditing={() => addChip('conditions', conditionInput, setConditionInput)}
-                        />
-                        <TouchableOpacity onPress={() => addChip('conditions', conditionInput, setConditionInput)}>
-                            <MaterialCommunityIcons name="plus-circle" size={32} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
+                    {isEditing && (
+                        <View style={styles.addChipContainer}>
+                            <TextInput
+                                style={styles.chipInput}
+                                placeholder="Add condition..."
+                                value={conditionInput}
+                                onChangeText={setConditionInput}
+                                onSubmitEditing={() => addChip('conditions', conditionInput, setConditionInput)}
+                            />
+                            <TouchableOpacity onPress={() => addChip('conditions', conditionInput, setConditionInput)}>
+                                <MaterialCommunityIcons name="plus-circle" size={32} color={PRIMARY_COLOR} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
 
                 {/* Medications */}
@@ -273,24 +405,28 @@ export const MedicalProfileScreen = () => {
                         {profile.medications.map((item, index) => (
                             <View key={index} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <TouchableOpacity onPress={() => removeChip('medications', index)}>
-                                    <MaterialCommunityIcons name="close" size={16} color={PRIMARY_COLOR} />
-                                </TouchableOpacity>
+                                {isEditing && (
+                                    <TouchableOpacity onPress={() => removeChip('medications', index)}>
+                                        <MaterialCommunityIcons name="close" size={16} color={PRIMARY_COLOR} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
                     </View>
-                    <View style={styles.addChipContainer}>
-                        <TextInput
-                            style={styles.chipInput}
-                            placeholder="Add medication..."
-                            value={medicationInput}
-                            onChangeText={setMedicationInput}
-                            onSubmitEditing={() => addChip('medications', medicationInput, setMedicationInput)}
-                        />
-                        <TouchableOpacity onPress={() => addChip('medications', medicationInput, setMedicationInput)}>
-                            <MaterialCommunityIcons name="plus-circle" size={32} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
+                    {isEditing && (
+                        <View style={styles.addChipContainer}>
+                            <TextInput
+                                style={styles.chipInput}
+                                placeholder="Add medication..."
+                                value={medicationInput}
+                                onChangeText={setMedicationInput}
+                                onSubmitEditing={() => addChip('medications', medicationInput, setMedicationInput)}
+                            />
+                            <TouchableOpacity onPress={() => addChip('medications', medicationInput, setMedicationInput)}>
+                                <MaterialCommunityIcons name="plus-circle" size={32} color={PRIMARY_COLOR} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
 
                 {/* Emergency Contact */}
@@ -298,32 +434,44 @@ export const MedicalProfileScreen = () => {
                     <Text style={styles.sectionTitle}>Emergency Contact</Text>
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Full Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Contact's Name"
-                            value={profile.emergencyContact.name}
-                            onChangeText={(text) => updateContact('name', text)}
-                        />
+                        {isEditing ? (
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Contact's Name"
+                                value={profile.emergencyContact.name}
+                                onChangeText={(text) => updateContact('name', text)}
+                            />
+                        ) : (
+                            <Text style={styles.valueText}>{profile.emergencyContact.name}</Text>
+                        )}
                     </View>
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                             <Text style={styles.label}>Relationship</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Spouse"
-                                value={profile.emergencyContact.relationship}
-                                onChangeText={(text) => updateContact('relationship', text)}
-                            />
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Spouse"
+                                    value={profile.emergencyContact.relationship}
+                                    onChangeText={(text) => updateContact('relationship', text)}
+                                />
+                            ) : (
+                                <Text style={styles.valueText}>{profile.emergencyContact.relationship}</Text>
+                            )}
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                             <Text style={styles.label}>Phone</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="555-0123"
-                                keyboardType="phone-pad"
-                                value={profile.emergencyContact.phone}
-                                onChangeText={(text) => updateContact('phone', text)}
-                            />
+                            {isEditing ? (
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="555-0123"
+                                    keyboardType="phone-pad"
+                                    value={profile.emergencyContact.phone}
+                                    onChangeText={(text) => updateContact('phone', text)}
+                                />
+                            ) : (
+                                <Text style={styles.valueText}>{profile.emergencyContact.phone}</Text>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -333,9 +481,11 @@ export const MedicalProfileScreen = () => {
 
             <View style={styles.footer}>
                 <View style={styles.footerButtons}>
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                        <Text style={styles.saveButtonText}>Save Profile</Text>
-                    </TouchableOpacity>
+                    {isEditing && (
+                        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                            <Text style={styles.saveButtonText}>Save Changes</Text>
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity style={styles.downloadButton} onPress={handleDownloadData}>
                         <Text style={styles.downloadButtonText}>Download My Data</Text>
                     </TouchableOpacity>
@@ -405,6 +555,20 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         color: TEXT_LIGHT,
+    },
+    valueText: {
+        fontSize: 16,
+        color: TEXT_LIGHT,
+        paddingVertical: 12,
+        paddingHorizontal: 12, // Match input padding for alignment
+        backgroundColor: 'transparent',
+    },
+    pickerContainer: {
+        backgroundColor: CARD_LIGHT,
+        borderWidth: 1,
+        borderColor: BORDER_COLOR,
+        borderRadius: 8,
+        overflow: 'hidden',
     },
     chipContainer: {
         flexDirection: 'row',

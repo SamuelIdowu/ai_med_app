@@ -16,4 +16,6 @@ export type RootStackParamList = {
     ProviderList: undefined;
     ProviderDetail: { providerId: string };
     Settings: undefined;
+    AITools: undefined;
+    Notifications: undefined;
 };

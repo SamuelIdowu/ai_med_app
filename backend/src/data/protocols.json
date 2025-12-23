@@ -1,0 +1,134 @@
+{
+    "severe_bleeding": {
+        "name": "Severe Bleeding Control",
+        "steps": [
+            "Call 911 immediately if bleeding is severe or spurting",
+            "Protect yourself - wear gloves if available",
+            "Have person lie down and elevate injured area above heart if possible",
+            "Apply direct pressure with clean cloth or gauze for 10-15 minutes",
+            "If blood soaks through, add more cloth on top - DO NOT remove original",
+            "If bleeding continues after 10 minutes of pressure, apply pressure to artery",
+            "Once bleeding stops, secure bandage firmly but not too tight",
+            "Monitor for shock: pale skin, rapid pulse, weakness",
+            "Keep person warm and calm until help arrives"
+        ],
+        "warnings": [
+            "DO NOT use tourniquet unless trained",
+            "DO NOT peek under bandage - keep pressure constant",
+            "Call 911 if bleeding won't stop after 15 minutes"
+        ]
+    },
+    "choking_adult": {
+        "name": "Choking - Adult (Heimlich Maneuver)",
+        "steps": [
+            "Ask 'Are you choking?' If they can't speak/cough, act immediately",
+            "Call 911 or have someone else call",
+            "Stand behind person, wrap arms around waist",
+            "Make a fist, place thumb side against stomach above navel",
+            "Grasp fist with other hand",
+            "Give quick, upward thrusts into abdomen",
+            "Repeat 5 times, check if object expelled",
+            "Continue until object comes out or person becomes unconscious",
+            "If unconscious, begin CPR"
+        ],
+        "warnings": [
+            "DO NOT slap back if person can cough",
+            "Call 911 immediately",
+            "Even if successful, person should see doctor"
+        ]
+    },
+    "cpr_adult": {
+        "name": "CPR - Adult",
+        "steps": [
+            "Call 911 immediately",
+            "Check if person is responsive - tap shoulders and shout",
+            "Check for breathing - look, listen, feel for 10 seconds",
+            "Place person on firm, flat surface",
+            "Kneel beside chest",
+            "Place heel of one hand on center of chest, other hand on top",
+            "Push hard and fast - 2 inches deep, 100-120 compressions per minute",
+            "After 30 compressions, give 2 rescue breaths (if trained)",
+            "Continue 30:2 ratio until help arrives or person breathes"
+        ],
+        "warnings": [
+            "DO NOT stop CPR unless person starts breathing",
+            "Push HARD - you may break ribs, this is normal",
+            "Continue until paramedics arrive"
+        ]
+    },
+    "burns_minor": {
+        "name": "Minor Burns (1st/2nd Degree, small area)",
+        "steps": [
+            "Remove person from heat source",
+            "Cool burn under cool (not cold) running water for 10-20 minutes",
+            "Remove jewelry/tight clothing before swelling starts",
+            "DO NOT apply ice - only cool water",
+            "Pat dry gently with clean cloth",
+            "Apply antibiotic ointment if available",
+            "Cover with sterile, non-stick bandage",
+            "Take over-the-counter pain reliever if needed",
+            "Watch for signs of infection over next few days"
+        ],
+        "warnings": [
+            "DO NOT pop blisters",
+            "DO NOT use butter, oil, or ice",
+            "See doctor if burn is larger than 3 inches or on face/hands/genitals"
+        ]
+    },
+    "burns_severe": {
+        "name": "Severe Burns (3rd Degree or large area)",
+        "steps": [
+            "Call 911 immediately",
+            "Remove person from heat source if safe",
+            "DO NOT remove burned clothing stuck to skin",
+            "Cover burn with cool, moist, sterile bandage or clean cloth",
+            "DO NOT use ice or immerse large burns in water",
+            "Elevate burned area above heart if possible",
+            "Watch for shock: pale skin, weak pulse, rapid breathing",
+            "Keep person warm with blanket (not on burned area)",
+            "Stay with person until paramedics arrive"
+        ],
+        "warnings": [
+            "DO NOT apply ointments or creams",
+            "DO NOT break blisters",
+            "This is a medical emergency - always call 911"
+        ]
+    },
+    "fracture": {
+        "name": "Broken Bone (Fracture)",
+        "steps": [
+            "Call 911 if bone is visible, area is numb, or severe pain",
+            "DO NOT move person unless necessary",
+            "Immobilize injured area - don't try to realign",
+            "Apply ice packs wrapped in cloth (not directly on skin)",
+            "Treat for shock if needed: lay person down, elevate legs",
+            "If must move person, splint injured area first",
+            "For open fracture: cover wound with sterile bandage, don't push bone",
+            "Monitor circulation: check if area below injury is pink and warm"
+        ],
+        "warnings": [
+            "DO NOT try to straighten broken bone",
+            "DO NOT move person with suspected spine/neck injury",
+            "Always seek medical care for fractures"
+        ]
+    },
+    "allergic_reaction": {
+        "name": "Severe Allergic Reaction (Anaphylaxis)",
+        "steps": [
+            "Call 911 immediately if difficulty breathing or swelling",
+            "Help person use epinephrine auto-injector (EpiPen) if available",
+            "Have person lie down with legs elevated",
+            "Loosen tight clothing",
+            "DO NOT give anything to drink",
+            "Turn person on side if vomiting",
+            "Begin CPR if person stops breathing",
+            "Stay with person until paramedics arrive",
+            "Give paramedics names of any medications/allergens"
+        ],
+        "warnings": [
+            "This is a life-threatening emergency",
+            "Use EpiPen immediately if available",
+            "Person needs emergency medical care even after EpiPen"
+        ]
+    }
+}

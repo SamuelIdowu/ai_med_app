@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { MediaTypeOptions } from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import { EncounterService } from '../services/encounterService';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { api } from '../services/api';
 
 const PRIMARY_COLOR = '#e53734';
 const BG_LIGHT = '#f8f6f6';
@@ -14,7 +18,90 @@ const TEXT_SECONDARY = '#6b5f5f';
 
 export const AIAnalysisScreen = () => {
     const navigation = useNavigation<any>();
+    const [analyzing, setAnalyzing] = useState(false);
     const [image, setImage] = useState<string | null>(null);
+
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission needed', 'Sorry, we need camera roll permissions to make this work!');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setImage(result.assets[0].uri);
+        }
+    };
+
+    const takePhoto = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission needed', 'Sorry, we need camera permissions to make this work!');
+            return;
+        }
+
+        const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setImage(result.assets[0].uri);
+        }
+    };
+
+    const handleAnalyze = async () => {
+        if (!image) return;
+
+        setAnalyzing(true);
+        try {
+            // Convert URI to Base64
+            const response = await fetch(image);
+            const blob = await response.blob();
+            const reader = new FileReader();
+
+            reader.onloadend = async () => {
+                const base64data = reader.result;
+
+                try {
+                    const apiResponse = await api.post('/ai/analyze', {
+                        image: base64data
+                    });
+
+                    // Create encounter with the image and analysis
+                    await EncounterService.createEncounter(
+                        'AI Analysis',
+                        apiResponse.data.analysis || 'Analysis Completed',
+                        [image]
+                    );
+
+                    Alert.alert(
+                        'Analysis Result',
+                        apiResponse.data.analysis,
+                        [{ text: 'View in History', onPress: () => navigation.navigate('History') }, { text: 'OK' }]
+                    );
+                } catch (err: any) {
+                    console.error("API Error", err?.response?.data || err);
+                    Alert.alert('Analysis Failed', 'Could not analyze image.');
+                } finally {
+                    setAnalyzing(false);
+                }
+            };
+
+            reader.readAsDataURL(blob);
+
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Failed to process image. Please try again.');
+            setAnalyzing(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -38,12 +125,12 @@ export const AIAnalysisScreen = () => {
                     <View style={styles.headlineRow}>
                         <Text style={styles.headlineText}>Assess Injury</Text>
                         <View style={styles.offlineChip}>
-                            <MaterialCommunityIcons name="wifi-off" size={16} color="#065f46" />
-                            <Text style={styles.offlineText}>OFFLINE</Text>
+                            <MaterialCommunityIcons name="cloud-sync" size={16} color="#065f46" />
+                            <Text style={styles.offlineText}>ONLINE AI</Text>
                         </View>
                     </View>
                     <Text style={styles.subtext}>
-                        Snap a photo of the affected area. Our offline AI will identify the injury and suggest immediate first aid steps.
+                        Snap a photo of the affected area. Our AI will analyze the injury and save it to your history.
                     </Text>
                 </View>
 
@@ -52,44 +139,65 @@ export const AIAnalysisScreen = () => {
                     <TouchableOpacity
                         style={styles.uploadBox}
                         activeOpacity={0.8}
-                        onPress={() => {
-                            // Placeholder for image picker logic
-                            console.log('Pick image');
-                        }}
+                        onPress={pickImage}
                     >
-                        {/* Decorative background effect would be complex to replicate exactly, keeping it simple clean UI */}
-                        <View style={styles.uploadIconCircle}>
-                            <MaterialCommunityIcons name="camera-plus" size={40} color={PRIMARY_COLOR} />
-                        </View>
-                        <Text style={styles.uploadTitle}>No Image Selected</Text>
-                        <Text style={styles.uploadSubtitle}>Tap to capture or upload</Text>
+                        {image ? (
+                            <Image source={{ uri: image }} style={styles.uploadedImage} />
+                        ) : (
+                            <>
+                                {/* Decorative background effect would be complex to replicate exactly, keeping it simple clean UI */}
+                                <View style={styles.uploadIconCircle}>
+                                    <MaterialCommunityIcons name="camera-plus" size={40} color={PRIMARY_COLOR} />
+                                </View>
+                                <Text style={styles.uploadTitle}>No Image Selected</Text>
+                                <Text style={styles.uploadSubtitle}>Tap to capture or upload</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.cameraButton}>
+                        <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
                             <MaterialCommunityIcons name="camera" size={20} color="#fff" />
                             <Text style={styles.cameraButtonText}>Open Camera</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.galleryButton}>
+                        <TouchableOpacity style={styles.galleryButton} onPress={pickImage}>
                             <MaterialCommunityIcons name="image" size={20} color={TEXT_LIGHT} />
                             <Text style={styles.galleryButtonText}>Select from Gallery</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.analyzeButton,
+                                !image && styles.analyzeButtonDisabled
+                            ]}
+                            disabled={!image || analyzing}
+                            onPress={handleAnalyze}
+                        >
+                            {analyzing ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <LinearGradient
+                                        colors={image ? ['#e53734', '#ff5252'] : ['#f3f4f6', '#f3f4f6']}
+                                        style={StyleSheet.absoluteFillObject}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                    />
+                                    <MaterialCommunityIcons name="creation" size={24} color={image ? "#fff" : "#9ca3af"} style={{ zIndex: 1 }} />
+                                    <Text style={[styles.analyzeButtonText, { color: image ? "#fff" : "#9ca3af", zIndex: 1 }]}>
+                                        Analyze Image
+                                    </Text>
+                                </>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Bottom Actions */}
+                {/* Disclaimer */}
                 <View style={styles.bottomSection}>
-                    <TouchableOpacity
-                        style={[styles.analyzeButton, { opacity: 0.5 }]}
-                        disabled={true}
-                    >
-                        <MaterialCommunityIcons name="auto-fix" size={24} color="#9ca3af" />
-                        <Text style={styles.analyzeButtonText}>Analyze Image</Text>
-                    </TouchableOpacity>
-
                     <Text style={styles.disclaimer}>
-                        AI analysis runs offline on your device. Always seek professional help for serious emergencies.
+                        AI analysis results are saved to your history. Always seek professional help for serious emergencies.
                     </Text>
                 </View>
             </ScrollView>
@@ -227,6 +335,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#71717a',
     },
+    uploadedImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+        borderRadius: 12,
+    },
     actionButtons: {
         gap: 12,
         width: '100%',
@@ -275,16 +389,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        height: 60,
+        borderRadius: 30, // Pill shape
+        gap: 12,
+        overflow: 'hidden', // For gradient
+        shadowColor: PRIMARY_COLOR,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    analyzeButtonDisabled: {
+        shadowOpacity: 0,
+        elevation: 0,
         backgroundColor: '#f3f4f6',
-        height: 56,
-        borderRadius: 8,
-        gap: 8,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
     },
     analyzeButtonText: {
-        color: '#9ca3af',
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '700',
     },
     disclaimer: {
@@ -294,6 +415,7 @@ const styles = StyleSheet.create({
         lineHeight: 18,
         maxWidth: 300,
         alignSelf: 'center',
+        marginTop: 8,
     },
     bottomNav: {
         position: 'absolute',

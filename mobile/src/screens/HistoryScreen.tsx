@@ -1,80 +1,93 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SectionList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SectionList, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBar } from '../components/BottomTabBar';
+import { EncounterService } from '../services/encounterService';
+import { reportService } from '../services/reportService';
 
 const BG_LIGHT = '#f8f6f6';
 const CARD_LIGHT = '#ffffff';
 const TEXT_LIGHT = '#1b0e0e';
 const TEXT_SECONDARY = '#6b5f5f';
 
-// Mock Data matching the design
-const MOCK_DATA = [
-    {
-        title: 'RECENT',
-        data: [
-            {
-                id: '1',
-                title: 'Bleeding Incident',
-                subtitle: 'Guidance Completed',
-                date: '2 hrs ago',
-                icon: 'water', // blood-bag in map
-                iconColor: '#e53734',
-                iconBg: '#ffe5e5',
-            },
-            {
-                id: '2',
-                title: 'Report Shared',
-                subtitle: 'Sent to Dr. Smith',
-                date: 'Yesterday',
-                icon: 'share-variant',
-                iconColor: '#2b6cb0', // Blueish
-                iconBg: '#e5f0ff',
-            }
-        ]
-    },
-    {
-        title: 'LAST WEEK',
-        data: [
-            {
-                id: '3',
-                title: 'Burn Treatment',
-                subtitle: 'Severity: Moderate',
-                date: 'Oct 15',
-                icon: 'fire',
-                iconColor: '#dd6b20', // Orange
-                iconBg: '#fff0e5',
-            },
-            {
-                id: '4',
-                title: 'Injury Photo Upload',
-                subtitle: '3 Images added',
-                date: 'Oct 12',
-                icon: 'camera',
-                iconColor: '#4a5568', // Gray
-                iconBg: '#f0f2f5',
-            }
-        ]
-    },
-    {
-        title: 'OLDER',
-        data: [
-            {
-                id: '5',
-                title: 'CPR Training',
-                subtitle: 'Practice Session',
-                date: 'Sep 28',
-                icon: 'heart-pulse',
-                iconColor: '#38a169', // Green
-                iconBg: '#e6fffa',
-            }
-        ]
-    }
-];
+
 
 export const HistoryScreen = () => {
-    // In a real app we'd fetch from EncounterService
+    const [sections, setSections] = React.useState<any[]>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        loadHistory();
+    }, []);
+
+    const loadHistory = async () => {
+        try {
+            const encounters = await EncounterService.getEncounters();
+
+            // Transform to Sections suitable for SectionList
+            const transformed = encounters.map((e: any) => ({
+                id: e.id,
+                title: e.category || 'First Aid',
+                subtitle: e.notes || 'No details',
+                date: new Date(e.created_at).toLocaleDateString(),
+                icon: 'medical-bag', // Generic icon for now or map based on category
+                iconColor: '#e53734',
+                iconBg: '#ffe5e5',
+            }));
+
+            // Only set sections if we have data, otherwise empty list handling
+            if (transformed.length > 0) {
+                setSections([{
+                    title: 'RECENT ACTIVITY',
+                    data: transformed
+                }]);
+            } else {
+                setSections([]);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGenerateReport = async (encounterId: string) => {
+        try {
+            setLoading(true);
+
+            // Generate the PDF report from the backend
+            const reportUri = await reportService.generateReport(encounterId);
+
+            setLoading(false);
+
+            // Show success and offer to view/share the report
+            Alert.alert(
+                'Report Generated',
+                'Your medical report has been generated successfully.',
+                [
+                    {
+                        text: 'Share',
+                        onPress: async () => {
+                            try {
+                                await reportService.shareReport(reportUri);
+                            } catch (error) {
+                                console.error('Error sharing report:', error);
+                            }
+                        }
+                    },
+                    {
+                        text: 'OK',
+                        style: 'cancel'
+                    }
+                ]
+            );
+        } catch (error: any) {
+            setLoading(false);
+            console.error('Report generation failed', error);
+            Alert.alert('Error', error.message || 'Failed to generate report. Please try again.');
+        }
+    };
 
     const renderItem = ({ item }: { item: any }) => (
         <TouchableOpacity style={styles.card} activeOpacity={0.7}>
@@ -86,9 +99,14 @@ export const HistoryScreen = () => {
                     <Text style={styles.itemTitle}>{item.title}</Text>
                     <Text style={styles.dateText}>{item.date}</Text>
                 </View>
-                <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+                <Text style={styles.itemSubtitle} numberOfLines={1}>{item.subtitle}</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#bdc3c7" />
+            <TouchableOpacity
+                style={{ padding: 8 }}
+                onPress={() => handleGenerateReport(item.id)}
+            >
+                <MaterialCommunityIcons name="file-document-outline" size={24} color={TEXT_SECONDARY} />
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 
@@ -103,19 +121,26 @@ export const HistoryScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>History of Events</Text>
-                <TouchableOpacity style={styles.filterButton}>
-                    <MaterialCommunityIcons name="filter-variant" size={24} color={TEXT_LIGHT} />
+                <TouchableOpacity style={styles.filterButton} onPress={loadHistory}>
+                    <MaterialCommunityIcons name="refresh" size={24} color={TEXT_LIGHT} />
                 </TouchableOpacity>
             </View>
 
             <SectionList
-                sections={MOCK_DATA}
+                sections={sections}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
                 renderSectionHeader={renderSectionHeader}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
                 stickySectionHeadersEnabled={false}
+                ListEmptyComponent={
+                    !loading ? (
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                            <Text style={{ color: TEXT_SECONDARY }}>No history found</Text>
+                        </View>
+                    ) : null
+                }
             />
 
             {/* Bottom Navigation */}

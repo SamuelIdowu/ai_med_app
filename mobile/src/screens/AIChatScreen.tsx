@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { api } from '../services/api';
+import { Chat, Message } from '../types/chatTypes';
+import { createNewChat, updateChatMessages, getAllChats } from '../services/chatService';
+import { deleteChat as deleteChatFromStorage, setCurrentChatId, getCurrentChatId } from '../services/chatStorage';
+import { ChatHistorySidebar } from '../components/ChatHistorySidebar';
 
 const PRIMARY_COLOR = '#137fec';
 const BG_LIGHT = '#f6f7f8';
@@ -12,7 +17,198 @@ const TEXT_SECONDARY = '#64748b';
 
 export const AIChatScreen = () => {
     const navigation = useNavigation<any>();
+    const scrollViewRef = useRef<ScrollView>(null);
+
     const [message, setMessage] = useState('');
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [currentChatId, setCurrentChatIdState] = useState<string | null>(null);
+    const [allChats, setAllChats] = useState<Chat[]>([]);
+    const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [currentChatTitle, setCurrentChatTitle] = useState('New Chat');
+
+    // Load chats on mount
+    useEffect(() => {
+        loadChatsFromStorage();
+    }, []);
+
+    // Auto-scroll to bottom when messages change
+    useEffect(() => {
+        setTimeout(() => {
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+    }, [messages]);
+
+    const loadChatsFromStorage = async () => {
+        try {
+            const chats = await getAllChats();
+            setAllChats(chats);
+
+            // Get current chat ID or create new chat if none exists
+            let chatId = await getCurrentChatId();
+
+            if (!chatId || !chats.find(c => c.id === chatId)) {
+                // No current chat or current chat doesn't exist, create new one
+                const newChat = await createNewChat();
+                chatId = newChat.id;
+                await setCurrentChatId(chatId);
+                setAllChats(prev => [newChat, ...prev]);
+            }
+
+            // Load messages for current chat
+            const currentChat = chats.find(c => c.id === chatId);
+            if (currentChat) {
+                setMessages(currentChat.messages);
+                setCurrentChatTitle(currentChat.title);
+                setCurrentChatIdState(chatId);
+            }
+        } catch (error) {
+            console.error('Error loading chats:', error);
+        }
+    };
+
+    const saveCurrentChat = async (updatedMessages: Message[]) => {
+        if (!currentChatId) return;
+
+        try {
+            await updateChatMessages(currentChatId, updatedMessages);
+
+            // Refresh chat list to show updated title/timestamp
+            const chats = await getAllChats();
+            setAllChats(chats);
+
+            // Update current chat title if it changed
+            const updatedChat = chats.find(c => c.id === currentChatId);
+            if (updatedChat) {
+                setCurrentChatTitle(updatedChat.title);
+            }
+        } catch (error) {
+            console.error('Error saving chat:', error);
+        }
+    };
+
+    const handleNewChat = async () => {
+        try {
+            const newChat = await createNewChat();
+            await setCurrentChatId(newChat.id);
+
+            setCurrentChatIdState(newChat.id);
+            setMessages(newChat.messages);
+            setCurrentChatTitle(newChat.title);
+            setAllChats(prev => [newChat, ...prev]);
+            setSidebarVisible(false);
+        } catch (error) {
+            console.error('Error creating new chat:', error);
+        }
+    };
+
+    const handleSelectChat = async (chatId: string) => {
+        try {
+            await setCurrentChatId(chatId);
+
+            const chat = allChats.find(c => c.id === chatId);
+            if (chat) {
+                setCurrentChatIdState(chatId);
+                setMessages(chat.messages);
+                setCurrentChatTitle(chat.title);
+            }
+        } catch (error) {
+            console.error('Error selecting chat:', error);
+        }
+    };
+
+    const handleDeleteChat = async (chatId: string) => {
+        try {
+            await deleteChatFromStorage(chatId);
+            const updatedChats = allChats.filter(c => c.id !== chatId);
+            setAllChats(updatedChats);
+
+            // If deleted chat was current, create new chat
+            if (chatId === currentChatId) {
+                if (updatedChats.length > 0) {
+                    // Switch to most recent chat
+                    await handleSelectChat(updatedChats[0].id);
+                } else {
+                    // No chats left, create new one
+                    await handleNewChat();
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+        }
+    };
+
+
+
+    const sendMessage = async () => {
+        if (!message.trim()) return;
+
+        const userMsg: Message = {
+            role: 'user',
+            text: message,
+            timestamp: Date.now()
+        };
+        const newMessages = [...messages, userMsg];
+        setMessages(newMessages);
+        setMessage('');
+        setLoading(true);
+
+        try {
+            // Convert messages to history format expected by Gemini (user, model)
+            // But our backend expects { message, history }
+            // History is array of { role: 'user' | 'model', parts: [{ text: string }] }
+            const history = messages.map(m => ({
+                role: m.role,
+                parts: [{ text: m.text }]
+            }));
+
+            const response = await api.post('/ai/chat', {
+                message: userMsg.text,
+                history: history
+            });
+
+            const aiResponse = response.data.response;
+            const aiMessage: Message = {
+                role: 'model',
+                text: aiResponse,
+                timestamp: Date.now()
+            };
+            const updatedMessages = [...newMessages, aiMessage];
+            setMessages(updatedMessages);
+
+            // Auto-save to storage
+            await saveCurrentChat(updatedMessages);
+        } catch (error: any) {
+            console.error(error);
+
+            // Extract user-friendly error message from backend response
+            let errorMessage = 'Sorry, I am having trouble connecting to the server.';
+
+            if (error?.response?.data?.userMessage) {
+                // Backend returned a structured error with userMessage
+                errorMessage = error.response.data.userMessage;
+            } else if (error?.response?.status === 429) {
+                // Rate limit error
+                errorMessage = 'Too many requests. Please wait a moment before trying again.';
+            } else if (error?.message?.includes('Network Error') || !error?.response) {
+                // Network connectivity issue
+                errorMessage = 'Unable to connect. Please check your internet connection.';
+            }
+
+            const errorMsg: Message = {
+                role: 'model',
+                text: errorMessage,
+                timestamp: Date.now()
+            };
+            const updatedMessagesWithError = [...newMessages, errorMsg];
+            setMessages(updatedMessagesWithError);
+
+            // Auto-save even on error
+            await saveCurrentChat(updatedMessagesWithError);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -27,19 +223,42 @@ export const AIChatScreen = () => {
                     <MaterialCommunityIcons name="arrow-left" size={24} color={TEXT_DARK} />
                 </TouchableOpacity>
                 <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>AI Assistant</Text>
+                    <Text style={styles.headerTitle} numberOfLines={1}>{currentChatTitle}</Text>
                     <View style={styles.statusRow}>
                         <View style={styles.statusDot} />
                         <Text style={styles.statusText}>Offline Ready</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.headerButton}>
-                    <MaterialCommunityIcons name="dots-vertical" size={24} color={TEXT_DARK} />
-                </TouchableOpacity>
+                <View style={styles.headerButtons}>
+                    <TouchableOpacity
+                        style={styles.headerButton}
+                        onPress={handleNewChat}
+                    >
+                        <MaterialCommunityIcons name="plus" size={24} color={TEXT_DARK} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.headerButton}
+                        onPress={() => setSidebarVisible(true)}
+                    >
+                        <MaterialCommunityIcons name="history" size={24} color={TEXT_DARK} />
+                    </TouchableOpacity>
+                </View>
             </View>
+
+            {/* Chat History Sidebar */}
+            <ChatHistorySidebar
+                visible={sidebarVisible}
+                onClose={() => setSidebarVisible(false)}
+                chats={allChats}
+                currentChatId={currentChatId}
+                onSelectChat={handleSelectChat}
+                onNewChat={handleNewChat}
+                onDeleteChat={handleDeleteChat}
+            />
 
             {/* Chat Area */}
             <ScrollView
+                ref={scrollViewRef}
                 style={styles.chatContainer}
                 contentContainerStyle={styles.chatContent}
             >
@@ -50,61 +269,42 @@ export const AIChatScreen = () => {
                     </View>
                 </View>
 
-                {/* AI Welcome */}
-                <View style={styles.messageRow}>
-                    <View style={styles.avatarContainer}>
-                        {/* Placeholder for AI Avatar */}
-                        <MaterialCommunityIcons name="robot" size={20} color="#64748b" />
-                    </View>
-                    <View style={styles.messageContent}>
-                        <Text style={styles.senderName}>AI Assistant</Text>
-                        <View style={styles.receivedBubble}>
-                            <Text style={styles.messageText}>
-                                I am ready to help. Describe the injury or situation, or upload a photo.
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* User Message */}
-                <View style={[styles.messageRow, styles.messageRowRight]}>
-                    <View style={[styles.messageContent, styles.messageContentRight]}>
-                        <View style={styles.sentBubble}>
-                            <Text style={styles.sentMessageText}>
-                                My friend cut his hand deeply and it won't stop bleeding.
-                            </Text>
-                        </View>
-                        <Text style={styles.timestampRight}>You • Just now</Text>
-                    </View>
-                    <View style={styles.avatarContainer}>
-                        {/* Placeholder for User Avatar */}
-                        <MaterialCommunityIcons name="account" size={20} color="#64748b" />
-                    </View>
-                </View>
-
-                {/* AI Response */}
-                <View style={styles.messageRow}>
-                    <View style={styles.avatarContainer}>
-                        <MaterialCommunityIcons name="robot" size={20} color="#64748b" />
-                    </View>
-                    <View style={styles.messageContent}>
-                        <Text style={styles.senderName}>AI Assistant</Text>
-                        <View style={styles.receivedBubble}>
-                            <Text style={styles.protocolTitle}>SEVERE BLEEDING PROTOCOL</Text>
-                            <View style={styles.stepsContainer}>
-                                <Text style={styles.stepText}>
-                                    1. <Text style={styles.boldText}>Apply direct pressure</Text> to the wound immediately using a clean cloth or gauze.
-                                </Text>
-                                <Text style={styles.stepText}>
-                                    2. <Text style={styles.boldText}>Elevate the hand</Text> above heart level to reduce blood flow.
-                                </Text>
-                                <Text style={styles.stepText}>
-                                    3. <Text style={styles.boldText}>Do not remove the cloth</Text> if it soaks through; add more material on top.
+                {/* Chat Messages */}
+                {messages.map((msg, index) => (
+                    <View key={index} style={[styles.messageRow, msg.role === 'user' ? styles.messageRowRight : {}]}>
+                        {msg.role === 'model' && (
+                            <View style={styles.avatarContainer}>
+                                <MaterialCommunityIcons name="robot" size={20} color="#64748b" />
+                            </View>
+                        )}
+                        <View style={[styles.messageContent, msg.role === 'user' ? styles.messageContentRight : {}]}>
+                            {msg.role === 'model' && <Text style={styles.senderName}>AI Assistant</Text>}
+                            <View style={msg.role === 'user' ? styles.sentBubble : styles.receivedBubble}>
+                                <Text style={msg.role === 'user' ? styles.sentMessageText : styles.messageText}>
+                                    {msg.text}
                                 </Text>
                             </View>
                         </View>
+                        {msg.role === 'user' && (
+                            <View style={styles.avatarContainer}>
+                                <MaterialCommunityIcons name="account" size={20} color="#64748b" />
+                            </View>
+                        )}
                     </View>
-                </View>
+                ))}
+
+                {loading && (
+                    <View style={styles.messageRow}>
+                        <View style={styles.avatarContainer}>
+                            <MaterialCommunityIcons name="robot" size={20} color="#64748b" />
+                        </View>
+                        <View style={styles.messageContent}>
+                            <View style={styles.receivedBubble}>
+                                <ActivityIndicator size="small" color="#64748b" />
+                            </View>
+                        </View>
+                    </View>
+                )}
 
                 {/* Warning Card */}
                 <View style={styles.messageRow}>
@@ -157,8 +357,12 @@ export const AIChatScreen = () => {
                             </TouchableOpacity>
                         </View>
 
-                        <TouchableOpacity style={styles.sendButton}>
-                            <MaterialCommunityIcons name="send" size={20} color="#fff" />
+                        <TouchableOpacity style={styles.sendButton} onPress={sendMessage} disabled={loading}>
+                            {loading ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                            ) : (
+                                <MaterialCommunityIcons name="send" size={20} color="#fff" />
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -188,6 +392,10 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 20,
         backgroundColor: '#f8fafc',
+    },
+    headerButtons: {
+        flexDirection: 'row',
+        gap: 8,
     },
     headerTitleContainer: {
         alignItems: 'center',

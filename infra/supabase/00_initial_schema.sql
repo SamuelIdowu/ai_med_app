@@ -90,6 +90,44 @@ ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 -- Policy: Users can see their own data
 CREATE POLICY "Users can view own profile" ON public.users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Medical Profiles Policies
+CREATE POLICY "Users can view own medical profile" ON public.medical_profiles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own medical profile" ON public.medical_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own medical profile" ON public.medical_profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- Encounters Policies
+CREATE POLICY "Users can view own encounters" ON public.encounters FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own encounters" ON public.encounters FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Photos Policies
+CREATE POLICY "Users can view own photos" ON public.photos FOR SELECT 
+  USING (EXISTS (
+    SELECT 1 FROM public.encounters 
+    WHERE encounters.id = photos.encounter_id 
+    AND encounters.user_id = auth.uid()
+  ));
+CREATE POLICY "Users can insert own photos" ON public.photos FOR INSERT 
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.encounters 
+    WHERE encounters.id = photos.encounter_id 
+    AND encounters.user_id = auth.uid()
+  ));
+
+-- Reports Policies
+CREATE POLICY "Users can view own reports" ON public.reports FOR SELECT 
+  USING (EXISTS (
+    SELECT 1 FROM public.encounters 
+    WHERE encounters.id = reports.encounter_id 
+    AND encounters.user_id = auth.uid()
+  ));
+CREATE POLICY "Users can insert own reports" ON public.reports FOR INSERT 
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.encounters 
+    WHERE encounters.id = reports.encounter_id 
+    AND encounters.user_id = auth.uid()
+  ));
 
 -- Trigger to handle updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

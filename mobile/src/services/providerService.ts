@@ -48,11 +48,21 @@ const MOCK_PROVIDERS: Provider[] = [
 export const ProviderService = {
     getProviders: async (): Promise<Provider[]> => {
         try {
-            const response = await api.get('/providers');
+            console.log('Fetching providers from:', api.defaults.baseURL + '/providers');
+            // Race between API call and 5s timeout
+            const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Request timed out')), 5000)
+            );
+
+            const response = await Promise.race([
+                api.get('/providers'),
+                timeoutPromise
+            ]) as any;
+
             return response.data;
         } catch (e) {
-            console.error('Failed to fetch providers', e);
-            // Fallback to mock if offline
+            console.error('Failed to fetch providers (or timed out)', e);
+            // Fallback to mock if offline or timed out
             return MOCK_PROVIDERS;
         }
     },
@@ -61,13 +71,22 @@ export const ProviderService = {
         // Ideally backend would have a search endpoint e.g. /providers?q=...
         // For now, we fetch all and filter client side OR use the same mock filter on the backend response
         try {
-            const response = await api.get('/providers');
+            const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Request timed out')), 5000)
+            );
+
+            const response = await Promise.race([
+                api.get('/providers'),
+                timeoutPromise
+            ]) as any;
+
             const lowerQuery = query.toLowerCase();
             return response.data.filter((p: Provider) =>
                 p.name?.toLowerCase().includes(lowerQuery) ||
                 p.type?.toLowerCase().includes(lowerQuery)
             );
         } catch (e) {
+            console.error('Failed to search providers (or timed out)', e);
             return MOCK_PROVIDERS.filter(p =>
                 p.name?.toLowerCase().includes(query.toLowerCase()) ||
                 p.type?.toLowerCase().includes(query.toLowerCase())

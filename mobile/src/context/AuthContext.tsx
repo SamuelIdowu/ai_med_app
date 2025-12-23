@@ -6,6 +6,8 @@ type AuthContextType = {
     session: Session | null;
     user: User | null;
     loading: boolean;
+    isGuest: boolean;
+    enterGuestMode: () => void;
     signOut: () => Promise<void>;
 };
 
@@ -13,6 +15,8 @@ const AuthContext = createContext<AuthContextType>({
     session: null,
     user: null,
     loading: true,
+    isGuest: false,
+    enterGuestMode: () => { },
     signOut: async () => { },
 });
 
@@ -20,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isGuest, setIsGuest] = useState(false);
 
     useEffect(() => {
         // Wait for both session check and splash animation (2.5s)
@@ -45,12 +50,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, []);
 
+    const enterGuestMode = () => {
+        setIsGuest(true);
+    };
+
     const signOut = async () => {
-        await supabase.auth.signOut();
+        if (isGuest) {
+            setIsGuest(false);
+        } else {
+            await supabase.auth.signOut();
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ session, user, loading, signOut }}>
+        <AuthContext.Provider value={{ session, user, loading, isGuest, enterGuestMode, signOut }}>
             {children}
         </AuthContext.Provider>
     );

@@ -144,6 +144,12 @@ export const SettingsScreen = () => {
                     <Text style={styles.sectionTitle}>ACCOUNT</Text>
                     <View style={styles.sectionContent}>
                         <OptionItem
+                            icon="notifications"
+                            label="Notifications"
+                            onPress={() => navigation.navigate('Notifications')}
+                        />
+                        <View style={styles.separator} />
+                        <OptionItem
                             icon="person"
                             label="Edit Profile"
                             onPress={() => navigation.navigate('MedicalProfile')}

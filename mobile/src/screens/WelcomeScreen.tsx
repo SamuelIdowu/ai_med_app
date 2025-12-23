@@ -1,46 +1,82 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Animated, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
+import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+
+const { height, width } = Dimensions.get('window');
 
 export const WelcomeScreen = () => {
     const navigation = useNavigation<any>();
+    const { enterGuestMode } = useAuth();
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    // Simple float animation for the main image/icon
+    const floatAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
+
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(floatAnim, {
+                    toValue: 10,
+                    duration: 2000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(floatAnim, {
+                    toValue: 0,
+                    duration: 2000,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F8F6F6" />
-            <View style={styles.contentContainer}>
-                {/* Logo Container */}
-                <View style={styles.logoContainer}>
-                    <View style={styles.logoBackground}>
-                        <MaterialIcons name="health-and-safety" size={48} color="#E53734" />
-                    </View>
+            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-                    {/* HeadlineText */}
-                    <Text style={styles.headline}>Your First Aid Companion</Text>
+            <View style={styles.content}>
 
-                    {/* BodyText */}
-                    <Text style={styles.bodyText}>Reliable offline steps for emergencies.</Text>
+                {/* Illustration Area */}
+                <Animated.View style={[styles.imageContainer, { opacity: fadeAnim, transform: [{ translateY: floatAnim }] }]}>
+                    {/* Placeholder for the vector art in design (pills, doctor kit, etc) */}
+                    <View style={styles.circleDecoration} />
+                    {/* Using a placeholder text/icon if no image asset available, but structure allows for Image */}
+                    {/* <Image source={require('../assets/hero.png')} style={styles.heroImage} resizeMode="contain" /> */}
+                    <Text style={{ fontSize: 80 }}>💊</Text>
+                    <Text style={{ fontSize: 80, position: 'absolute', top: 40, right: 60 }}>🩺</Text>
+                </Animated.View>
+
+                {/* Text Area */}
+                <View style={styles.textContainer}>
+                    <Text style={styles.title}>Find the best{"\n"}doctor and medicine{"\n"}for you.</Text>
                 </View>
 
-                {/* CTA Container */}
-                <View style={styles.widthFull}>
+                {/* Actions */}
+                <View style={styles.actions}>
                     <TouchableOpacity
                         style={styles.primaryButton}
-                        onPress={() => navigation.navigate('Permissions')}
+                        onPress={() => navigation.navigate('Signup')}
                         activeOpacity={0.8}
                     >
                         <Text style={styles.primaryButtonText}>Get Started</Text>
                     </TouchableOpacity>
 
-                    {/* MetaText */}
-                    <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                        <Text style={styles.metaText}>
-                            Already have an account? <Text style={styles.linkText}>Sign In</Text>
-                        </Text>
+                    <TouchableOpacity
+                        onPress={enterGuestMode}
+                        style={{ padding: 10 }}
+                    >
+                        <Text style={styles.linkText}>Skip</Text>
                     </TouchableOpacity>
                 </View>
+
             </View>
         </SafeAreaView>
     );
@@ -49,69 +85,64 @@ export const WelcomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F6F6',
+        backgroundColor: COLORS.background,
     },
-    contentContainer: {
+    content: {
         flex: 1,
         justifyContent: 'space-between',
-        padding: 16,
+        paddingHorizontal: 24,
+        paddingBottom: 40,
+        paddingTop: 60,
     },
-    logoContainer: {
+    imageContainer: {
+        flex: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    circleDecoration: {
+        position: 'absolute',
+        width: width * 0.8,
+        height: width * 0.8,
+        borderRadius: (width * 0.8) / 2,
+        backgroundColor: COLORS.inputBackground, // Subtle gray circle behind
+        zIndex: -1,
+    },
+    textContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    logoBackground: {
-        width: 80,
-        height: 80,
-        borderRadius: 12, // rounded-xl
-        backgroundColor: 'rgba(229, 55, 52, 0.1)', // bg-primary/10
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 32,
-    },
-    headline: {
-        color: '#1B0E0E',
-        fontSize: 32,
+    title: {
+        fontSize: 28,
+        fontFamily: 'System', // Use default bold if custom font not loaded
         fontWeight: 'bold',
+        color: COLORS.textPrimary,
         textAlign: 'center',
-        lineHeight: 38, // tracking-tight leads to tighter spacing, adjusting line height accordingly
-        paddingBottom: 12,
+        lineHeight: 40,
     },
-    bodyText: {
-        color: 'rgba(27, 14, 14, 0.8)', // text-[#1b0e0e]/80
-        fontSize: 16,
-        textAlign: 'center',
-        lineHeight: 24,
-        maxWidth: 320,
-    },
-    widthFull: {
-        width: '100%',
-        paddingBottom: 24,
+    actions: {
+        alignItems: 'center',
+        gap: 16,
     },
     primaryButton: {
-        backgroundColor: '#E53734', // bg-primary
-        height: 48,
-        borderRadius: 8, // rounded-lg
+        backgroundColor: COLORS.textPrimary, // Dark button as per the 2nd image (Get Started is dark Navy/Black)
+        // Or if matching the 1st image blue theme:
+        // backgroundColor: COLORS.primary, 
+        width: '100%',
+        height: 56,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 12,
+        ...SHADOWS.medium,
     },
     primaryButtonText: {
-        color: '#FBF8F8',
+        color: '#FFF',
         fontSize: 16,
-        fontWeight: 'bold',
-        letterSpacing: 0.24, // tracking-[0.015em] -> approx 0.015 * 16
-    },
-    metaText: {
-        color: '#96504F',
-        fontSize: 14,
-        textAlign: 'center',
-        textDecorationLine: 'underline',
-        paddingTop: 4,
-        paddingBottom: 12,
+        fontWeight: '600',
     },
     linkText: {
-        // Inherits style, but explicit if needed
+        color: COLORS.placeholder,
+        fontSize: 14,
     }
 });

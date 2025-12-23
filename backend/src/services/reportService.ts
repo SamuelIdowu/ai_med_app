@@ -2,10 +2,10 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { getProfile } from './profileService';
 import { getEncounter } from './encounterService';
 
-export const generateReport = async (userId: string, encounterId: string) => {
+export const generateReport = async (userId: string, encounterId: string, token: string) => {
     const [profile, encounter] = await Promise.all([
-        getProfile(userId),
-        getEncounter(encounterId, userId)
+        getProfile(userId, token),
+        getEncounter(encounterId, userId, token)
     ]);
 
     if (!encounter) {

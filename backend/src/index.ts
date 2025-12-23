@@ -2,8 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config({ path: '../.env' }); // Load from root .env
+dotenv.config({ path: path.resolve(__dirname, '../../.env') }); // Load from root .env
+
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,6 +20,8 @@ import profileRoutes from './routes/profile';
 import encounterRoutes from './routes/encounters';
 import reportRoutes from './routes/reports';
 import providerRoutes from './routes/providers';
+import authRoutes from './routes/auth';
+import aiRoutes from './routes/ai';
 
 app.get('/', (req, res) => {
     res.send('AI First Aid App Backend is running');
@@ -24,7 +29,7 @@ app.get('/', (req, res) => {
 
 // Request Logger
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip}`);
     next();
 });
 
@@ -33,6 +38,8 @@ app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/encounters', encounterRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/providers', providerRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/ai', aiRoutes);
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

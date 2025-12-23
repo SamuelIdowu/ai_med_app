@@ -9,7 +9,8 @@ router.use(authenticateUser);
 
 router.get('/', async (req, res) => {
     try {
-        const profile = await getProfile(req.user.id);
+        const token = req.headers.authorization?.split(' ')[1] || '';
+        const profile = await getProfile(req.user.id, token);
         if (!profile) {
             return res.status(404).json({ message: 'Profile not found' });
         }
@@ -21,7 +22,8 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const profile = await upsertProfile(req.user.id, req.body);
+        const token = req.headers.authorization?.split(' ')[1] || '';
+        const profile = await upsertProfile(req.user.id, req.body, token);
         res.json(profile);
     } catch (error: any) {
         res.status(500).json({ error: error.message });

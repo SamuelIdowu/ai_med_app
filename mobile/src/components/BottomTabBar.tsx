@@ -7,7 +7,7 @@ const PRIMARY_COLOR = '#e53734';
 const SECONDARY_TEXT_LIGHT = '#6b5f5f';
 
 interface BottomTabBarProps {
-    activeRoute: 'Home' | 'History' | 'Profile';
+    activeRoute: 'Home' | 'History' | 'Profile' | 'AITools';
 }
 
 export const BottomTabBar = ({ activeRoute }: BottomTabBarProps) => {
@@ -26,6 +26,12 @@ export const BottomTabBar = ({ activeRoute }: BottomTabBarProps) => {
                 label="History"
                 active={activeRoute === 'History'}
                 onPress={() => navigation.navigate('History')}
+            />
+            <BottomNavItem
+                icon="robot"
+                label="AI Tools"
+                active={activeRoute === 'AITools'}
+                onPress={() => navigation.navigate('AITools')}
             />
             <BottomNavItem
                 icon="account"

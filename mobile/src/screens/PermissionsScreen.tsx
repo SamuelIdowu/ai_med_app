@@ -13,10 +13,7 @@ export const PermissionsScreen = () => {
     const [reportSharing, setReportSharing] = useState(false);
 
     const handleAgree = () => {
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'CreateProfile' }],
-        });
+        navigation.navigate('CreateProfile');
     };
 
     return (
@@ -26,14 +23,7 @@ export const PermissionsScreen = () => {
             {/* Top App Bar */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    onPress={() => {
-                        if (navigation.canGoBack()) {
-                            navigation.goBack();
-                        } else {
-                            // Fallback to Welcome if no history (e.g. refreshed on this screen)
-                            navigation.navigate('Welcome');
-                        }
-                    }}
+                    onPress={() => navigation.navigate('Welcome')}
                     style={styles.iconButton}
                 >
                     <MaterialCommunityIcons name="chevron-left" size={32} color="#1B0E0E" />
