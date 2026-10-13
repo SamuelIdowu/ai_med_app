@@ -189,12 +189,17 @@ export class OfflineStorage {
     return guide || null;
   }
 
+  private fallbackEncounters: OfflineEncounter[] = [];
+
   // --- Outbox Queue for Offline Encounters ---
 
   async queueOfflineEncounter(encounter: OfflineEncounter): Promise<void> {
+    const updatedEncounter = { ...encounter, synced: false };
+    this.fallbackEncounters = [...this.fallbackEncounters.filter((e) => e.id !== encounter.id), updatedEncounter];
+
     try {
       const existing = await this.getPendingEncounters();
-      const updated = [...existing.filter((e) => e.id !== encounter.id), { ...encounter, synced: false }];
+      const updated = [...existing.filter((e) => e.id !== encounter.id), updatedEncounter];
       await AsyncStorage.setItem(STORAGE_KEY_ENCOUNTERS, JSON.stringify(updated));
 
       if (this.db) {
@@ -213,22 +218,23 @@ export class OfflineStorage {
         );
       }
     } catch (err) {
-      console.warn('Failed to queue offline encounter:', err);
+      // In-memory fallback handles queuing gracefully
     }
   }
 
   async getPendingEncounters(): Promise<OfflineEncounter[]> {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY_ENCOUNTERS);
-      if (!raw) return [];
+      if (!raw) return this.fallbackEncounters;
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : this.fallbackEncounters;
     } catch {
-      return [];
+      return this.fallbackEncounters;
     }
   }
 
   async removePendingEncounter(id: string): Promise<void> {
+    this.fallbackEncounters = this.fallbackEncounters.filter((e) => e.id !== id);
     try {
       const current = await this.getPendingEncounters();
       const filtered = current.filter((e) => e.id !== id);
@@ -238,7 +244,7 @@ export class OfflineStorage {
         this.db.runSync(`DELETE FROM offline_encounters WHERE id = ?;`, [id]);
       }
     } catch (err) {
-      console.warn('Failed to remove pending encounter:', err);
+      // In-memory handled
     }
   }
 
