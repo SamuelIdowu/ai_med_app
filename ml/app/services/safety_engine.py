@@ -2,11 +2,11 @@ from typing import List, Dict
 import re
 
 CRITICAL_EMERGENCY_RULES: Dict[str, str] = {
-    "anaphylaxis": r"(throat is closing|can't breathe|cant breathe|swollen tongue|difficulty swallowing|bee sting.*breathe)",
-    "cardiac": r"(chest pain|heart attack|crushing chest|pain in left arm|pressure in chest)",
-    "stroke": r"(face drooping|slurred speech|arm weakness|cannot speak)",
-    "massive_hemorrhage": r"(spurting blood|uncontrolled bleeding|gushing blood|pools of blood)",
-    "airway_obstruction": r"(choking|airway blocked|turning blue)"
+    "anaphylaxis": r"(throat is closing|can't breathe|cant breathe|swollen tongue|difficulty swallowing|bee sting.*breathe|swelling lips|anaphylaxis)",
+    "cardiac": r"(chest pain|heart attack|crushing (chest|pain)|pressure in chest|pain in (the )?left arm|crushing.*chest)",
+    "stroke": r"(face drooping|slurred speech|arm weakness|cannot speak|facial droop)",
+    "massive_hemorrhage": r"(spurting blood|uncontrolled bleeding|gushing blood|pools of blood|arterial (bleeding|laceration))",
+    "airway_obstruction": r"(choking|airway blocked|turning blue|gasping.*cannot cry|high pitched squeaking|clutching throat)"
 }
 
 class SafetyEngine:
