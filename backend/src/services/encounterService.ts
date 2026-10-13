@@ -42,3 +42,34 @@ export const getEncounters = async (userId: string, token: string) => {
     if (error) throw error;
     return data;
 };
+
+export const updateEncounter = async (encounterId: string, userId: string, updates: any, token: string) => {
+    const supabaseClient = createAuthenticatedClient(token);
+
+    const { data, error } = await supabaseClient
+        .from('encounters')
+        .update({
+            ...updates,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('id', encounterId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const deleteEncounter = async (encounterId: string, userId: string, token: string) => {
+    const supabaseClient = createAuthenticatedClient(token);
+
+    const { error } = await supabaseClient
+        .from('encounters')
+        .delete()
+        .eq('id', encounterId)
+        .eq('user_id', userId);
+
+    if (error) throw error;
+    return { success: true };
+};

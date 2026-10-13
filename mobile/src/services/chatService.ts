@@ -1,5 +1,5 @@
 import { Chat, Message } from '../types/chatTypes';
-import { saveChat, loadAllChats } from './chatStorage';
+import { saveChat, loadAllChats, saveAllChats } from './chatStorage';
 
 /**
  * Generate a unique chat ID
@@ -85,5 +85,5 @@ export const deleteAllChats = async (): Promise<void> => {
     const storage = await loadAllChats();
     storage.chats = [];
     storage.currentChatId = null;
-    await saveChat;
+    await saveAllChats(storage);
 };

@@ -1,629 +1,846 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  Image,
+  Alert,
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Markdown from 'react-native-markdown-display';
 import { api } from '../services/api';
 import { Chat, Message } from '../types/chatTypes';
 import { createNewChat, updateChatMessages, getAllChats } from '../services/chatService';
 import { deleteChat as deleteChatFromStorage, setCurrentChatId, getCurrentChatId } from '../services/chatStorage';
 import { ChatHistorySidebar } from '../components/ChatHistorySidebar';
+import { ThingsYouCanDoCards, ActionCardItem } from '../components/chat/ThingsYouCanDoCards';
+import { FloatingChatInput, AttachedMedia } from '../components/chat/FloatingChatInput';
+import { VoiceWaveformModal } from '../components/chat/VoiceWaveformModal';
+import { MediaAttachmentModal, MediaCaptureAction } from '../components/chat/MediaAttachmentModal';
+import { MedicalCard } from '../components/ui/MedicalCard';
+import { theme } from '../theme';
 
-const PRIMARY_COLOR = '#137fec';
-const BG_LIGHT = '#f6f7f8';
-const TEXT_DARK = '#0f172a';
-const TEXT_SECONDARY = '#64748b';
+const QUICK_SUGGESTIONS = [
+  { label: 'CPR Steps', icon: 'heart-pulse', prompt: 'Walk me through CPR step by step.' },
+  { label: 'Choking', icon: 'lungs', prompt: 'What should I do if someone is choking?' },
+  { label: 'Severe Bleed', icon: 'water', prompt: 'How do I stop severe bleeding?' },
+  { label: 'Burns', icon: 'fire', prompt: 'How should I treat a burn injury?' },
+  { label: 'Shock', icon: 'alert-circle-outline', prompt: 'What are the signs of shock and how do I treat it?' },
+  { label: 'Seizure', icon: 'lightning-bolt', prompt: 'What should I do if someone is having a seizure?' },
+  { label: 'Allergic', icon: 'bee-flower', prompt: 'How do I handle a severe allergic reaction or anaphylaxis?' },
+];
 
-export const AIChatScreen = () => {
-    const navigation = useNavigation<any>();
-    const scrollViewRef = useRef<ScrollView>(null);
+export const AIChatScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const scrollViewRef = useRef<ScrollView>(null);
 
-    const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [currentChatId, setCurrentChatIdState] = useState<string | null>(null);
-    const [allChats, setAllChats] = useState<Chat[]>([]);
-    const [sidebarVisible, setSidebarVisible] = useState(false);
-    const [currentChatTitle, setCurrentChatTitle] = useState('New Chat');
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentChatId, setCurrentChatIdState] = useState<string | null>(null);
+  const [allChats, setAllChats] = useState<Chat[]>([]);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [mediaModalVisible, setMediaModalVisible] = useState(false);
+  const [attachedMedia, setAttachedMedia] = useState<AttachedMedia | null>(null);
+  const [currentChatTitle, setCurrentChatTitle] = useState('New Triage');
 
-    // Load chats on mount
-    useEffect(() => {
-        loadChatsFromStorage();
-    }, []);
+  useEffect(() => {
+    loadChatsFromStorage();
+  }, []);
 
-    // Auto-scroll to bottom when messages change
-    useEffect(() => {
-        setTimeout(() => {
-            scrollViewRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-    }, [messages]);
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, [messages]);
 
-    const loadChatsFromStorage = async () => {
-        try {
-            const chats = await getAllChats();
-            setAllChats(chats);
+  const loadChatsFromStorage = async () => {
+    try {
+      let chats = await getAllChats();
+      let chatId = await getCurrentChatId();
+      let currentChat = chats.find((c) => c.id === chatId);
 
-            // Get current chat ID or create new chat if none exists
-            let chatId = await getCurrentChatId();
+      if (!chatId || !currentChat) {
+        const newChat = await createNewChat();
+        chatId = newChat.id;
+        await setCurrentChatId(chatId);
+        chats = [newChat, ...chats];
+        currentChat = newChat;
+      }
 
-            if (!chatId || !chats.find(c => c.id === chatId)) {
-                // No current chat or current chat doesn't exist, create new one
-                const newChat = await createNewChat();
-                chatId = newChat.id;
-                await setCurrentChatId(chatId);
-                setAllChats(prev => [newChat, ...prev]);
-            }
+      setAllChats(chats);
+      setCurrentChatIdState(chatId);
 
-            // Load messages for current chat
-            const currentChat = chats.find(c => c.id === chatId);
-            if (currentChat) {
-                setMessages(currentChat.messages);
-                setCurrentChatTitle(currentChat.title);
-                setCurrentChatIdState(chatId);
-            }
-        } catch (error) {
-            console.error('Error loading chats:', error);
+      if (currentChat) {
+        setMessages(currentChat.messages);
+        setCurrentChatTitle(currentChat.title);
+      }
+    } catch (error) {
+      console.error('Error loading chats:', error);
+    }
+  };
+
+  const saveCurrentChat = async (updatedMessages: Message[]) => {
+    if (!currentChatId) return;
+    try {
+      await updateChatMessages(currentChatId, updatedMessages);
+      const chats = await getAllChats();
+      setAllChats(chats);
+      const updatedChat = chats.find((c) => c.id === currentChatId);
+      if (updatedChat) {
+        setCurrentChatTitle(updatedChat.title);
+      }
+    } catch (error) {
+      console.error('Error saving chat:', error);
+    }
+  };
+
+  const handleNewChat = async () => {
+    try {
+      const newChat = await createNewChat();
+      await setCurrentChatId(newChat.id);
+      setCurrentChatIdState(newChat.id);
+      setMessages(newChat.messages);
+      setCurrentChatTitle(newChat.title);
+      setAllChats((prev) => [newChat, ...prev]);
+      setSidebarVisible(false);
+      setAttachedMedia(null);
+    } catch (error) {
+      console.error('Error creating new chat:', error);
+    }
+  };
+
+  const handleSelectChat = async (chatId: string) => {
+    try {
+      await setCurrentChatId(chatId);
+      const chat = allChats.find((c) => c.id === chatId);
+      if (chat) {
+        setCurrentChatIdState(chatId);
+        setMessages(chat.messages);
+        setCurrentChatTitle(chat.title);
+        setAttachedMedia(null);
+      }
+    } catch (error) {
+      console.error('Error selecting chat:', error);
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await deleteChatFromStorage(chatId);
+      const updatedChats = allChats.filter((c) => c.id !== chatId);
+      setAllChats(updatedChats);
+      if (chatId === currentChatId) {
+        if (updatedChats.length > 0) {
+          await handleSelectChat(updatedChats[0].id);
+        } else {
+          await handleNewChat();
         }
-    };
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+    }
+  };
 
-    const saveCurrentChat = async (updatedMessages: Message[]) => {
-        if (!currentChatId) return;
-
-        try {
-            await updateChatMessages(currentChatId, updatedMessages);
-
-            // Refresh chat list to show updated title/timestamp
-            const chats = await getAllChats();
-            setAllChats(chats);
-
-            // Update current chat title if it changed
-            const updatedChat = chats.find(c => c.id === currentChatId);
-            if (updatedChat) {
-                setCurrentChatTitle(updatedChat.title);
-            }
-        } catch (error) {
-            console.error('Error saving chat:', error);
+  const handleSelectMediaAction = async (action: MediaCaptureAction) => {
+    try {
+      if (action === 'take_photo') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Camera Permission Required', 'Please enable camera access to take triage photos.');
+          return;
         }
-    };
-
-    const handleNewChat = async () => {
-        try {
-            const newChat = await createNewChat();
-            await setCurrentChatId(newChat.id);
-
-            setCurrentChatIdState(newChat.id);
-            setMessages(newChat.messages);
-            setCurrentChatTitle(newChat.title);
-            setAllChats(prev => [newChat, ...prev]);
-            setSidebarVisible(false);
-        } catch (error) {
-            console.error('Error creating new chat:', error);
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+        if (!result.canceled && result.assets?.[0]?.uri) {
+          setAttachedMedia({
+            uri: result.assets[0].uri,
+            type: 'image',
+          });
         }
-    };
-
-    const handleSelectChat = async (chatId: string) => {
-        try {
-            await setCurrentChatId(chatId);
-
-            const chat = allChats.find(c => c.id === chatId);
-            if (chat) {
-                setCurrentChatIdState(chatId);
-                setMessages(chat.messages);
-                setCurrentChatTitle(chat.title);
-            }
-        } catch (error) {
-            console.error('Error selecting chat:', error);
+      } else if (action === 'record_video') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Camera Permission Required', 'Please enable camera access to record triage videos.');
+          return;
         }
-    };
-
-    const handleDeleteChat = async (chatId: string) => {
-        try {
-            await deleteChatFromStorage(chatId);
-            const updatedChats = allChats.filter(c => c.id !== chatId);
-            setAllChats(updatedChats);
-
-            // If deleted chat was current, create new chat
-            if (chatId === currentChatId) {
-                if (updatedChats.length > 0) {
-                    // Switch to most recent chat
-                    await handleSelectChat(updatedChats[0].id);
-                } else {
-                    // No chats left, create new one
-                    await handleNewChat();
-                }
-            }
-        } catch (error) {
-            console.error('Error deleting chat:', error);
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+          allowsEditing: true,
+          videoMaxDuration: 60,
+        });
+        if (!result.canceled && result.assets?.[0]?.uri) {
+          setAttachedMedia({
+            uri: result.assets[0].uri,
+            type: 'video',
+          });
         }
-    };
-
-
-
-    const sendMessage = async () => {
-        if (!message.trim()) return;
-
-        const userMsg: Message = {
-            role: 'user',
-            text: message,
-            timestamp: Date.now()
-        };
-        const newMessages = [...messages, userMsg];
-        setMessages(newMessages);
-        setMessage('');
-        setLoading(true);
-
-        try {
-            // Convert messages to history format expected by Gemini (user, model)
-            // But our backend expects { message, history }
-            // History is array of { role: 'user' | 'model', parts: [{ text: string }] }
-            const history = messages.map(m => ({
-                role: m.role,
-                parts: [{ text: m.text }]
-            }));
-
-            const response = await api.post('/ai/chat', {
-                message: userMsg.text,
-                history: history
-            });
-
-            const aiResponse = response.data.response;
-            const aiMessage: Message = {
-                role: 'model',
-                text: aiResponse,
-                timestamp: Date.now()
-            };
-            const updatedMessages = [...newMessages, aiMessage];
-            setMessages(updatedMessages);
-
-            // Auto-save to storage
-            await saveCurrentChat(updatedMessages);
-        } catch (error: any) {
-            console.error(error);
-
-            // Extract user-friendly error message from backend response
-            let errorMessage = 'Sorry, I am having trouble connecting to the server.';
-
-            if (error?.response?.data?.userMessage) {
-                // Backend returned a structured error with userMessage
-                errorMessage = error.response.data.userMessage;
-            } else if (error?.response?.status === 429) {
-                // Rate limit error
-                errorMessage = 'Too many requests. Please wait a moment before trying again.';
-            } else if (error?.message?.includes('Network Error') || !error?.response) {
-                // Network connectivity issue
-                errorMessage = 'Unable to connect. Please check your internet connection.';
-            }
-
-            const errorMsg: Message = {
-                role: 'model',
-                text: errorMessage,
-                timestamp: Date.now()
-            };
-            const updatedMessagesWithError = [...newMessages, errorMsg];
-            setMessages(updatedMessagesWithError);
-
-            // Auto-save even on error
-            await saveCurrentChat(updatedMessagesWithError);
-        } finally {
-            setLoading(false);
+      } else if (action === 'pick_photo') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Photos Permission Required', 'Please grant access to your photo library.');
+          return;
         }
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+        if (!result.canceled && result.assets?.[0]?.uri) {
+          setAttachedMedia({
+            uri: result.assets[0].uri,
+            type: 'image',
+          });
+        }
+      } else if (action === 'pick_video') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Photos Permission Required', 'Please grant access to your media library.');
+          return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+          allowsEditing: true,
+        });
+        if (!result.canceled && result.assets?.[0]?.uri) {
+          setAttachedMedia({
+            uri: result.assets[0].uri,
+            type: 'video',
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('Error handling media action:', err);
+      Alert.alert('Media Error', 'Failed to capture or select media. Please try again.');
+    }
+  };
+
+  const sendMessage = async (overrideText?: string) => {
+    const rawText = (overrideText ?? message).trim();
+    if (!rawText && !attachedMedia) return;
+
+    const currentMedia = attachedMedia;
+    const text =
+      rawText ||
+      (currentMedia?.type === 'video'
+        ? 'I have attached a video clip of the condition for triage assessment.'
+        : 'I have attached an image of the condition for triage assessment.');
+
+    const userMsg: Message = {
+      role: 'user',
+      text,
+      timestamp: Date.now(),
+      mediaUri: currentMedia?.uri,
+      mediaType: currentMedia?.type,
     };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setMessage('');
+    setAttachedMedia(null);
+    setLoading(true);
 
-    return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-            <StatusBar style="dark" />
+    try {
+      const history = messages.map((m) => ({
+        role: m.role,
+        parts: [{ text: m.text }],
+      }));
 
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={styles.headerButton}
-                >
-                    <MaterialCommunityIcons name="arrow-left" size={24} color={TEXT_DARK} />
-                </TouchableOpacity>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle} numberOfLines={1}>{currentChatTitle}</Text>
-                    <View style={styles.statusRow}>
-                        <View style={styles.statusDot} />
-                        <Text style={styles.statusText}>Offline Ready</Text>
-                    </View>
-                </View>
-                <View style={styles.headerButtons}>
-                    <TouchableOpacity
-                        style={styles.headerButton}
-                        onPress={handleNewChat}
-                    >
-                        <MaterialCommunityIcons name="plus" size={24} color={TEXT_DARK} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.headerButton}
-                        onPress={() => setSidebarVisible(true)}
-                    >
-                        <MaterialCommunityIcons name="history" size={24} color={TEXT_DARK} />
-                    </TouchableOpacity>
-                </View>
-            </View>
+      const response = await api.post('/ai/chat', {
+        message: userMsg.text,
+        history,
+      });
 
-            {/* Chat History Sidebar */}
-            <ChatHistorySidebar
-                visible={sidebarVisible}
-                onClose={() => setSidebarVisible(false)}
-                chats={allChats}
-                currentChatId={currentChatId}
-                onSelectChat={handleSelectChat}
-                onNewChat={handleNewChat}
-                onDeleteChat={handleDeleteChat}
+      const aiResponse = response.data.response;
+      const aiMessage: Message = {
+        role: 'model',
+        text: aiResponse,
+        timestamp: Date.now(),
+      };
+      const updatedMessages = [...newMessages, aiMessage];
+      setMessages(updatedMessages);
+      await saveCurrentChat(updatedMessages);
+    } catch (error: any) {
+      console.error(error);
+      let errorMessage = 'Unable to connect to the clinical service. Please try again.';
+      if (error?.response?.data?.userMessage) {
+        errorMessage = error.response.data.userMessage;
+      } else if (error?.response?.status === 429) {
+        errorMessage = 'Too many requests. Please wait a moment before trying again.';
+      }
+
+      const errorMsg: Message = {
+        role: 'model',
+        text: errorMessage,
+        timestamp: Date.now(),
+      };
+      const updatedMessagesWithError = [...newMessages, errorMsg];
+      setMessages(updatedMessagesWithError);
+      await saveCurrentChat(updatedMessagesWithError);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const actionCards: ActionCardItem[] = [
+    {
+      id: 'first-aid',
+      title: 'First Aid Protocol',
+      description: 'Step-by-step guidance for bleeding, burns, CPR & choking',
+      icon: 'medical-bag',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => navigation.navigate('FirstAidList'),
+    },
+    {
+      id: 'video-triage',
+      title: 'Video Triage (Live Capture)',
+      description: 'Record a video clip for motion, bleed & airway assessment',
+      icon: 'video-outline',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => handleSelectMediaAction('record_video'),
+    },
+    {
+      id: 'wound-scan',
+      title: 'Wound & Photo Assessment',
+      description: 'Upload or capture a photo for clinical AI inspection',
+      icon: 'camera-iris',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => setMediaModalVisible(true),
+    },
+    {
+      id: 'emergency-services',
+      title: 'Emergency Dial & Dispatch',
+      description: 'Direct 911 one-tap line with location assistance',
+      icon: 'phone-alert',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => sendMessage('What should I do in an emergency before paramedics arrive?'),
+    },
+  ];
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar style="dark" />
+
+      {/* 1. Header with Offline indicator & history button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.iconButton}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={22}
+            color={theme.colors.text.primary}
+          />
+        </TouchableOpacity>
+
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {currentChatTitle}
+          </Text>
+          <View style={styles.statusRow}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>Clinical AI Active</Text>
+          </View>
+        </View>
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleNewChat}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name="plus"
+              size={22}
+              color={theme.colors.text.primary}
             />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setSidebarVisible(true)}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name="history"
+              size={22}
+              color={theme.colors.text.primary}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-            {/* Chat Area */}
-            <ScrollView
-                ref={scrollViewRef}
-                style={styles.chatContainer}
-                contentContainerStyle={styles.chatContent}
-            >
-                {/* Date Divider */}
-                <View style={styles.dividerContainer}>
-                    <View style={styles.dividerChip}>
-                        <Text style={styles.dividerText}>Emergency Mode • 14:02 PM</Text>
-                    </View>
-                </View>
+      {/* Chat History Sidebar Modal */}
+      <ChatHistorySidebar
+        visible={sidebarVisible}
+        onClose={() => setSidebarVisible(false)}
+        chats={allChats}
+        currentChatId={currentChatId}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
+      />
 
-                {/* Chat Messages */}
-                {messages.map((msg, index) => (
-                    <View key={index} style={[styles.messageRow, msg.role === 'user' ? styles.messageRowRight : {}]}>
-                        {msg.role === 'model' && (
-                            <View style={styles.avatarContainer}>
-                                <MaterialCommunityIcons name="robot" size={20} color="#64748b" />
-                            </View>
-                        )}
-                        <View style={[styles.messageContent, msg.role === 'user' ? styles.messageContentRight : {}]}>
-                            {msg.role === 'model' && <Text style={styles.senderName}>AI Assistant</Text>}
-                            <View style={msg.role === 'user' ? styles.sentBubble : styles.receivedBubble}>
-                                <Text style={msg.role === 'user' ? styles.sentMessageText : styles.messageText}>
-                                    {msg.text}
-                                </Text>
-                            </View>
-                        </View>
-                        {msg.role === 'user' && (
-                            <View style={styles.avatarContainer}>
-                                <MaterialCommunityIcons name="account" size={20} color="#64748b" />
-                            </View>
-                        )}
-                    </View>
-                ))}
+      {/* Voice Waveform Recording Modal */}
+      <VoiceWaveformModal
+        visible={voiceModalVisible}
+        onClose={() => setVoiceModalVisible(false)}
+        onConfirm={(transcript) => {
+          setVoiceModalVisible(false);
+          sendMessage(transcript);
+        }}
+      />
 
-                {loading && (
-                    <View style={styles.messageRow}>
-                        <View style={styles.avatarContainer}>
-                            <MaterialCommunityIcons name="robot" size={20} color="#64748b" />
-                        </View>
-                        <View style={styles.messageContent}>
-                            <View style={styles.receivedBubble}>
-                                <ActivityIndicator size="small" color="#64748b" />
-                            </View>
-                        </View>
-                    </View>
+      {/* Media Attachment Action Sheet Modal */}
+      <MediaAttachmentModal
+        visible={mediaModalVisible}
+        onClose={() => setMediaModalVisible(false)}
+        onSelectAction={handleSelectMediaAction}
+      />
+
+      {/* 2. Messages & Actions Area */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollArea}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Welcome Orb Greeting if empty */}
+          {messages.length === 0 && (
+            <View style={styles.welcomeSection}>
+              <View style={styles.orbShadow}>
+                <LinearGradient
+                  colors={['#0F1115', '#262A33', '#4B5563']}
+                  start={{ x: 0.1, y: 0.1 }}
+                  end={{ x: 0.9, y: 0.9 }}
+                  style={styles.orb}
+                />
+              </View>
+
+              <Text style={styles.welcomeTitle}>Hey there!</Text>
+              <Text style={styles.welcomeSubtitle}>
+                How can I assist your health and safety today?
+              </Text>
+
+              {/* Things you can do cards from ref image */}
+              <ThingsYouCanDoCards actions={actionCards} />
+            </View>
+          )}
+
+          {/* Render Active Messages */}
+          {messages.map((msg, index) => {
+            const isUser = msg.role === 'user';
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.messageRow,
+                  isUser ? styles.userRow : styles.modelRow,
+                ]}
+              >
+                {!isUser && (
+                  <View style={styles.modelAvatarCircle}>
+                    <LinearGradient
+                      colors={['#0F1115', '#262A33']}
+                      style={styles.avatarGradient}
+                    >
+                      <MaterialCommunityIcons
+                        name="creation"
+                        size={14}
+                        color="#FFFFFF"
+                      />
+                    </LinearGradient>
+                  </View>
                 )}
 
-                {/* Warning Card */}
-                <View style={styles.messageRow}>
-                    <View style={{ width: 32 }} />
-                    <View style={styles.warningCard}>
-                        <MaterialCommunityIcons name="alert" size={20} color="#dc2626" />
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.warningTitle}>CRITICAL WARNING</Text>
-                            <Text style={styles.warningText}>
-                                If bleeding is spurting or won't stop after 10 minutes of pressure, call emergency services immediately. Do not use a tourniquet unless trained.
-                            </Text>
+                <View
+                  style={[
+                    styles.bubble,
+                    isUser ? styles.userBubble : styles.modelBubble,
+                  ]}
+                >
+                  {/* Media Attachment Inside Bubble */}
+                  {msg.mediaUri && (
+                    <View style={styles.bubbleMediaContainer}>
+                      {msg.mediaType === 'image' ? (
+                        <View style={styles.imageBubbleWrapper}>
+                          <Image
+                            source={{ uri: msg.mediaUri }}
+                            style={styles.bubbleImage}
+                            resizeMode="cover"
+                          />
+                          <View style={styles.mediaTagPill}>
+                            <MaterialCommunityIcons name="camera" size={11} color="#FFFFFF" />
+                            <Text style={styles.mediaTagText}>Photo Attached</Text>
+                          </View>
                         </View>
+                      ) : (
+                        <View style={styles.videoBubbleCard}>
+                          <View style={styles.videoPlayCircle}>
+                            <MaterialCommunityIcons name="play" size={20} color="#0F1115" />
+                          </View>
+                          <View style={styles.videoBubbleMeta}>
+                            <Text style={styles.videoBubbleTitle}>Video Recording</Text>
+                            <Text style={styles.videoBubbleSubtitle}>Attached for triage</Text>
+                          </View>
+                          <View style={styles.videoPillBadge}>
+                            <Text style={styles.videoPillBadgeText}>VIDEO</Text>
+                          </View>
+                        </View>
+                      )}
                     </View>
+                  )}
+
+                  {isUser ? (
+                    <Text style={styles.userMessageText}>{msg.text}</Text>
+                  ) : (
+                    <Markdown style={markdownStyles}>{msg.text}</Markdown>
+                  )}
                 </View>
+              </View>
+            );
+          })}
 
-            </ScrollView>
+          {loading && (
+            <View style={[styles.messageRow, styles.modelRow]}>
+              <View style={styles.modelAvatarCircle}>
+                <LinearGradient
+                  colors={['#0F1115', '#262A33']}
+                  style={styles.avatarGradient}
+                >
+                  <MaterialCommunityIcons
+                    name="creation"
+                    size={14}
+                    color="#FFFFFF"
+                  />
+                </LinearGradient>
+              </View>
+              <View style={[styles.bubble, styles.modelBubble, { paddingVertical: 14 }]}>
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.primary.main}
+                />
+              </View>
+            </View>
+          )}
 
-            {/* Bottom Input Area */}
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-                style={styles.keyboardAvoid}
+          {/* Quick Suggestions Horizontal Chips */}
+          <View style={styles.suggestionsSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.suggestionsScroll}
             >
-                <View style={styles.footer}>
-                    {/* Quick Chips */}
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll} contentContainerStyle={styles.chipsContent}>
-                        {['CPR Guide', 'Shock', 'Choking', 'Burn'].map((chip) => (
-                            <TouchableOpacity key={chip} style={styles.chip}>
-                                <Text style={styles.chipText}>{chip}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+              {QUICK_SUGGESTIONS.map((s) => (
+                <TouchableOpacity
+                  key={s.label}
+                  style={styles.suggestionChip}
+                  onPress={() => sendMessage(s.prompt)}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name={s.icon as any}
+                    size={15}
+                    color={theme.colors.primary.main}
+                  />
+                  <Text style={styles.suggestionText}>{s.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
 
-                    {/* Input Bar */}
-                    <View style={styles.inputBar}>
-                        <TouchableOpacity style={styles.attachButton}>
-                            <MaterialCommunityIcons name="camera-plus" size={24} color={TEXT_SECONDARY} />
-                        </TouchableOpacity>
+        {/* 3. Floating Pill Chat Input from ref image */}
+        <FloatingChatInput
+          value={message}
+          onChangeText={setMessage}
+          onSend={() => sendMessage()}
+          onMicPress={() => setVoiceModalVisible(true)}
+          onAttachPress={() => setMediaModalVisible(true)}
+          attachedMedia={attachedMedia}
+          onRemoveMedia={() => setAttachedMedia(null)}
+          placeholder="Ask anything about your health?"
+          loading={loading}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
 
-                        <View style={styles.inputFieldContainer}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Describe the emergency..."
-                                placeholderTextColor="#94a3b8"
-                                value={message}
-                                onChangeText={setMessage}
-                            />
-                            <TouchableOpacity>
-                                <MaterialCommunityIcons name="microphone" size={22} color={TEXT_SECONDARY} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity style={styles.sendButton} onPress={sendMessage} disabled={loading}>
-                            {loading ? (
-                                <ActivityIndicator size="small" color="#fff" />
-                            ) : (
-                                <MaterialCommunityIcons name="send" size={20} color="#fff" />
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </View>
-                <SafeAreaView edges={['bottom']} style={{ backgroundColor: '#fff' }} />
-            </KeyboardAvoidingView>
-
-        </SafeAreaView>
-    );
+const markdownStyles = {
+  body: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.colors.text.primary,
+  },
+  strong: {
+    fontWeight: '700' as const,
+    color: theme.colors.text.primary,
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: BG_LIGHT,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
-    },
-    headerButton: {
-        padding: 8,
-        borderRadius: 20,
-        backgroundColor: '#f8fafc',
-    },
-    headerButtons: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    headerTitleContainer: {
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: TEXT_DARK,
-    },
-    statusRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#22c55e',
-    },
-    statusText: {
-        fontSize: 12,
-        color: TEXT_SECONDARY,
-        fontWeight: '500',
-    },
-    chatContainer: {
-        flex: 1,
-    },
-    chatContent: {
-        padding: 16,
-        paddingBottom: 24,
-    },
-    dividerContainer: {
-        alignItems: 'center',
-        marginVertical: 16,
-    },
-    dividerChip: {
-        backgroundColor: '#e2e8f0',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 99,
-    },
-    dividerText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: '#94a3b8',
-    },
-    messageRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        gap: 12,
-        marginBottom: 24,
-    },
-    messageRowRight: {
-        justifyContent: 'flex-end',
-    },
-    avatarContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#e2e8f0',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#cbd5e1',
-    },
-    messageContent: {
-        flex: 1,
-        maxWidth: '85%',
-    },
-    messageContentRight: {
-        alignItems: 'flex-end',
-    },
-    senderName: {
-        fontSize: 12,
-        color: TEXT_SECONDARY,
-        marginBottom: 4,
-        marginLeft: 4,
-        fontWeight: '500',
-    },
-    receivedBubble: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        borderBottomLeftRadius: 4,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: '#f1f5f9',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
-    },
-    messageText: {
-        fontSize: 15,
-        color: '#1e293b',
-        lineHeight: 22,
-    },
-    sentBubble: {
-        backgroundColor: PRIMARY_COLOR,
-        borderRadius: 16,
-        borderBottomRightRadius: 4,
-        padding: 14,
-        shadowColor: PRIMARY_COLOR,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    sentMessageText: {
-        fontSize: 15,
-        color: '#fff',
-        lineHeight: 22,
-    },
-    timestampRight: {
-        fontSize: 12,
-        color: '#94a3b8',
-        marginTop: 4,
-        marginRight: 4,
-        fontWeight: '500',
-    },
-    protocolTitle: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#64748b',
-        marginBottom: 8,
-        letterSpacing: 0.5,
-    },
-    stepsContainer: {
-        gap: 8,
-    },
-    stepText: {
-        fontSize: 14,
-        color: '#1e293b',
-        lineHeight: 20,
-    },
-    boldText: {
-        fontWeight: '700',
-        color: TEXT_DARK,
-    },
-    warningCard: {
-        flexDirection: 'row',
-        gap: 12,
-        backgroundColor: '#fef2f2',
-        borderWidth: 1,
-        borderColor: '#fee2e2',
-        borderRadius: 12,
-        padding: 12,
-        maxWidth: '90%',
-    },
-    warningTitle: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#991b1b',
-        marginBottom: 4,
-    },
-    warningText: {
-        fontSize: 14,
-        color: '#7f1d1d',
-        lineHeight: 20,
-    },
-    keyboardAvoid: {
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#e2e8f0',
-    },
-    footer: {
-        backgroundColor: '#fff',
-    },
-    chipsScroll: {
-        paddingVertical: 12,
-    },
-    chipsContent: {
-        paddingHorizontal: 16,
-        gap: 8,
-    },
-    chip: {
-        backgroundColor: '#f1f5f9',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-    },
-    chipText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: '#334155',
-    },
-    inputBar: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        padding: 16,
-        paddingTop: 4,
-        gap: 12,
-    },
-    attachButton: {
-        padding: 10,
-        backgroundColor: '#f1f5f9',
-        borderRadius: 12,
-        marginBottom: 1,
-    },
-    inputFieldContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f1f5f9',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        minHeight: 48,
-    },
-    input: {
-        flex: 1,
-        fontSize: 16,
-        color: TEXT_DARK,
-        paddingVertical: 12,
-        marginRight: 8,
-    },
-    sendButton: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: PRIMARY_COLOR,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: PRIMARY_COLOR,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-        marginBottom: 1,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.canvas.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spatial.spacing.md,
+    paddingVertical: 10,
+    backgroundColor: theme.colors.canvas.background,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.canvas.border,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.text.primary,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 4,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0F1115',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: theme.colors.text.secondary,
+  },
+  iconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: theme.colors.canvas.surface,
+    borderColor: theme.colors.canvas.border,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: theme.spatial.spacing.md,
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+  welcomeSection: {
+    alignItems: 'flex-start',
+    marginVertical: 12,
+  },
+  orbShadow: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+    marginBottom: 16,
+  },
+  orb: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    marginBottom: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: theme.colors.text.secondary,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    marginVertical: 6,
+    alignItems: 'flex-end',
+  },
+  userRow: {
+    justifyContent: 'flex-end',
+  },
+  modelRow: {
+    justifyContent: 'flex-start',
+  },
+  modelAvatarCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+    overflow: 'hidden',
+  },
+  avatarGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bubble: {
+    maxWidth: '82%',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: theme.spatial.radii.lg,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary.main,
+    borderBottomRightRadius: 4,
+  },
+  modelBubble: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+    borderBottomLeftRadius: 4,
+    ...theme.spatial.shadows.card,
+  },
+  userMessageText: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#FFFFFF',
+  },
+  suggestionsSection: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  suggestionsScroll: {
+    gap: 8,
+  },
+  suggestionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.canvas.border,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: theme.spatial.radii.pill,
+  },
+  suggestionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  bubbleMediaContainer: {
+    marginBottom: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  imageBubbleWrapper: {
+    position: 'relative',
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  bubbleImage: {
+    width: 220,
+    height: 150,
+    borderRadius: 14,
+    backgroundColor: '#1F242D',
+  },
+  mediaTagPill: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    backgroundColor: 'rgba(15, 17, 21, 0.8)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  mediaTagText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  videoBubbleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F242D',
+    borderWidth: 1,
+    borderColor: '#374151',
+    borderRadius: 14,
+    padding: 10,
+    width: 220,
+  },
+  videoPlayCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  videoBubbleMeta: {
+    flex: 1,
+  },
+  videoBubbleTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  videoBubbleSubtitle: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginTop: 1,
+  },
+  videoPillBadge: {
+    backgroundColor: '#374151',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  videoPillBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
 });

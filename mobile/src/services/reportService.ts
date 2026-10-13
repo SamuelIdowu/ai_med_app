@@ -12,7 +12,7 @@ export const reportService = {
 
       // Call backend to generate PDF
       const response = await api.post(`/reports/${encounterId}/generate`, {}, {
-        responseType: 'arraybuffer' // Important for binary data
+        responseType: 'arraybuffer'
       });
 
       // Create a unique filename for the PDF
@@ -35,7 +35,21 @@ export const reportService = {
     } catch (error: any) {
       console.error('Error generating report:', error);
       if (error.response) {
-        console.error('Backend error:', error.response.status, error.response.data);
+        // If responseType is arraybuffer, response.data is an ArrayBuffer.
+        // We need to decode it to see the JSON error message.
+        let errorData = error.response.data;
+        if (errorData instanceof ArrayBuffer) {
+          try {
+            const decodedString = new TextDecoder().decode(errorData);
+            errorData = JSON.parse(decodedString);
+          } catch (e) {
+            console.warn("Could not decode error response", e);
+            // fallback if not json
+            errorData = String.fromCharCode.apply(null, new Uint8Array(errorData) as any);
+          }
+        }
+
+        console.error('Backend error:', error.response.status, errorData);
         throw new Error(`Failed to generate report: ${error.response.status}`);
       } else if (error.request) {
         throw new Error('Failed to connect to backend. Please check your connection.');

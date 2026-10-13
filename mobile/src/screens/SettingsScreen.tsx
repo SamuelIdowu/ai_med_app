@@ -153,14 +153,12 @@ export const SettingsScreen = () => {
                             icon="person"
                             label="Edit Profile"
                             onPress={() => navigation.navigate('MedicalProfile')}
-                            color="#E53935"
                         />
                         <View style={styles.separator} />
                         <OptionItem
                             icon="logout"
                             label="Logout"
                             onPress={handleLogout}
-                            color="#E53935"
                         />
                     </View>
                 </View>
@@ -176,6 +174,12 @@ export const SettingsScreen = () => {
                         />
                         <View style={styles.separator} />
                         <OptionItem
+                            icon="policy"
+                            label="Privacy Policy"
+                            onPress={() => navigation.navigate('PrivacyPolicy')}
+                        />
+                        <View style={styles.separator} />
+                        <OptionItem
                             icon="download"
                             label="Export My Data"
                             onPress={handleExportData}
@@ -185,7 +189,6 @@ export const SettingsScreen = () => {
                             icon="delete"
                             label="Delete My Data"
                             onPress={handleDeleteData}
-                            color="#E53935"
                         />
                     </View>
                 </View>
@@ -203,7 +206,7 @@ export const SettingsScreen = () => {
                 </View>
                 {(isExporting || isDeleting) && (
                     <View style={styles.loadingOverlay}>
-                        <ActivityIndicator size="large" color="#E53935" />
+                        <ActivityIndicator size="large" color="#0F1115" />
                         <Text style={styles.loadingText}>{isDeleting ? 'Deleting data...' : 'Exporting data...'}</Text>
                     </View>
                 )}
@@ -232,7 +235,7 @@ export const SettingsScreen = () => {
                                 <Switch
                                     value={analyticsConsent}
                                     onValueChange={setAnalyticsConsent}
-                                    trackColor={{ false: '#767577', true: '#E53935' }}
+                                    trackColor={{ false: '#E5E7EB', true: '#0F1115' }}
                                 />
                             </View>
                             <Text style={styles.toggleDesc}>Allow us to collect anonymous usage data to improve the app.</Text>
@@ -242,7 +245,7 @@ export const SettingsScreen = () => {
                                 <Switch
                                     value={marketingConsent}
                                     onValueChange={setMarketingConsent}
-                                    trackColor={{ false: '#767577', true: '#E53935' }}
+                                    trackColor={{ false: '#E5E7EB', true: '#0F1115' }}
                                 />
                             </View>
                             <Text style={styles.toggleDesc}>Receive updates about new features and health tips.</Text>
@@ -265,7 +268,7 @@ export const SettingsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f6f6',
+        backgroundColor: '#F8F9FA',
     },
     header: {
         flexDirection: 'row',
@@ -388,7 +391,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     saveButton: {
-        backgroundColor: '#E53935',
+        backgroundColor: '#0F1115',
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',

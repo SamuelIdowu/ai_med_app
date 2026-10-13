@@ -8,10 +8,13 @@ router.use(authenticateUser);
 
 router.post('/:id/generate', async (req, res) => {
     try {
+        console.log(`Report Generation: Request received for encounter ${req.params.id} by user ${req.user.id}`);
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
+            // Should be caught by middleware, but safe to keep
+            console.log('Report Generation: Token check failed in handler');
             res.status(401).json({ error: 'Token missing' });
             return;
         }

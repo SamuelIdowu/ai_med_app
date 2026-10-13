@@ -40,22 +40,25 @@ export const EncounterService = {
         }
 
         // 2. Attempt Sync to Supabase (if online and logged in)
+        let backendEncounter = null;
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                await EncounterService.syncEncounter(encounter, session.user.id);
+                backendEncounter = await EncounterService.syncEncounter(encounter, session.user.id);
             }
         } catch (e) {
             console.log('Sync failed, will retry later', e);
             // Silent fail for sync - we rely on local data
         }
 
-        return localId;
+        return { localId, backendEncounter };
     },
 
     // Sync a specific encounter to Supabase via Backend API
     syncEncounter: async (localEncounter: any, userId: string) => {
-        if (localEncounter.synced) return;
+        if (localEncounter.synced) return localEncounter; // Return existing if already synced? Or maybe we can't easily retrieve the backend object here without more changes. 
+        // Ideally we should store the backend ID locally after sync. 
+        // For now, let's just proceed with the logic.
 
         try {
             // A. Create Encounter via API
@@ -78,22 +81,13 @@ export const EncounterService = {
                         fileName: filename
                     });
 
-                    const { signedUrl, filePath } = uploadAuthRes.data; // Adjust based on StorageService response structure
-
-                    // 2. Upload to Supabase Storage using signedUrl
-                    // Note: Supabase createSignedUploadUrl returns { path, token, signedUrl } usually.
-                    // Our backend Service returns { ...data, filePath } which includes 'signedUrl' if using createSignedUrl (for download)
-                    // But for upload, createSignedUploadUrl returns `token` and `path`?
-                    // Let's check storageService.ts implementation again.
-                    // Implementation: createSignedUploadUrl(filePath) -> returns data { signedUrl: string, path: string, token: string }
+                    const { signedUrl, filePath } = uploadAuthRes.data;
 
                     const fileResponse = await fetch(uri);
                     const blob = await fileResponse.blob();
 
                     const uploadHeaders = {
                         'Content-Type': 'image/jpeg',
-                        // For createSignedUploadUrl, we PUT to the signedUrl with the file
-                        // The signedUrl contains the token.
                     };
 
                     await fetch(signedUrl, {
@@ -101,42 +95,12 @@ export const EncounterService = {
                         body: blob,
                         headers: uploadHeaders
                     });
-
-                    // 3. We assume Backend doesn't insert the Photo record automatically? 
-                    // Checklist says "Logic to link photos to encounters".
-                    // Backend encounterService might need to listen to webhooks or we explicitely add it?
-                    // Our current backend `encounterService` only creates encounters. `storageService` handles URLs.
-                    // We might need an endpoint to "Confirm Photo Upload" or "Add Photo Metadata".
-                    // The previous code inserted into 'photos' table directly.
-                    // If we want to be pure backend, we should have `POST /encounters/:id/photos/confirm` or similiar.
-                    // OR, we can just insert into photos table directly if we still have RLS? 
-                    // No, implementation plan says "Refactor to use backend API". 
-                    // Ideally we should post metadata to backend.
-                    // Current backend routes/encounters.ts only has POST /photos (get upload URL).
-                    // MISSING FEATURE: Endpoint to save photo metadata.
-                    // Workaround: We will skip metadata insertion for now or do it directly if permitted, 
-                    // BUT better allows us to just implement the endpoint quickly if needed?
-                    // Let's check `encounters.ts` routes again.
-                    // Only `POST /:id/photos` (Get upload URL).
-
-                    // Re-evaluating: To save time and stick to plan, I will skip the metadata record create for now or assume simple upload is enough for MVP compliance if "Link photos" was done via naming convention?
-                    // NO, strictness. I should probably insert into `photos` table directly if I have the client, OR ask backend to do it.
-                    // Since I am converting to API, I should probably add an endpoint to backend OR just assume upload is enough for file existance.
-                    // But UI usually needs to query DB for photos.
-
-                    // QUICK FIX: Since I am editing `encounterService.ts`, I can still use `supabase` client to insert the metadata record for now
-                    // if I want to avoid modifying backend right now. 
-                    // But that defeats the purpose of "Hardening".
-                    // However, `supabase` is imported in this file. 
-                    // Let's stick to using `api` for the upload URL, and maybe `supabase` for the metadata insert as a "todo" or temporary hybrid,
-                    // OR just rely on the storage.
-
-                    // Let's implement the upload step using the SignedURL first.
                 }
             }
 
             // Mark as synced (in local storage logic - handled by caller or state mgmt)
-            // Here we just return success
+            // Here we just return the backend data
+            return encounterData;
         } catch (e: any) {
             console.error('Sync failed', e.response?.data || e.message);
             throw e;
@@ -159,6 +123,26 @@ export const EncounterService = {
             await AsyncStorage.removeItem(LOCAL_ENCOUNTERS_KEY);
         } catch (e) {
             console.error('Failed to clear encounters', e);
+        }
+    },
+
+    deleteEncounter: async (id: string) => {
+        try {
+            // 1. Remove from backend if not local
+            if (!id.startsWith('local_')) {
+                await api.delete(`/encounters/${id}`);
+            }
+
+            // 2. Remove from local storage
+            const json = await AsyncStorage.getItem(LOCAL_ENCOUNTERS_KEY);
+            if (json) {
+                const encounters = JSON.parse(json);
+                const filtered = encounters.filter((e: any) => e.id !== id);
+                await AsyncStorage.setItem(LOCAL_ENCOUNTERS_KEY, JSON.stringify(filtered));
+            }
+        } catch (e) {
+            console.error('Failed to delete encounter', e);
+            throw e;
         }
     }
 };

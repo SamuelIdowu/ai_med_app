@@ -6,6 +6,8 @@ import { CameraView, CameraType, useCameraPermissions, FlashMode } from 'expo-ca
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { CameraReticle } from '../components/ui/CameraReticle';
+import { theme } from '../theme';
 
 export const CameraScreen = () => {
     const navigation = useNavigation<any>();
@@ -73,18 +75,10 @@ export const CameraScreen = () => {
                     </View>
 
                     {/* Guidelines Overlay */}
-                    <View style={styles.guidesContainer}>
-                        <View style={styles.guideBox}>
-                            <View style={[styles.corner, styles.topLeft]} />
-                            <View style={[styles.corner, styles.topRight]} />
-                            <View style={[styles.corner, styles.bottomLeft]} />
-                            <View style={[styles.corner, styles.bottomRight]} />
-                        </View>
-                    </View>
+                    <CameraReticle instruction="Center the injury within the guides" size={260} />
 
                     {/* Footer - Capture */}
                     <View style={styles.footer}>
-                        <Text style={styles.instructionText}>Center the injury within the guides</Text>
                         <View style={styles.captureContainer}>
                             <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
                                 <View style={styles.captureInner} />
@@ -193,7 +187,7 @@ const styles = StyleSheet.create({
     instructionText: {
         color: 'white',
         fontSize: 16,
-        fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto', // Default font
+        fontFamily: theme.typography.h3.fontFamily,
         textAlign: 'center',
         marginBottom: 16,
     },

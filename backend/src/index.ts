@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(helmet());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 import { authenticateUser } from './middleware/auth';
 import profileRoutes from './routes/profile';
@@ -22,6 +22,7 @@ import reportRoutes from './routes/reports';
 import providerRoutes from './routes/providers';
 import authRoutes from './routes/auth';
 import aiRoutes from './routes/ai';
+import notificationRoutes from './routes/notifications';
 
 app.get('/', (req, res) => {
     res.send('AI First Aid App Backend is running');
@@ -40,6 +41,7 @@ app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/providers', providerRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -87,7 +87,7 @@ export const GeminiService = {
                 history: validHistory,
                 tools: userId ? [{ functionDeclarations }] : undefined, // Only enable tools if user is authenticated
                 generationConfig: {
-                    maxOutputTokens: 1000,
+                    maxOutputTokens: 8192,
                 },
             });
 
@@ -159,7 +159,27 @@ export const GeminiService = {
                 imageData = imageBuffer.replace(/^data:image\/[a-z]+;base64,/, "");
             }
 
-            const prompt = "Analyze this image specifically for any injuries or medical conditions visible. Provide a first aid assessment and suggested next steps. If it's not a medical situation, just describe what you see.";
+            const prompt = `You are a medical AI assistant analyzing an injury or medical condition from an image.
+
+IMPORTANT: Respond with a structured analysis in this EXACT JSON format:
+{
+  "severity": "minor" | "moderate" | "serious" | "critical",
+  "injuryType": "short description of injury type",
+  "confidence": 0-100,
+  "emergencyFlag": true/false,
+  "symptoms": ["symptom1", "symptom2", ...],
+  "recommendations": ["step1", "step2", ...],
+  "warnings": ["warning1", "warning2", ...]
+}
+
+CRITICAL GUIDELINES:
+- If severe bleeding, difficulty breathing, chest pain, loss of consciousness, or severe allergic reaction: set emergencyFlag to true and severity to "critical"
+- Include clear, actionable first aid steps in recommendations
+- Number all recommendations as clear steps
+- Include when to seek professional care in warnings
+- If this is not a medical image, still provide the JSON format with appropriate values
+
+Analyze the image now:`;
 
             const imagePart = {
                 inlineData: {
@@ -170,9 +190,36 @@ export const GeminiService = {
 
             const result = await model.generateContent([prompt, imagePart]);
             const response = await result.response;
-            const text = response.text();
+            let text = response.text();
 
-            return text;
+            // Try to parse structured JSON response
+            try {
+                // Extract JSON from markdown code blocks if present
+                const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const jsonText = jsonMatch[1] || jsonMatch[0];
+                    const structuredResponse = JSON.parse(jsonText);
+
+                    // Validate required fields
+                    if (structuredResponse.severity && structuredResponse.recommendations) {
+                        return structuredResponse;
+                    }
+                }
+            } catch (parseError) {
+                console.warn('Failed to parse structured response, using raw text:', parseError);
+            }
+
+            // Fallback to raw text with basic structure
+            return {
+                severity: 'moderate',
+                injuryType: 'General Assessment',
+                confidence: 70,
+                emergencyFlag: text.toLowerCase().includes('911') || text.toLowerCase().includes('emergency services'),
+                symptoms: [],
+                recommendations: text.split('\n').filter(line => line.trim().length > 0).slice(0, 5),
+                warnings: ['Always seek professional medical care if symptoms worsen'],
+                rawAnalysis: text
+            };
         } catch (error: any) {
             console.error('Gemini Vision Error:', error);
 

@@ -1,148 +1,193 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Animated, Dimensions, Image } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { MedicalCard } from '../components/ui/MedicalCard';
+import { TactileButton } from '../components/ui/TactileButton';
+import { theme } from '../theme';
 
-const { height, width } = Dimensions.get('window');
+export const WelcomeScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const { enterGuestMode } = useAuth();
 
-export const WelcomeScreen = () => {
-    const navigation = useNavigation<any>();
-    const { enterGuestMode } = useAuth();
-    const fadeAnim = useRef(new Animated.Value(0)).current;
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-    // Simple float animation for the main image/icon
-    const floatAnim = useRef(new Animated.Value(0)).current;
+      <View style={styles.content}>
+        {/* Top Logo from sketch.webp & full_sketch.webp */}
+        <View style={styles.topLogoRow}>
+          <View style={styles.logoBadge}>
+            <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+          </View>
+          <Text style={styles.logoText}>iAid<Text style={styles.logoPlus}>+</Text></Text>
+        </View>
 
-    useEffect(() => {
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-        }).start();
+        {/* Hero Illustration Card from full_sketch.webp & ref5.webp */}
+        <MedicalCard style={styles.heroCard}>
+          <View style={styles.illustrationCircle}>
+            <MaterialCommunityIcons
+              name="shield-plus-outline"
+              size={64}
+              color={theme.colors.primary.main}
+            />
+          </View>
 
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(floatAnim, {
-                    toValue: 10,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(floatAnim, {
-                    toValue: 0,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-    }, []);
+          <Text style={styles.cardTitle}>Quick Instructions</Text>
+          <Text style={styles.cardSub}>
+            Get instant access to step-by-step first aid guidance for any medical emergency.
+          </Text>
+        </MedicalCard>
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+        {/* Headline & Value Prop */}
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>
+            Stay Safe.{"\n"}Act Fast in Any Emergency.
+          </Text>
+          <Text style={styles.subtitle}>
+            Offline-first medical triage, guided wound inspections, and instant 911 dispatch.
+          </Text>
+        </View>
 
-            <View style={styles.content}>
+        {/* Action Buttons matching sketch.webp & full_sketch.webp */}
+        <View style={styles.actions}>
+          <TactileButton
+            label="Get Started"
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={() => navigation.navigate('Signup')}
+          />
 
-                {/* Illustration Area */}
-                <Animated.View style={[styles.imageContainer, { opacity: fadeAnim, transform: [{ translateY: floatAnim }] }]}>
-                    {/* Placeholder for the vector art in design (pills, doctor kit, etc) */}
-                    <View style={styles.circleDecoration} />
-                    {/* Using a placeholder text/icon if no image asset available, but structure allows for Image */}
-                    {/* <Image source={require('../assets/hero.png')} style={styles.heroImage} resizeMode="contain" /> */}
-                    <Text style={{ fontSize: 80 }}>💊</Text>
-                    <Text style={{ fontSize: 80, position: 'absolute', top: 40, right: 60 }}>🩺</Text>
-                </Animated.View>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={enterGuestMode}
+            style={styles.guestButton}
+          >
+            <Text style={styles.guestButtonText}>Continue without sign up</Text>
+          </TouchableOpacity>
 
-                {/* Text Area */}
-                <View style={styles.textContainer}>
-                    <Text style={styles.title}>Find the best{"\n"}doctor and medicine{"\n"}for you.</Text>
-                </View>
-
-                {/* Actions */}
-                <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={styles.primaryButton}
-                        onPress={() => navigation.navigate('Signup')}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.primaryButtonText}>Get Started</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={enterGuestMode}
-                        style={{ padding: 10 }}
-                    >
-                        <Text style={styles.linkText}>Skip</Text>
-                    </TouchableOpacity>
-                </View>
-
-            </View>
-        </SafeAreaView>
-    );
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Login')}
+            style={styles.signInLink}
+          >
+            <Text style={styles.signInLinkText}>
+              Already have an account? <Text style={styles.signInBold}>Sign In</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'space-between',
-        paddingHorizontal: 24,
-        paddingBottom: 40,
-        paddingTop: 60,
-    },
-    imageContainer: {
-        flex: 2,
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative',
-    },
-    circleDecoration: {
-        position: 'absolute',
-        width: width * 0.8,
-        height: width * 0.8,
-        borderRadius: (width * 0.8) / 2,
-        backgroundColor: COLORS.inputBackground, // Subtle gray circle behind
-        zIndex: -1,
-    },
-    textContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 28,
-        fontFamily: 'System', // Use default bold if custom font not loaded
-        fontWeight: 'bold',
-        color: COLORS.textPrimary,
-        textAlign: 'center',
-        lineHeight: 40,
-    },
-    actions: {
-        alignItems: 'center',
-        gap: 16,
-    },
-    primaryButton: {
-        backgroundColor: COLORS.textPrimary, // Dark button as per the 2nd image (Get Started is dark Navy/Black)
-        // Or if matching the 1st image blue theme:
-        // backgroundColor: COLORS.primary, 
-        width: '100%',
-        height: 56,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...SHADOWS.medium,
-    },
-    primaryButtonText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    linkText: {
-        color: COLORS.placeholder,
-        fontSize: 14,
-    }
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.canvas.background,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  topLogoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: theme.colors.primary.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    letterSpacing: -0.5,
+  },
+  logoPlus: {
+    color: '#10B981',
+  },
+  heroCard: {
+    padding: 28,
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  illustrationCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: theme.colors.primary.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    marginBottom: 8,
+  },
+  cardSub: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  textContainer: {
+    marginVertical: 8,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    lineHeight: 32,
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    lineHeight: 20,
+  },
+  actions: {
+    gap: 12,
+    alignItems: 'center',
+  },
+  guestButton: {
+    paddingVertical: 12,
+  },
+  guestButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+  },
+  signInLink: {
+    paddingVertical: 4,
+  },
+  signInLinkText: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+  },
+  signInBold: {
+    fontWeight: '700',
+    color: theme.colors.primary.main,
+  },
 });

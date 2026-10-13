@@ -28,7 +28,6 @@ export const CreateProfileScreen = () => {
     const [dob, setDob] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [bloodType, setBloodType] = useState('O+'); // Default
-    const [genotype, setGenotype] = useState('AA'); // Default
     const [gender, setGender] = useState('Male'); // Default
     const [weight, setWeight] = useState('');
     const [height, setHeight] = useState('');
@@ -61,8 +60,8 @@ export const CreateProfileScreen = () => {
     };
 
     const handleCreateProfile = async () => {
-        if (!email || !password || !fullName || !gender || !genotype) {
-            Alert.alert('Missing Fields', 'Please fill in Email, Password, Name, Gender and Genotype.');
+        if (!email || !password || !fullName || !gender) {
+            Alert.alert('Missing Fields', 'Please fill in Email, Password, Name, and Gender.');
             return;
         }
 
@@ -82,7 +81,6 @@ export const CreateProfileScreen = () => {
                 fullName,
                 dob: dob.toISOString().split('T')[0],
                 bloodType,
-                genotype,
                 gender,
                 weight,
                 height,
@@ -91,10 +89,9 @@ export const CreateProfileScreen = () => {
                 medications,
                 emergencyContact: {
                     name: emergencyContactName,
-                    relationship: '', // Optional for now
+                    relationship: 'Primary Contact',
                     phone: emergencyContactPhone,
                 },
-                // Default avatar or logic to pick one could go here, for now using placeholder logic in Service or just undefined
             };
 
             await MedicalProfileService.saveProfile(profileData);
@@ -235,42 +232,24 @@ export const CreateProfileScreen = () => {
                         </View>
                     </View>
 
-                    <View style={styles.row}>
-                        <View style={[styles.inputContainer, styles.halfInput]}>
-                            <Text style={styles.inputLabel}>Blood Type</Text>
-                            <View style={styles.pickerWrapper}>
-                                <Picker
-                                    selectedValue={bloodType}
-                                    onValueChange={(itemValue) => setBloodType(itemValue)}
-                                    style={styles.picker}
-                                >
-                                    <Picker.Item label="O+" value="O+" />
-                                    <Picker.Item label="O-" value="O-" />
-                                    <Picker.Item label="A+" value="A+" />
-                                    <Picker.Item label="A-" value="A-" />
-                                    <Picker.Item label="B+" value="B+" />
-                                    <Picker.Item label="B-" value="B-" />
-                                    <Picker.Item label="AB+" value="AB+" />
-                                    <Picker.Item label="AB-" value="AB-" />
-                                </Picker>
-                            </View>
-                        </View>
-                        <View style={[styles.inputContainer, styles.halfInput]}>
-                            <Text style={styles.inputLabel}>Genotype</Text>
-                            <View style={styles.pickerWrapper}>
-                                <Picker
-                                    selectedValue={genotype}
-                                    onValueChange={(itemValue) => setGenotype(itemValue)}
-                                    style={styles.picker}
-                                >
-                                    <Picker.Item label="AA" value="AA" />
-                                    <Picker.Item label="AS" value="AS" />
-                                    <Picker.Item label="SS" value="SS" />
-                                    <Picker.Item label="AC" value="AC" />
-                                    <Picker.Item label="SC" value="SC" />
-                                    <Picker.Item label="CC" value="CC" />
-                                </Picker>
-                            </View>
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Blood Type</Text>
+                        <View style={styles.pickerWrapper}>
+                            <Picker
+                                selectedValue={bloodType}
+                                onValueChange={(itemValue) => setBloodType(itemValue)}
+                                style={styles.picker}
+                            >
+                                <Picker.Item label="O+" value="O+" />
+                                <Picker.Item label="O-" value="O-" />
+                                <Picker.Item label="A+" value="A+" />
+                                <Picker.Item label="A-" value="A-" />
+                                <Picker.Item label="B+" value="B+" />
+                                <Picker.Item label="B-" value="B-" />
+                                <Picker.Item label="AB+" value="AB+" />
+                                <Picker.Item label="AB-" value="AB-" />
+                                <Picker.Item label="Unknown" value="Unknown" />
+                            </Picker>
                         </View>
                     </View>
                 </View>

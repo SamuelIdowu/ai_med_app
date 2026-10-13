@@ -1,302 +1,868 @@
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  Platform,
+  SafeAreaView,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
 
-const PRIMARY_COLOR = '#e53734';
-const BG_LIGHT = '#f8f6f6';
-const CARD_LIGHT = '#ffffff';
-const TEXT_LIGHT = '#0f172a'; // slate-900
-const TEXT_SECONDARY = '#334155'; // slate-700
-const TEXT_MUTED = '#475569'; // slate-600
-
 type RootStackParamList = {
-    EmergencySteps: { categoryId: string };
-    EmergencySummary: { categoryId: string };
-};
-
-// Design-spec mapping for icons (reused from Home, ideally shared in utils)
-const ICON_MAP: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
-    'blood-bag': 'water',
-    'fire': 'fire',
-    'breathe': 'weather-windy',
-    'heart-pulse': 'heart-pulse',
-    'bone': 'bone',
-    'account-alert': 'alert-circle',
+  EmergencySteps: { categoryId: string };
+  EmergencySummary: { categoryId: string; encounterId: string };
 };
 
 type EmergencyStepsRouteProp = RouteProp<RootStackParamList, 'EmergencySteps'>;
 
-export const EmergencyStepScreen = () => {
-    const navigation = useNavigation<any>();
-    const route = useRoute<EmergencyStepsRouteProp>();
-    const { categoryId } = route.params;
+export const EmergencyStepScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const route = useRoute<EmergencyStepsRouteProp>();
+  const { categoryId } = route.params;
 
-    const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    const category = firstAidData.categories.find(c => c.id === categoryId);
+  // View mode: 'overview' vs 'step'
+  const [viewMode, setViewMode] = useState<'overview' | 'step'>('overview');
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [rating, setRating] = useState(5);
 
-    if (!category) {
-        return (
-            <View style={styles.container}>
-                <Text>Category not found</Text>
-            </View>
-        );
+  // Find category in local offline JSON or fallback
+  const category = (firstAidData.categories.find((c) => c.id === categoryId) as any) ||
+    firstAidData.categories[0] || {
+      id: categoryId,
+      title: 'Emergency Care',
+      subtitle: 'Immediate First Aid',
+      icon: 'medical-bag',
+      warning: 'Call emergency services (911) immediately if victim is unresponsive.',
+      steps: [
+        {
+          step_number: 1,
+          title: 'Ensure Scene Safety',
+          content: 'Verify the environment is safe before administering first aid.',
+          explanation: 'Personal safety is paramount to prevent multiple casualties.',
+          illustration_icon: 'shield-alert',
+          illustration_label: 'Safety Check',
+        },
+      ],
+    };
+
+  const steps = category.steps || [];
+  const currentStep = steps[currentStepIndex] || {};
+  const totalSteps = steps.length;
+
+  const rawTitle = category.title || 'First Aid';
+  const headerTitle = rawTitle.toLowerCase().endsWith('aid')
+    ? rawTitle
+    : `${rawTitle} protocol`;
+
+  const handleNext = () => {
+    if (currentStepIndex < totalSteps - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
+    } else {
+      setShowCompletionModal(true);
     }
+  };
 
-    const steps = category.steps;
-    const currentStep = steps[currentStepIndex];
-    const totalSteps = steps.length;
-    // Calculation: 20% for 1 of 5. ((index + 1) / total) * 100
-    const progress = ((currentStepIndex + 1) / totalSteps) * 100;
+  const handlePrevious = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
+    } else {
+      setViewMode('overview');
+    }
+  };
 
-    const getIconName = (originalIcon: string) => {
-        return ICON_MAP[originalIcon] || 'medical-bag';
-    };
+  const handleFinishGuide = async () => {
+    setShowCompletionModal(false);
+    try {
+      const encounterId = await EncounterService.createEncounter(
+        category.title,
+        `Completed emergency protocol for ${category.title} with rating ${rating}/5`,
+        []
+      );
+      navigation.navigate('EmergencySummary', { categoryId, encounterId });
+    } catch (e) {
+      navigation.navigate('EmergencySummary', { categoryId, encounterId: 'local_enc' });
+    }
+  };
 
-    // Specific icon for the step view large icon. Content.json doesn't have per-step icons, uses category icon.
-    // Design shows 'compress' symbol for bleeding. We might need a mapping or just use category icon.
-    // For now, using category icon is safer.
+  return (
+    <SafeAreaView style={styles.safeContainer}>
+      <StatusBar style="dark" />
 
-    const handleNext = async () => {
-        if (currentStepIndex < totalSteps - 1) {
-            setCurrentStepIndex(currentStepIndex + 1);
-        } else {
-            try {
-                const encounterId = await EncounterService.createEncounter(
-                    category.title,
-                    `Completed emergency guide for ${category.title}`,
-                    []
-                );
-                navigation.navigate('EmergencySummary', { categoryId, encounterId });
-            } catch (error) {
-                console.error('Failed to create encounter', error);
-                navigation.navigate('EmergencySummary', { categoryId, encounterId: 'temp_id' });
+      {/* ─── Top Header (Common to both views) ─── */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => {
+            if (viewMode === 'step') {
+              setViewMode('overview');
+            } else {
+              navigation.goBack();
             }
-        }
-    };
+          }}
+          style={styles.backCircle}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="chevron-left" size={24} color="#000000" />
+        </TouchableOpacity>
 
-    const handleBack = () => {
-        if (currentStepIndex > 0) {
-            setCurrentStepIndex(currentStepIndex - 1);
-        } else {
-            navigation.goBack();
-        }
-    };
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {headerTitle}
+        </Text>
 
-    return (
-        <View style={styles.container}>
-            <StatusBar style="dark" backgroundColor={BG_LIGHT} />
+        <View style={styles.headerSpacer} />
+      </View>
 
-            {/* Top App Bar */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                    <MaterialCommunityIcons name="chevron-left" size={32} color={TEXT_LIGHT} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{category.title}</Text>
-                <View style={{ width: 44 }} />
-            </View>
+      {/* ─── SCREEN 1: Overview Mode ─── */}
+      {viewMode === 'overview' ? (
+        <View style={styles.contentWrapper}>
+          <ScrollView
+            style={styles.scrollArea}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Medical Illustration Hero Card (Replaces Video) */}
+            <View style={styles.illustrationHeroCard}>
+              <View style={styles.heroIconBadge}>
+                <MaterialCommunityIcons
+                  name={(category.icon as any) || 'medical-bag'}
+                  size={44}
+                  color="#0F1115"
+                />
+              </View>
 
-            <View style={styles.mainContent}>
-                {/* Progress Bar */}
-                <View style={styles.progressSection}>
-                    <View style={styles.stepLabelContainer}>
-                        <Text style={styles.stepLabel}>Step {currentStepIndex + 1} of {totalSteps}</Text>
-                    </View>
-                    <View style={styles.track}>
-                        <View style={[styles.bar, { width: `${progress}%` }]} />
-                    </View>
+              <Text style={styles.heroProtocolName}>{category.title}</Text>
+              <Text style={styles.heroSubtitle}>{category.subtitle || 'Clinical Protocol'}</Text>
+
+              {/* Protocol Spec Badges */}
+              <View style={styles.heroBadgeRow}>
+                <View style={styles.heroPill}>
+                  <MaterialCommunityIcons name="format-list-numbered" size={14} color="#0F1115" />
+                  <Text style={styles.heroPillText}>{totalSteps} Detailed Steps</Text>
                 </View>
 
-                {/* Instruction Card */}
-                <View style={styles.cardContainer}>
-                    <View style={styles.card}>
-                        <View style={styles.iconWrapper}>
-                            <View style={styles.iconCircle}>
-                                <MaterialCommunityIcons name={getIconName(category.icon)} size={72} color={PRIMARY_COLOR} />
-                            </View>
-                        </View>
-
-                        <View style={styles.textWrapper}>
-                            <Text style={styles.stepTitle}>{currentStep.title}</Text>
-
-                            {/* Content formatting: Split by newline if present to mimic the list in design */}
-                            {/* Design has:
-                                1. Place a clean cloth...
-                                2. Press firmly...
-                            */}
-                            {/* Assuming content is a string. We can try to format it if it has newlines, or just display it. */}
-                            <Text style={styles.stepDescription}>
-                                {currentStep.content}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
+                {category.urgency ? (
+                  <View style={styles.heroPillAlert}>
+                    <MaterialCommunityIcons name="alert-circle-outline" size={14} color="#0F1115" />
+                    <Text style={styles.heroPillAlertText}>{category.urgency}</Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
 
-            {/* Button Group (Sticky Bottom) */}
-            <View style={styles.footer}>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNext} activeOpacity={0.9}>
-                    <Text style={styles.nextButtonText}>
-                        {currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next Step'}
+            {/* Critical Emergency Warning Banner */}
+            {category.warning && (
+              <View style={styles.criticalWarningBox}>
+                <MaterialCommunityIcons name="alert-decagram" size={22} color="#0F1115" />
+                <View style={styles.criticalWarningContent}>
+                  <Text style={styles.criticalWarningTitle}>Crucial Medical Notice</Text>
+                  <Text style={styles.criticalWarningText}>{category.warning}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* First Aid Steps Section Header */}
+            <View style={styles.sectionHeadingRow}>
+              <Text style={styles.sectionHeading}>Emergency Step Instructions</Text>
+              <Text style={styles.sectionStepCounter}>{totalSteps} Steps</Text>
+            </View>
+
+            {/* Step Capsules List (Tapping opens specific step) */}
+            <View style={styles.stepListContainer}>
+              {steps.map((st: any, idx: number) => (
+                <TouchableOpacity
+                  key={idx}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setCurrentStepIndex(idx);
+                    setViewMode('step');
+                  }}
+                  style={styles.stepCapsuleRow}
+                >
+                  <View style={styles.stepBadge}>
+                    <Text style={styles.stepBadgeText}>{idx + 1}</Text>
+                  </View>
+
+                  <View style={styles.stepCapsuleTextCol}>
+                    <Text style={styles.stepCapsuleTitle} numberOfLines={1}>
+                      {st.title}
                     </Text>
-                </TouchableOpacity>
+                    <Text style={styles.stepCapsulePreview} numberOfLines={2}>
+                      {st.content}
+                    </Text>
+                  </View>
 
-                <TouchableOpacity style={styles.sosButton} onPress={() => { /* Call Logic */ }} activeOpacity={0.7}>
-                    <Text style={styles.sosButtonText}>Call Emergency Services</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
                 </TouchableOpacity>
+              ))}
             </View>
+          </ScrollView>
+
+          {/* Sticky Bottom Actions: Ask AI Triage & Start Step by Step */}
+          <View style={styles.bottomActionBar}>
+            <TouchableOpacity
+              style={styles.pillButtonOutline}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('AIChat')}
+            >
+              <MaterialCommunityIcons name="robot" size={18} color="#0F1115" />
+              <Text style={styles.pillButtonOutlineText}>Ask AI Triage</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.pillButtonSolid}
+              activeOpacity={0.85}
+              onPress={() => {
+                setCurrentStepIndex(0);
+                setViewMode('step');
+              }}
+            >
+              <Text style={styles.pillButtonSolidText}>Start Instructions</Text>
+              <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
-    );
+      ) : (
+        /* ─── SCREEN 2: Step-by-Step Instruction Mode (Detailed Instructions & Illustrations) ─── */
+        <View style={styles.contentWrapper}>
+          <ScrollView
+            style={styles.scrollArea}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Step Progress Header */}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressTextRow}>
+                <Text style={styles.progressStepLabel}>
+                  Step {currentStepIndex + 1} of {totalSteps}
+                </Text>
+                <Text style={styles.progressStepName} numberOfLines={1}>
+                  {category.title}
+                </Text>
+              </View>
+
+              <View style={styles.progressBarTrack}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    { width: `${((currentStepIndex + 1) / totalSteps) * 100}%` },
+                  ]}
+                />
+              </View>
+            </View>
+
+            {/* Step Title Header */}
+            <View style={styles.stepHeaderRow}>
+              <View style={styles.stepHeaderBadge}>
+                <Text style={styles.stepHeaderBadgeText}>
+                  {currentStepIndex + 1}
+                </Text>
+              </View>
+              <Text style={styles.stepHeaderTitle}>
+                {currentStep.title || `Step ${currentStepIndex + 1}`}
+              </Text>
+            </View>
+
+            {/* Step Medical Illustration Card (No Video) */}
+            <View style={styles.stepIllustrationCard}>
+              <View style={styles.stepIllustrationCircle}>
+                <MaterialCommunityIcons
+                  name={(currentStep.illustration_icon as any) || (category.icon as any) || 'medical-bag'}
+                  size={52}
+                  color="#0F1115"
+                />
+              </View>
+              <Text style={styles.stepIllustrationLabel}>
+                {currentStep.illustration_label || 'Medical Step Visual Guide'}
+              </Text>
+            </View>
+
+            {/* Detailed Medical Instructions */}
+            <View style={styles.stepDescriptionSection}>
+              <Text style={styles.stepInstructionSectionTitle}>Action Directive</Text>
+              <Text style={styles.stepPrimaryContent}>
+                {currentStep.content}
+              </Text>
+
+              {/* Clinical Explanation & Mechanism */}
+              {currentStep.explanation && (
+                <View style={styles.explanationBox}>
+                  <Text style={styles.explanationTitle}>Clinical Rationale:</Text>
+                  <Text style={styles.explanationText}>
+                    {currentStep.explanation}
+                  </Text>
+                </View>
+              )}
+
+              {/* Safety Caution / Do's & Don'ts */}
+              {currentStep.caution && (
+                <View style={styles.cautionBox}>
+                  <MaterialCommunityIcons name="alert-circle" size={18} color="#0F1115" />
+                  <View style={styles.cautionContent}>
+                    <Text style={styles.cautionTitle}>Critical Warning:</Text>
+                    <Text style={styles.cautionText}>{currentStep.caution}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+
+          {/* Sticky Bottom Actions: < Previous & Next > */}
+          <View style={styles.bottomActionBar}>
+            <TouchableOpacity
+              style={styles.pillButtonOutline}
+              activeOpacity={0.8}
+              onPress={handlePrevious}
+            >
+              <Text style={styles.pillButtonOutlineText}>&lt; Previous</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.pillButtonSolid}
+              activeOpacity={0.85}
+              onPress={handleNext}
+            >
+              <Text style={styles.pillButtonSolidText}>
+                {currentStepIndex === totalSteps - 1 ? 'Finish Protocol' : 'Next Step >'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* ─── Completion Modal (Black & White) ─── */}
+      <Modal
+        visible={showCompletionModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCompletionModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.feedbackModalCard}>
+            <View style={styles.modalCheckCircle}>
+              <MaterialCommunityIcons name="check" size={32} color="#FFFFFF" />
+            </View>
+
+            <Text style={styles.feedbackTitle}>
+              Protocol Complete
+            </Text>
+            <Text style={styles.feedbackSub}>
+              Guidance completed for {category.title}. Confirm encounter to save clinical record.
+            </Text>
+
+            {/* High-contrast rating */}
+            <View style={styles.starRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setRating(star)}
+                  activeOpacity={0.7}
+                  style={styles.starTouch}
+                >
+                  <MaterialCommunityIcons
+                    name={star <= rating ? 'star' : 'star-outline'}
+                    size={32}
+                    color="#000000"
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalSubmitButton}
+              activeOpacity={0.85}
+              onPress={handleFinishGuide}
+            >
+              <Text style={styles.modalSubmitButtonText}>
+                Confirm & Log Encounter
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: BG_LIGHT,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingTop: Platform.OS === 'android' ? 40 : 60,
-        paddingHorizontal: 16,
-        paddingBottom: 12,
-        backgroundColor: BG_LIGHT,
-        zIndex: 10,
-    },
-    backButton: {
-        width: 44,
-        height: 44,
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: TEXT_LIGHT,
-        textAlign: 'center',
-        flex: 1,
-    },
-    mainContent: {
-        flex: 1,
-        paddingHorizontal: 16,
-        flexDirection: 'column',
-    },
-    progressSection: {
-        paddingVertical: 16,
-        gap: 12,
-    },
-    stepLabelContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    stepLabel: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: TEXT_SECONDARY,
-    },
-    track: {
-        height: 8,
-        backgroundColor: 'rgba(229, 55, 52, 0.2)', // primary/20
-        borderRadius: 9999,
-        width: '100%',
-    },
-    bar: {
-        height: 8,
-        backgroundColor: PRIMARY_COLOR,
-        borderRadius: 9999,
-    },
-    cardContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 16,
-    },
-    card: {
-        width: '100%',
-        backgroundColor: CARD_LIGHT,
-        borderRadius: 12,
-        padding: 24,
-        alignItems: 'stretch',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 4,
-        minHeight: 320,
-    },
-    iconWrapper: {
-        alignItems: 'center',
-        marginBottom: 32,
-        marginTop: 8,
-    },
-    iconCircle: {
-        width: 128,
-        height: 128,
-        borderRadius: 64,
-        backgroundColor: 'rgba(229, 55, 52, 0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    textWrapper: {
-        gap: 8,
-        alignItems: 'center',
-    },
-    stepTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: TEXT_LIGHT,
-        textAlign: 'center',
-        marginBottom: 8,
-    },
-    stepDescription: {
-        fontSize: 16,
-        fontWeight: '400',
-        color: TEXT_MUTED,
-        textAlign: 'center',
-        lineHeight: 24,
-    },
-    footer: {
-        padding: 16,
-        paddingTop: 16,
-        backgroundColor: BG_LIGHT,
-        gap: 12,
-        borderTopWidth: 0,
-    },
-    nextButton: {
-        backgroundColor: PRIMARY_COLOR,
-        height: 56,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    nextButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-    },
-    sosButton: {
-        height: 56,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-    },
-    sosButtonText: {
-        color: PRIMARY_COLOR,
-        fontSize: 16,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-    },
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 38 : 10,
+    paddingBottom: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F4F4F5',
+  },
+  backCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F1115',
+    maxWidth: '70%',
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 42,
+  },
+  contentWrapper: {
+    flex: 1,
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 100,
+  },
+
+  // Overview Medical Illustration Hero Card
+  illustrationHeroCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  heroIconBadge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  heroProtocolName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F1115',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  heroBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  heroPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  heroPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F1115',
+  },
+  heroPillAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#0F1115',
+  },
+  heroPillAlertText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F1115',
+  },
+
+  // Critical Warning Banner
+  criticalWarningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#0F1115',
+    padding: 16,
+    marginBottom: 20,
+    gap: 12,
+  },
+  criticalWarningContent: {
+    flex: 1,
+  },
+  criticalWarningTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 2,
+  },
+  criticalWarningText: {
+    fontSize: 13,
+    color: '#374151',
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+
+  // Steps Section Header
+  sectionHeadingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionHeading: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F1115',
+  },
+  sectionStepCounter: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+
+  // Step Capsule Row
+  stepListContainer: {
+    gap: 10,
+  },
+  stepCapsuleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 14,
+    gap: 12,
+  },
+  stepBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#0F1115',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBadgeText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  stepCapsuleTextCol: {
+    flex: 1,
+  },
+  stepCapsuleTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 2,
+  },
+  stepCapsulePreview: {
+    fontSize: 12,
+    color: '#6B7280',
+    lineHeight: 16,
+  },
+
+  // Step Mode Progress
+  progressContainer: {
+    marginBottom: 18,
+  },
+  progressTextRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  progressStepLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F1115',
+  },
+  progressStepName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    maxWidth: '60%',
+  },
+  progressBarTrack: {
+    height: 4,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#0F1115',
+  },
+
+  // Step Header
+  stepHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  stepHeaderBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0F1115',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepHeaderBadgeText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  stepHeaderTitle: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#0F1115',
+    flex: 1,
+  },
+
+  // Step Illustration Card
+  stepIllustrationCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  stepIllustrationCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  stepIllustrationLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#4B5563',
+    textAlign: 'center',
+  },
+
+  // Detailed Description
+  stepDescriptionSection: {
+    marginBottom: 16,
+  },
+  stepInstructionSectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  stepPrimaryContent: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F1115',
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  explanationBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 12,
+  },
+  explanationTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 4,
+  },
+  explanationText: {
+    fontSize: 13,
+    color: '#4B5563',
+    lineHeight: 18,
+  },
+  cautionBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#0F1115',
+    gap: 10,
+  },
+  cautionContent: {
+    flex: 1,
+  },
+  cautionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 2,
+  },
+  cautionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0F1115',
+    lineHeight: 18,
+  },
+
+  // Bottom Sticky Action Bar
+  bottomActionBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F4F4F5',
+    gap: 12,
+  },
+  pillButtonOutline: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#0F1115',
+    backgroundColor: '#FFFFFF',
+    gap: 8,
+  },
+  pillButtonOutlineText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F1115',
+  },
+  pillButtonSolid: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 24,
+    backgroundColor: '#0F1115',
+    gap: 8,
+  },
+  pillButtonSolidText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // Modal Backdrop
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  feedbackModalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 24,
+    alignItems: 'center',
+  },
+  modalCheckCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#0F1115',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  feedbackTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  feedbackSub: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 18,
+  },
+  starRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  starTouch: {
+    padding: 4,
+  },
+  modalSubmitButton: {
+    width: '100%',
+    backgroundColor: '#0F1115',
+    paddingVertical: 14,
+    borderRadius: 24,
+    alignItems: 'center',
+  },
+  modalSubmitButtonText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
 });

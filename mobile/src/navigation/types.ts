@@ -16,6 +16,12 @@ export type RootStackParamList = {
     ProviderList: undefined;
     ProviderDetail: { providerId: string };
     Settings: undefined;
+    PrivacyPolicy: undefined;
     AITools: undefined;
     Notifications: undefined;
+    FirstAidList: undefined;
+    WoundScanner: { encounterId?: string } | undefined;
+    LiveTriage: { encounterId?: string; apiBaseUrl?: string; initialQuery?: string } | undefined;
+    AIChat: undefined;
+    AIAnalysis: undefined;
 };

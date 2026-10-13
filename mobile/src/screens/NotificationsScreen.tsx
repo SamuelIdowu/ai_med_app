@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { ActivityIndicator, RefreshControl } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 import { BottomTabBar } from '../components/BottomTabBar';
 
 const BG_LIGHT = '#f8f6f6';
@@ -27,6 +29,54 @@ export const NotificationsScreen = () => {
     // For now, I'll start with empty to match the user request of "add an empty state".
     // I can toggle this to test the list view.
     const [notifications, setNotifications] = React.useState<Notification[]>([]);
+    const [refreshing, setRefreshing] = React.useState(false);
+    const { session } = useAuth(); // Assuming useAuth is exported from AuthContext
+    const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:3000/api/v1';
+
+    const fetchNotifications = async () => {
+        if (!session?.access_token) return;
+        try {
+            const response = await fetch(`${backendUrl}/notifications`, {
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setNotifications(data);
+            }
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, [session]);
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        await fetchNotifications();
+        setRefreshing(false);
+    }, [session]);
+
+    const handleMarkAsRead = async (id: string, read: boolean) => {
+        if (read || !session?.access_token) return;
+
+        try {
+            // Optimistic update
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+            await fetch(`${backendUrl}/notifications/${id}/read`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+        } catch (error) {
+            console.error('Error marking as read:', error);
+        }
+    };
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
@@ -39,7 +89,10 @@ export const NotificationsScreen = () => {
     );
 
     const renderItem = ({ item }: { item: Notification }) => (
-        <TouchableOpacity style={[styles.card, !item.read && styles.unreadCard]}>
+        <TouchableOpacity
+            style={[styles.card, !item.read && styles.unreadCard]}
+            onPress={() => handleMarkAsRead(item.id, item.read)}
+        >
             <View style={[styles.iconContainer, { backgroundColor: item.type === 'alert' ? '#ffe5e5' : '#e3f2fd' }]}>
                 <MaterialCommunityIcons
                     name={item.type === 'alert' ? 'alert-circle-outline' : 'information-outline'}
@@ -80,6 +133,9 @@ export const NotificationsScreen = () => {
                 ]}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={renderEmptyState}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
             />
 
             {/* Bottom Navigation */}

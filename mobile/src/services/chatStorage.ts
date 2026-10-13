@@ -10,9 +10,11 @@ export const loadAllChats = async (): Promise<ChatsStorage> => {
     try {
         const data = await AsyncStorage.getItem(STORAGE_KEY);
         if (data) {
+            console.log('Context: chatStorage.ts:13 [loadAllChats] Loading chats from storage:', data.substring(0, 100) + '...');
             const parsed: ChatsStorage = JSON.parse(data);
             return parsed;
         }
+        console.log('Context: chatStorage.ts:17 [loadAllChats] No chats found in storage.');
         return { chats: [], currentChatId: null };
     } catch (error) {
         console.error('Error loading chats:', error);
@@ -25,6 +27,7 @@ export const loadAllChats = async (): Promise<ChatsStorage> => {
  */
 export const saveAllChats = async (storage: ChatsStorage): Promise<void> => {
     try {
+        console.log('Context: chatStorage.ts:28 [saveAllChats] Saving chats to storage. Count:', storage.chats.length);
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
     } catch (error) {
         console.error('Error saving chats:', error);

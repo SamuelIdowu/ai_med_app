@@ -11,9 +11,9 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Chat } from '../types/chatTypes';
 
-const PRIMARY_COLOR = '#137fec';
-const TEXT_DARK = '#0f172a';
-const TEXT_SECONDARY = '#64748b';
+const PRIMARY_COLOR = '#0F1115';
+const TEXT_DARK = '#0F1115';
+const TEXT_SECONDARY = '#6B7280';
 
 interface ChatHistorySidebarProps {
     visible: boolean;
@@ -34,6 +34,7 @@ export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
     onNewChat,
     onDeleteChat,
 }) => {
+    console.log('Context: ChatHistorySidebar.tsx [render] Received chats count:', chats?.length);
     const handleDelete = (chatId: string) => {
         Alert.alert(
             'Delete Chat',
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     chatList: {
-        flex: 1,
+        width: '100%',
     },
     chatListContent: {
         paddingHorizontal: 20,
@@ -226,15 +227,15 @@ const styles = StyleSheet.create({
     chatItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#FFFFFF',
         borderRadius: 12,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: '#E5E7EB',
     },
     chatItemActive: {
-        backgroundColor: '#eff6ff',
-        borderColor: PRIMARY_COLOR,
+        backgroundColor: '#F3F4F6',
+        borderColor: '#0F1115',
     },
     chatItemContent: {
         flex: 1,

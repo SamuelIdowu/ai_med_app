@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 // Rate limiter for AI endpoints
 export const aiRateLimiter = rateLimit({
@@ -11,10 +11,9 @@ export const aiRateLimiter = rateLimit({
     },
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    // Use IP address as the key (in production, consider using user ID if authenticated)
+    // Use IP address as the key with proper IPv6 support
     keyGenerator: (req) => {
-        // You can customize this to use user ID for authenticated users
-        return req.ip || 'unknown';
+        return ipKeyGenerator(req.ip ?? 'unknown');
     },
     handler: (req, res) => {
         res.status(429).json({

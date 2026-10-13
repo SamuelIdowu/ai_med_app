@@ -1,396 +1,1498 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, Easing, FlatList, Platform, StatusBar as RNStatusBar } from 'react-native';
+import React, { useState, useMemo, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Platform,
+  StatusBar as RNStatusBar,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBar } from '../components/BottomTabBar';
-import firstAidData from '../content/first-aid-content.json';
 import { AnalyticsService } from '../services/analyticsService';
-import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import { ScreenWrapper } from '../components/ScreenWrapper';
-import { MedicalProfileService, MedicalProfile } from '../services/medicalProfileService';
+import firstAidData from '../content/first-aid-content.json';
 
-const ICON_MAP: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
-    'blood-bag': 'water',
-    'fire': 'fire',
-    'breathe': 'weather-windy',
-    'heart-pulse': 'heart-pulse',
-    'bone': 'bone',
-    'account-alert': 'alert-circle',
-};
+// Types for Emergency Protocols
+export interface EmergencyProtocol {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  categoryId: string; // targets first-aid-content.json category
+  categoryGroup: string; // 'Bleedings' | 'Burns' | 'Injuries' | 'Respiratory' | 'Heart problems' | 'Poisonings' | 'Allergies' | 'Bites'
+  tags: string[]; // 'Quick' | 'Child' | 'Beginner' | 'Adult' | 'Advanced'
+  stepsCount: number;
+  urgency: string; // 'Immediate', 'High Urgency', 'Stabilization'
+  popularityRank: number;
+}
 
-export const HomeScreen = () => {
-    const navigation = useNavigation<any>();
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const [profile, setProfile] = React.useState<MedicalProfile | null>(null);
+// Emergency Protocol Catalog mapped directly from verified medical offline content
+const EMERGENCY_CATALOG: EmergencyProtocol[] = [
+  {
+    id: 'bone',
+    title: 'Bone injuries',
+    subtitle: 'Splints & Immobilization',
+    icon: 'bone',
+    categoryId: 'fractures',
+    categoryGroup: 'Injuries',
+    tags: ['Quick', 'Adult', 'Beginner'],
+    stepsCount: 3,
+    urgency: 'Stabilization',
+    popularityRank: 1,
+  },
+  {
+    id: 'wound',
+    title: 'Wound care',
+    subtitle: 'Bandage & Antiseptic',
+    icon: 'bandage',
+    categoryId: 'wound',
+    categoryGroup: 'Bleedings',
+    tags: ['Quick', 'Child', 'Adult', 'Beginner'],
+    stepsCount: 3,
+    urgency: 'Antiseptic',
+    popularityRank: 2,
+  },
+  {
+    id: 'burns',
+    title: 'Burns',
+    subtitle: 'Cooling & Dressing',
+    icon: 'fire',
+    categoryId: 'burns',
+    categoryGroup: 'Burns',
+    tags: ['Quick', 'Child', 'Beginner'],
+    stepsCount: 5,
+    urgency: 'Cooling Water',
+    popularityRank: 3,
+  },
+  {
+    id: 'choking',
+    title: 'Choking relief',
+    subtitle: 'Heimlich Maneuver',
+    icon: 'weather-windy',
+    categoryId: 'choking',
+    categoryGroup: 'Respiratory',
+    tags: ['Quick', 'Child', 'Adult', 'Advanced'],
+    stepsCount: 3,
+    urgency: 'Immediate',
+    popularityRank: 4,
+  },
+  {
+    id: 'bleeding',
+    title: 'Severe bleeding',
+    subtitle: 'Direct Pressure & Hemorrhage',
+    icon: 'water',
+    categoryId: 'bleeding',
+    categoryGroup: 'Bleedings',
+    tags: ['Quick', 'Adult', 'Advanced'],
+    stepsCount: 3,
+    urgency: 'Critical',
+    popularityRank: 5,
+  },
+  {
+    id: 'cpr',
+    title: 'CPR aid',
+    subtitle: 'Chest Compressions',
+    icon: 'heart-pulse',
+    categoryId: 'cpr',
+    categoryGroup: 'Heart problems',
+    tags: ['Quick', 'Adult', 'Advanced'],
+    stepsCount: 4,
+    urgency: 'Immediate 911',
+    popularityRank: 6,
+  },
+  {
+    id: 'poisoning',
+    title: 'Poisonings',
+    subtitle: 'Chemical Safety & Flush',
+    icon: 'alert-decagram',
+    categoryId: 'poisoning',
+    categoryGroup: 'Poisonings',
+    tags: ['Adult', 'Child', 'Advanced'],
+    stepsCount: 3,
+    urgency: 'Poison Help',
+    popularityRank: 7,
+  },
+  {
+    id: 'allergies',
+    title: 'Allergies & Shock',
+    subtitle: 'EpiPen & Anaphylaxis',
+    icon: 'shield-alert',
+    categoryId: 'allergic',
+    categoryGroup: 'Allergies',
+    tags: ['Quick', 'Child', 'Beginner'],
+    stepsCount: 3,
+    urgency: 'EpiPen Auto',
+    popularityRank: 8,
+  },
+  {
+    id: 'bites',
+    title: 'Bites & Stings',
+    subtitle: 'Venom & Disinfection',
+    icon: 'bug-outline',
+    categoryId: 'bites',
+    categoryGroup: 'Bites',
+    tags: ['Child', 'Adult', 'Beginner'],
+    stepsCount: 3,
+    urgency: 'Cold Compress',
+    popularityRank: 9,
+  },
+  {
+    id: 'unconscious',
+    title: 'Unconsciousness',
+    subtitle: 'Recovery Position',
+    icon: 'account-alert',
+    categoryId: 'unconsciousness',
+    categoryGroup: 'Respiratory',
+    tags: ['Adult', 'Advanced'],
+    stepsCount: 3,
+    urgency: 'Airway Check',
+    popularityRank: 10,
+  },
+];
 
-    useEffect(() => {
-        loadProfile();
-        // Add listener to reload profile when screen comes into focus
-        const unsubscribe = navigation.addListener('focus', () => {
-            loadProfile();
-        });
-        return unsubscribe;
-    }, [navigation]);
+// Available Filter Categories (matching mockup)
+const CATEGORY_FILTERS = [
+  'Bleedings',
+  'Burns',
+  'Allergies',
+  'Poisonings',
+  'Bites',
+  'Injuries',
+  'Respiratory',
+  'Heart problems',
+];
 
-    const loadProfile = async () => {
-        const data = await MedicalProfileService.getProfile();
-        setProfile(data);
-    };
+// Available Tags (matching mockup)
+const TAG_FILTERS = ['Quick', 'Child', 'Beginner', 'Adult', 'Advanced'];
 
-    useEffect(() => {
-        const pulse = Animated.loop(
-            Animated.sequence([
-                Animated.timing(pulseAnim, {
-                    toValue: 1.05,
-                    duration: 1500,
-                    useNativeDriver: true,
-                    easing: Easing.inOut(Easing.ease),
-                }),
-                Animated.timing(pulseAnim, {
-                    toValue: 1,
-                    duration: 1500,
-                    useNativeDriver: true,
-                    easing: Easing.inOut(Easing.ease),
-                }),
-            ])
-        );
-        pulse.start();
-        return () => pulse.stop();
-    }, [pulseAnim]);
+type SortOption = 'popular' | 'quickest' | 'alphabetical';
 
-    const getIconName = (originalIcon: string) => {
-        return ICON_MAP[originalIcon] || 'help-circle';
-    };
+export const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const searchInputRef = useRef<TextInput>(null);
 
-    const renderCategoryItem = ({ item }: { item: any }) => (
-        <TouchableOpacity
-            style={styles.categoryCard}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('EmergencySteps', { categoryId: item.id })}
-        >
-            <View style={styles.catIconContainer}>
-                <MaterialCommunityIcons name={getIconName(item.icon)} size={32} color={COLORS.primary} />
-            </View>
-            <Text style={styles.categoryText} numberOfLines={2}>{item.title}</Text>
-        </TouchableOpacity>
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+
+  // Temporary filter state for modal editing
+  const [modalCategories, setModalCategories] = useState<string[]>([]);
+  const [modalTags, setModalTags] = useState<string[]>([]);
+
+  // Sort State
+  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+
+  // Active filter count
+  const activeFilterCount = selectedCategories.length + selectedTags.length;
+
+  // Open modal handler
+  const handleOpenFilterModal = () => {
+    setModalCategories([...selectedCategories]);
+    setModalTags([...selectedTags]);
+    setIsFilterModalVisible(true);
+  };
+
+  // Toggle category inside modal
+  const handleToggleModalCategory = (cat: string) => {
+    setModalCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
+  };
 
-    return (
-        <ScreenWrapper>
+  // Toggle tag inside modal
+  const handleToggleModalTag = (tag: string) => {
+    setModalTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
-            {/* Enhanced Header */}
-            <View style={styles.header}>
-                <View style={styles.headerTop}>
-                    <View style={styles.profileContainer}>
-                        <Image
-                            source={{ uri: profile?.photoUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuATadtnpGLy0gIduxb0wLuTjC4m3cugufnBvj_-eDt3VcCWxmlDfo-iJkZw2SQdXjMuzPDU6Lh4u8Ezc112KvkuSrZrU5o3yvW_pCzkvWCxeapuIOEPGj6rFXqgQiye46fwjvKwuLuZpnuQSpvNIBVmKGmMncLEBc0z_cZXIR5yoYCqfFcve26iQ3iqg2Y71PRKR3Cf8u5maCzGJEY-arVr4f3Je-7BAp-X31YCVJViOsoMN5Q5lHWLcP82NFa5nqAFJn7X23037JQ" }}
-                            style={styles.avatar}
-                        />
-                        <View style={styles.greetingTextContainer}>
-                            <Text style={styles.greetingSub}>Welcome back,</Text>
-                            <Text style={styles.greetingName}>{profile?.fullName || 'User'}</Text>
-                        </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: 12 }}>
-                        <TouchableOpacity
-                            style={styles.notificationButton}
-                            onPress={() => navigation.navigate('Settings')}
-                        >
-                            <MaterialCommunityIcons name="cog-outline" size={24} color={COLORS.textPrimary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.notificationButton}
-                            onPress={() => navigation.navigate('Notifications')}
-                        >
-                            <MaterialCommunityIcons name="bell-badge-outline" size={24} color={COLORS.textPrimary} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+  // Apply filters from modal
+  const handleApplyFilters = () => {
+    setSelectedCategories([...modalCategories]);
+    setSelectedTags([...modalTags]);
+    setIsFilterModalVisible(false);
+  };
 
-                {/* Prominent Emergency Button */}
-                <View style={styles.emergencyWrapper}>
-                    <Animated.View style={{ transform: [{ scale: pulseAnim }], width: '100%' }}>
-                        <TouchableOpacity
-                            style={styles.emergencyButton}
-                            activeOpacity={0.9}
-                            onPress={() => {
-                                AnalyticsService.track('emergency_start');
-                            }}
-                        >
-                            <View style={styles.emergencyBtnContent}>
-                                <MaterialCommunityIcons name="alert-octagon" size={28} color={COLORS.white} />
-                                <Text style={styles.emergencyText}>EMERGENCY HELP</Text>
-                            </View>
-                        </TouchableOpacity>
-                    </Animated.View>
-                </View>
+  // Clear all filters
+  const handleClearAllFilters = () => {
+    setModalCategories([]);
+    setModalTags([]);
+    setSelectedCategories([]);
+    setSelectedTags([]);
+  };
+
+  // Quick horizontal pill toggle
+  const handleQuickCategoryPill = (cat: string) => {
+    if (selectedCategories.includes(cat)) {
+      setSelectedCategories((prev) => prev.filter((c) => c !== cat));
+    } else {
+      setSelectedCategories([cat]);
+    }
+  };
+
+  // Toggle search input
+  const handleToggleSearch = () => {
+    setIsSearchActive((prev) => {
+      const next = !prev;
+      if (next) {
+        setTimeout(() => searchInputRef.current?.focus(), 150);
+      } else {
+        setSearchQuery('');
+      }
+      return next;
+    });
+  };
+
+  // Filtered & Sorted Emergencies
+  const filteredEmergencies = useMemo(() => {
+    return EMERGENCY_CATALOG.filter((item) => {
+      // 1. Text Search filter
+      if (searchQuery.trim().length > 0) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchesTitle = item.title.toLowerCase().includes(query);
+        const matchesSubtitle = item.subtitle.toLowerCase().includes(query);
+        const matchesGroup = item.categoryGroup.toLowerCase().includes(query);
+        const matchesTag = item.tags.some((t) => t.toLowerCase().includes(query));
+        if (!matchesTitle && !matchesSubtitle && !matchesGroup && !matchesTag) {
+          return false;
+        }
+      }
+
+      // 2. Category Filter
+      if (selectedCategories.length > 0) {
+        if (!selectedCategories.includes(item.categoryGroup)) {
+          return false;
+        }
+      }
+
+      // 3. Tag Filter
+      if (selectedTags.length > 0) {
+        const hasMatchingTag = selectedTags.some((tag) => item.tags.includes(tag));
+        if (!hasMatchingTag) {
+          return false;
+        }
+      }
+
+      return true;
+    }).sort((a, b) => {
+      if (sortBy === 'popular') {
+        return a.popularityRank - b.popularityRank;
+      }
+      if (sortBy === 'quickest') {
+        return a.stepsCount - b.stepsCount;
+      }
+      if (sortBy === 'alphabetical') {
+        return a.title.localeCompare(b.title);
+      }
+      return 0;
+    });
+  }, [searchQuery, selectedCategories, selectedTags, sortBy]);
+
+  // Keep Home Screen Grid Minimal: ONLY TOP 4 ITEMS
+  const displayedEmergencies = useMemo(() => {
+    return filteredEmergencies.slice(0, 4);
+  }, [filteredEmergencies]);
+
+  const handleSelectEmergency = (categoryId: string, title: string) => {
+    AnalyticsService.track('emergency_selected_home', { categoryId, title });
+    navigation.navigate('EmergencySteps', { categoryId });
+  };
+
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case 'popular':
+        return 'Most popular';
+      case 'quickest':
+        return 'Quickest protocol';
+      case 'alphabetical':
+        return 'Alphabetical';
+    }
+  };
+
+  return (
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ================================================================= */}
+        {/* 1. HERO BANNER: Deep Onyx with iAid Logo + Stay Safe Act Fast     */}
+        {/* ================================================================= */}
+        <View style={styles.heroContainer}>
+          {/* Top Bar inside Hero */}
+          <View style={styles.heroHeaderRow}>
+            {/* Logo: iAid + Shield Icon */}
+            <View style={styles.logoRow}>
+              <Text style={styles.logoText}>iAid</Text>
+              <View style={styles.logoShieldBadge}>
+                <MaterialCommunityIcons name="shield-cross" size={20} color="#FFFFFF" />
+              </View>
             </View>
 
-            <ScrollView
-                style={styles.scrollContainer}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
+            {/* Notification & Settings Icon Buttons */}
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('Notifications')}
+                style={styles.circleActionButton}
+                accessibilityLabel="Notifications"
+              >
+                <MaterialCommunityIcons name="bell-outline" size={20} color="#FFFFFF" />
+                <View style={styles.unreadBadgeDot} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('Settings')}
+                style={styles.circleActionButton}
+                accessibilityLabel="Settings"
+              >
+                <MaterialCommunityIcons name="cog-outline" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Hero Title & Placeholder Illustration Slot */}
+          <View style={styles.heroBodyRow}>
+            <View style={styles.heroTextCol}>
+              <Text style={styles.heroTitle}>Stay Safe</Text>
+              <Text style={styles.heroTitle}>Act Fast!</Text>
+            </View>
+
+            {/* Medical Illustration Placeholder in Hero */}
+            <View style={styles.blankImagePlaceholder}>
+              <View style={styles.placeholderInner}>
+                <MaterialCommunityIcons name="medical-bag" size={28} color="#FFFFFF" />
+                <Text style={styles.placeholderLabel}>Emergency</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* ================================================================= */}
+        {/* 2. BODY CONTENT - CONTROLS, SEARCH, FILTERS & MINIMAL GRID        */}
+        {/* ================================================================= */}
+        <View style={styles.bodyContainer}>
+          {/* CONTROL ROW: Sort Selector, Filter Button, Search Button */}
+          <View style={styles.controlsRow}>
+            {/* Sort Dropdown Button */}
+            <TouchableOpacity
+              style={styles.sortButton}
+              activeOpacity={0.7}
+              onPress={() => setIsSortDropdownOpen((prev) => !prev)}
             >
-                {/* Horizontal First Aid Categories */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>First Aid Guide</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('FirstAidList')}>
-                        <Text style={styles.seeAllText}>See All</Text>
-                    </TouchableOpacity>
-                </View>
+              <Text style={styles.sortButtonText}>{getSortLabel()}</Text>
+              <MaterialCommunityIcons
+                name={isSortDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="#111827"
+              />
+            </TouchableOpacity>
 
-                <FlatList
-                    data={firstAidData.categories}
-                    renderItem={renderCategoryItem}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.categoriesList}
+            {/* Right Action Icons: Filter & Search */}
+            <View style={styles.controlsRightGroup}>
+              {/* Filter Button with active badge */}
+              <TouchableOpacity
+                style={[
+                  styles.circleControlBtn,
+                  activeFilterCount > 0 && styles.circleControlBtnActive,
+                ]}
+                activeOpacity={0.8}
+                onPress={handleOpenFilterModal}
+                accessibilityLabel="Open Filters"
+              >
+                <MaterialCommunityIcons
+                  name="tune-variant"
+                  size={19}
+                  color={activeFilterCount > 0 ? '#FFFFFF' : '#111827'}
                 />
+                {activeFilterCount > 0 && (
+                  <View style={styles.filterCountBadge}>
+                    <Text style={styles.filterCountBadgeText}>{activeFilterCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
 
-                {/* Quick Services */}
-                <Text style={[styles.sectionTitle, { marginTop: 24, marginLeft: 20 }]}>Quick Services</Text>
-                <View style={styles.actionsGrid}>
-                    <QuickActionButton
-                        icon="file-document-outline"
-                        label="History & Reports"
-                        subLabel="View past logs"
-                        onPress={() => navigation.navigate('History')}
-                        color="#4A90E2"
-                    />
-                    <QuickActionButton
-                        icon="hospital-marker"
-                        label="Find Providers"
-                        subLabel="Connect with doctors"
-                        onPress={() => navigation.navigate('ProviderList')}
-                        color="#50C878"
-                    />
-                </View>
+              {/* Search Toggle Button */}
+              <TouchableOpacity
+                style={[
+                  styles.circleControlBtn,
+                  (isSearchActive || searchQuery.length > 0) && styles.circleControlBtnActive,
+                ]}
+                activeOpacity={0.8}
+                onPress={handleToggleSearch}
+                accessibilityLabel="Toggle Search"
+              >
+                <MaterialCommunityIcons
+                  name="magnify"
+                  size={20}
+                  color={isSearchActive || searchQuery.length > 0 ? '#FFFFFF' : '#111827'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-                {/* Daily Tip Card */}
-                <View style={styles.tipCard}>
-                    <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color="#FFA500" />
-                    <View style={styles.tipContent}>
-                        <Text style={styles.tipTitle}>Daily Health Tip</Text>
-                        <Text style={styles.tipText}>Stay hydrated! Drinking water helps maintain the balance of body fluids.</Text>
-                    </View>
-                </View>
+          {/* Sort Dropdown Popover */}
+          {isSortDropdownOpen && (
+            <View style={styles.sortDropdownMenu}>
+              {(['popular', 'quickest', 'alphabetical'] as SortOption[]).map((opt) => (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.sortDropdownItem,
+                    sortBy === opt && styles.sortDropdownItemActive,
+                  ]}
+                  onPress={() => {
+                    setSortBy(opt);
+                    setIsSortDropdownOpen(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.sortDropdownItemText,
+                      sortBy === opt && styles.sortDropdownItemTextActive,
+                    ]}
+                  >
+                    {opt === 'popular'
+                      ? 'Most popular'
+                      : opt === 'quickest'
+                      ? 'Quickest protocol'
+                      : 'Alphabetical (A - Z)'}
+                  </Text>
+                  {sortBy === opt && (
+                    <MaterialCommunityIcons name="check" size={16} color="#0F1115" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
-                <View style={{ height: 100 }} />
+          {/* SEARCH BAR (Visible when toggled or query exists) */}
+          {(isSearchActive || searchQuery.length > 0) && (
+            <View style={styles.searchSection}>
+              <View style={styles.searchBarContainer}>
+                <MaterialCommunityIcons
+                  name="magnify"
+                  size={20}
+                  color="#111827"
+                  style={styles.searchIcon}
+                />
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Search emergency protocol..."
+                  placeholderTextColor="#888888"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setSearchQuery('')}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <MaterialCommunityIcons name="close-circle" size={18} color="#888888" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* HORIZONTAL CATEGORY FILTER PILLS */}
+          <View style={styles.horizontalPillsWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalPillsContent}
+            >
+              {/* "All" Pill */}
+              <TouchableOpacity
+                style={[
+                  styles.filterPill,
+                  selectedCategories.length === 0 && styles.filterPillActive,
+                ]}
+                activeOpacity={0.7}
+                onPress={() => setSelectedCategories([])}
+              >
+                <Text
+                  style={[
+                    styles.filterPillText,
+                    selectedCategories.length === 0 && styles.filterPillTextActive,
+                  ]}
+                >
+                  All
+                </Text>
+              </TouchableOpacity>
+
+              {/* Category Pills */}
+              {CATEGORY_FILTERS.map((cat) => {
+                const isSelected = selectedCategories.includes(cat);
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.filterPill, isSelected && styles.filterPillActive]}
+                    activeOpacity={0.7}
+                    onPress={() => handleQuickCategoryPill(cat)}
+                  >
+                    <Text
+                      style={[
+                        styles.filterPillText,
+                        isSelected && styles.filterPillTextActive,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                    {isSelected && (
+                      <MaterialCommunityIcons
+                        name="close"
+                        size={14}
+                        color="#FFFFFF"
+                        style={{ marginLeft: 4 }}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
+          </View>
 
-            <BottomTabBar activeRoute="Home" />
-        </ScreenWrapper>
-    );
+          {/* ACTIVE FILTER SUMMARY TAGS (if tags or multiple filters applied) */}
+          {selectedTags.length > 0 && (
+            <View style={styles.activeTagsRow}>
+              <Text style={styles.activeTagsLabel}>Tags:</Text>
+              {selectedTags.map((tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={styles.activeTagPill}
+                  onPress={() =>
+                    setSelectedTags((prev) => prev.filter((t) => t !== tag))
+                  }
+                >
+                  <Text style={styles.activeTagText}>{tag}</Text>
+                  <MaterialCommunityIcons name="close" size={12} color="#FFFFFF" />
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                onPress={() => setSelectedTags([])}
+                style={styles.clearTagsBtn}
+              >
+                <Text style={styles.clearTagsText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* =============================================================== */}
+          {/* MINIMAL GRID HEADER: Displays Top 4 with View All link          */}
+          {/* =============================================================== */}
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionTitle}>
+                {selectedCategories.length > 0
+                  ? selectedCategories.join(', ')
+                  : 'Emergencies'}
+              </Text>
+              <Text style={styles.sectionBadgeCount}>
+                ({displayedEmergencies.length} of {filteredEmergencies.length})
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('FirstAidList')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.sectionActionText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* MINIMAL 2x2 CARDS GRID (CLEAN EMERGENCY DESIGN - NO PROGRESS/TRAINING) */}
+          {displayedEmergencies.length > 0 ? (
+            <View style={styles.cardsGrid}>
+              {displayedEmergencies.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.emergencyCard}
+                  activeOpacity={0.85}
+                  onPress={() => handleSelectEmergency(item.categoryId, item.title)}
+                >
+                  {/* Top Row: Icon Circle + Step Badge */}
+                  <View style={styles.cardHeaderRow}>
+                    <View style={styles.iconCircleBadge}>
+                      <MaterialCommunityIcons name={item.icon} size={22} color="#000000" />
+                    </View>
+
+                    <View style={styles.cardStepsBadge}>
+                      <Text style={styles.cardStepsBadgeText}>
+                        {item.stepsCount} Steps
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Card Title */}
+                  <Text style={styles.emergencyCardTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+
+                  {/* Clinical Subtitle */}
+                  <Text style={styles.emergencyCardSubtitle} numberOfLines={2}>
+                    {item.subtitle}
+                  </Text>
+
+                  {/* Bottom Action Row (Emergency Protocol Link) */}
+                  <View style={styles.cardActionRow}>
+                    <Text style={styles.cardActionLabel}>Protocol</Text>
+                    <MaterialCommunityIcons name="arrow-right" size={16} color="#0F1115" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            /* EMPTY FILTER RESULT STATE */
+            <View style={styles.emptyStateContainer}>
+              <MaterialCommunityIcons
+                name="clipboard-search-outline"
+                size={48}
+                color="#888888"
+              />
+              <Text style={styles.emptyStateTitle}>No matching protocols</Text>
+              <Text style={styles.emptyStateSub}>
+                Try adjusting your search terms or clearing active filters.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyStateResetBtn}
+                onPress={() => {
+                  setSearchQuery('');
+                  setSelectedCategories([]);
+                  setSelectedTags([]);
+                }}
+              >
+                <Text style={styles.emptyStateResetText}>Reset Filters</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* VIEW ALL CTA BUTTON (If more than 4 items exist) */}
+          {filteredEmergencies.length > 4 && (
+            <TouchableOpacity
+              style={styles.viewMoreBanner}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('FirstAidList')}
+            >
+              <Text style={styles.viewMoreBannerText}>
+                View all {filteredEmergencies.length} emergency protocols
+              </Text>
+              <MaterialCommunityIcons name="arrow-right" size={18} color="#0F1115" />
+            </TouchableOpacity>
+          )}
+
+          {/* Medical AI Emergency Triage Banner */}
+          <TouchableOpacity
+            style={styles.aiTriageCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('AIChat')}
+          >
+            <View style={styles.aiTriageLeft}>
+              <View style={styles.aiTriageIcon}>
+                <MaterialCommunityIcons name="robot" size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.aiTriageTextCol}>
+                <Text style={styles.aiTriageTitle}>AI Emergency Triage</Text>
+                <Text style={styles.aiTriageSub}>
+                  Unsure what steps to take? Instant AI symptom triage
+                </Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#000000" />
+          </TouchableOpacity>
+
+          {/* Spacing for floating bottom bar */}
+          <View style={{ height: 110 }} />
+        </View>
+      </ScrollView>
+
+      {/* =================================================================== */}
+      {/* 3. CATEGORY & TAG FILTER BOTTOM SHEET MODAL (Screen 3 in mockup)   */}
+      {/* =================================================================== */}
+      <Modal
+        visible={isFilterModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsFilterModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setIsFilterModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalSheet}>
+                {/* Drag Handle Bar */}
+                <View style={styles.modalHandleBar} />
+
+                {/* Header: "Categories" + Close Icon */}
+                <View style={styles.modalHeaderRow}>
+                  <Text style={styles.modalHeaderTitle}>Categories</Text>
+                  <TouchableOpacity
+                    onPress={() => setIsFilterModalVisible(false)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={styles.modalCloseBtn}
+                  >
+                    <MaterialCommunityIcons name="close" size={20} color="#111827" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Categories Pill Grid */}
+                <View style={styles.modalPillsGrid}>
+                  {CATEGORY_FILTERS.map((cat) => {
+                    const isSelected = modalCategories.includes(cat);
+                    return (
+                      <TouchableOpacity
+                        key={cat}
+                        style={[
+                          styles.modalPill,
+                          isSelected ? styles.modalPillActive : styles.modalPillInactive,
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => handleToggleModalCategory(cat)}
+                      >
+                        <Text
+                          style={[
+                            styles.modalPillText,
+                            isSelected
+                              ? styles.modalPillTextActive
+                              : styles.modalPillTextInactive,
+                          ]}
+                        >
+                          {cat}
+                        </Text>
+                        {isSelected && (
+                          <MaterialCommunityIcons
+                            name="close"
+                            size={14}
+                            color="#FFFFFF"
+                            style={{ marginLeft: 6 }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Section: Tags */}
+                <Text style={styles.modalSubHeaderTitle}>Tags</Text>
+                <View style={styles.modalPillsGrid}>
+                  {TAG_FILTERS.map((tag) => {
+                    const isSelected = modalTags.includes(tag);
+                    return (
+                      <TouchableOpacity
+                        key={tag}
+                        style={[
+                          styles.modalPill,
+                          isSelected ? styles.modalPillActive : styles.modalPillInactive,
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => handleToggleModalTag(tag)}
+                      >
+                        <Text
+                          style={[
+                            styles.modalPillText,
+                            isSelected
+                              ? styles.modalPillTextActive
+                              : styles.modalPillTextInactive,
+                          ]}
+                        >
+                          {tag}
+                        </Text>
+                        {isSelected && (
+                          <MaterialCommunityIcons
+                            name="close"
+                            size={14}
+                            color="#FFFFFF"
+                            style={{ marginLeft: 6 }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Modal Footer Actions: "Clear all" & "Apply" */}
+                <View style={styles.modalFooterRow}>
+                  <TouchableOpacity
+                    style={styles.modalClearBtn}
+                    onPress={handleClearAllFilters}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.modalClearBtnText}>Clear all</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.modalApplyBtn}
+                    onPress={handleApplyFilters}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.modalApplyBtnText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* =================================================================== */}
+      {/* 4. FLOATING BOTTOM NAVIGATION BAR                                   */}
+      {/* =================================================================== */}
+      <BottomTabBar activeRoute="Home" />
+    </View>
+  );
 };
 
-const QuickActionButton = ({ icon, label, subLabel, onPress, color }: any) => (
-    <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
-        <View style={[styles.actionIconBox, { backgroundColor: (color || COLORS.primary) + '20' }]}>
-            <MaterialCommunityIcons name={icon} size={28} color={color || COLORS.primary} />
-        </View>
-        <View style={styles.actionInfo}>
-            <Text style={styles.actionLabel}>{label}</Text>
-            <Text style={styles.actionSubLabel}>{subLabel}</Text>
-        </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.gray} />
-    </TouchableOpacity>
-);
-
+// ============================================================================
+// BLACK & WHITE / MONOCHROME STYLES
+// ============================================================================
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    header: {
-        backgroundColor: COLORS.white,
-        paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 40) + 10 : 60,
-        paddingBottom: 20,
-        paddingHorizontal: 20,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        ...SHADOWS.light,
-        zIndex: 10,
-    },
-    headerTop: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        borderWidth: 2,
-        borderColor: COLORS.primary,
-    },
-    greetingTextContainer: {
-        marginLeft: 12,
-    },
-    greetingSub: {
-        fontSize: 14,
-        color: COLORS.textSecondary,
-    },
-    greetingName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: COLORS.textPrimary,
-    },
-    notificationButton: {
-        padding: 10,
-        backgroundColor: COLORS.inputBackground,
-        borderRadius: 12,
-    },
-    emergencyWrapper: {
-        alignItems: 'center',
-    },
-    emergencyButton: {
-        backgroundColor: '#FF3B30',
-        borderRadius: 20,
-        paddingVertical: 18,
-        paddingHorizontal: 24,
-        width: '100%',
-        alignItems: 'center',
-        shadowColor: '#FF3B30',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    emergencyBtnContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-    },
-    emergencyText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: '800',
-        letterSpacing: 1,
-    },
-    scrollContainer: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingTop: 24,
-        paddingBottom: 40,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        marginBottom: 16,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: COLORS.textPrimary,
-    },
-    seeAllText: {
-        color: COLORS.primary,
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    categoriesList: {
-        paddingHorizontal: 14,
-        paddingBottom: 10,
-    },
-    categoryCard: {
-        backgroundColor: COLORS.white,
-        borderRadius: 20,
-        padding: 16,
-        marginHorizontal: 6,
-        width: 120,
-        height: 140,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        ...SHADOWS.medium,
-        shadowOpacity: 0.1,
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.03)',
-    },
-    catIconContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#F2F8FF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    categoryText: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: COLORS.textPrimary,
-        textAlign: 'center',
-        lineHeight: 18,
-    },
-    actionsGrid: {
-        paddingHorizontal: 20,
-        marginTop: 12,
-        gap: 12,
-    },
-    actionCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.white,
-        borderRadius: 20,
-        padding: 16,
-        ...SHADOWS.light,
-        marginBottom: 8,
-    },
-    actionIconBox: {
-        width: 52,
-        height: 52,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    actionInfo: {
-        flex: 1,
-    },
-    actionLabel: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.textPrimary,
-        marginBottom: 2,
-    },
-    actionSubLabel: {
-        fontSize: 13,
-        color: COLORS.textSecondary,
-    },
-    tipCard: {
-        flexDirection: 'row',
-        backgroundColor: '#FFF8E1',
-        marginHorizontal: 20,
-        marginTop: 24,
-        padding: 20,
-        borderRadius: 20,
-        alignItems: 'flex-start',
-        gap: 12,
-        borderWidth: 1,
-        borderColor: '#FFE0B2',
-    },
-    tipContent: {
-        flex: 1,
-    },
-    tipTitle: {
-        fontSize: 15,
-        fontWeight: 'bold',
-        color: '#E65100',
-        marginBottom: 4,
-    },
-    tipText: {
-        fontSize: 13,
-        color: '#5D4037',
-        lineHeight: 19,
-    },
+  screen: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+
+  // 1. HERO BANNER
+  heroContainer: {
+    backgroundColor: '#0F1115', // Pure deep onyx black
+    paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 20) + 12 : 54,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  heroHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoText: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  logoShieldBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#262A33',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#3D4250',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  circleActionButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#262A33',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#3D4250',
+    position: 'relative',
+  },
+  unreadBadgeDot: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: '#262A33',
+  },
+  heroBodyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroTextCol: {
+    flex: 1,
+  },
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    lineHeight: 38,
+    letterSpacing: -0.6,
+  },
+
+  // Blank Image Placeholder in Hero
+  blankImagePlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#333842',
+    backgroundColor: '#181A20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  placeholderLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // 2. BODY CONTENT
+  bodyContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+  },
+
+  // CONTROLS ROW: "Most popular ⌄", filter icon, search icon
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 22,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  sortButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F1115',
+  },
+  controlsRightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  circleControlBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  circleControlBtnActive: {
+    backgroundColor: '#0F1115',
+    borderColor: '#0F1115',
+  },
+  filterCountBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#0F1115',
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  filterCountBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // Sort Dropdown Menu
+  sortDropdownMenu: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 6,
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  sortDropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  sortDropdownItemActive: {
+    backgroundColor: '#F9FAFB',
+  },
+  sortDropdownItemText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  sortDropdownItemTextActive: {
+    color: '#0F1115',
+    fontWeight: '800',
+  },
+
+  // SEARCH BAR
+  searchSection: {
+    marginBottom: 14,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FA',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+
+  // HORIZONTAL CATEGORY FILTER PILLS
+  horizontalPillsWrapper: {
+    marginBottom: 18,
+    marginHorizontal: -20,
+  },
+  horizontalPillsContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  filterPillActive: {
+    backgroundColor: '#0F1115',
+    borderColor: '#0F1115',
+  },
+  filterPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  filterPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  // Active tags row
+  activeTagsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 16,
+  },
+  activeTagsLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginRight: 2,
+  },
+  activeTagPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F1115',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  activeTagText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  clearTagsBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  clearTagsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#EF4444',
+  },
+
+  // Section Headers
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F1115',
+    letterSpacing: -0.3,
+  },
+  sectionBadgeCount: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  sectionActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#4B5563',
+  },
+
+  // 2-Column Cards Grid (Minimal Top 4)
+  cardsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 14,
+  },
+
+  // EMERGENCY CARDS (CLEAN EMERGENCY DESIGN - NO PROGRESS/TRAINING)
+  emergencyCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    padding: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    justifyContent: 'space-between',
+    minHeight: 154,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconCircleBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardStepsBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  cardStepsBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0F1115',
+  },
+  emergencyCardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 4,
+    letterSpacing: -0.2,
+  },
+  emergencyCardSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  cardActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  cardActionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F1115',
+  },
+
+  // Empty state
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  emptyStateTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginTop: 10,
+  },
+  emptyStateSub: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  emptyStateResetBtn: {
+    backgroundColor: '#0F1115',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  emptyStateResetText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+
+  // View more banner
+  viewMoreBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 14,
+    gap: 8,
+  },
+  viewMoreBannerText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F1115',
+  },
+
+  // AI Triage Banner
+  aiTriageCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 16,
+    marginTop: 20,
+  },
+  aiTriageLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flex: 1,
+  },
+  aiTriageIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#0F1115',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiTriageTextCol: {
+    flex: 1,
+  },
+  aiTriageTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginBottom: 2,
+  },
+  aiTriageSub: {
+    fontSize: 12,
+    color: '#666666',
+    lineHeight: 16,
+  },
+
+  // 3. FILTER BOTTOM SHEET MODAL (Screen 3 in mockup)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    maxHeight: '85%',
+  },
+  modalHandleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalHeaderTitle: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#0F1115',
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSubHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F1115',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  modalPillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  modalPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 22,
+    borderWidth: 1,
+  },
+  modalPillInactive: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+  },
+  modalPillActive: {
+    backgroundColor: '#0F1115',
+    borderColor: '#0F1115',
+  },
+  modalPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  modalPillTextInactive: {
+    color: '#1F2937',
+  },
+  modalPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  modalFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 28,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  modalClearBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  modalClearBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  modalApplyBtn: {
+    backgroundColor: '#0F1115',
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+  },
+  modalApplyBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
 });

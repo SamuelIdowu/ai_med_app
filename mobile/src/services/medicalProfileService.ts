@@ -2,24 +2,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 
+export interface EmergencyContact {
+    name: string;
+    relationship: string;
+    phone: string;
+}
+
 export interface MedicalProfile {
     id?: string;
     email?: string;
     fullName: string;
-    dob: string;
+    dob?: string;
     bloodType: string;
-    gender: string;
-    genotype: string;
+    gender?: string;
+    genotype?: string; // Kept as optional for backwards compatibility with legacy local storage
     weight?: string;
     height?: string;
     allergies: string[];
     medications: string[];
     conditions: string[];
-    emergencyContact: {
-        name: string;
-        relationship: string;
-        phone: string;
-    };
+    medicalDirectives?: string[]; // E.g., 'Organ Donor', 'Carries EpiPen', 'Pacemaker Installed', 'Diabetic Alert'
+    emergencyNotes?: string;      // Urgent instructions for first responders/paramedics
+    emergencyContact: EmergencyContact;          // Primary ICE
+    secondaryEmergencyContact?: EmergencyContact; // Secondary / Backup ICE
     photoUrl?: string;
 }
 
@@ -33,22 +38,32 @@ export const MedicalProfileService = {
                 const response = await api.get('/profile');
                 if (response.data) {
                     const apiData = response.data;
+                    const contacts: EmergencyContact[] = Array.isArray(apiData.emergency_contacts)
+                        ? apiData.emergency_contacts
+                        : [];
+
                     const profile: MedicalProfile = {
                         email: apiData.users?.email || '',
                         fullName: apiData.users?.name || '',
                         dob: apiData.dob,
-                        bloodType: apiData.blood_type,
-                        gender: apiData.gender || 'Male',
-                        genotype: apiData.genotype || 'AA',
-                        weight: apiData.weight,
-                        height: apiData.height,
-                        allergies: apiData.allergies || [],
-                        medications: apiData.medications || [],
-                        conditions: apiData.conditions || [],
-                        emergencyContact: (apiData.emergency_contacts && apiData.emergency_contacts.length > 0)
-                            ? apiData.emergency_contacts[0]
+                        bloodType: apiData.blood_type || 'Unknown',
+                        gender: apiData.gender || 'Not specified',
+                        weight: apiData.weight || '',
+                        height: apiData.height || '',
+                        allergies: Array.isArray(apiData.allergies) ? apiData.allergies : [],
+                        medications: Array.isArray(apiData.medications) ? apiData.medications : [],
+                        conditions: Array.isArray(apiData.conditions) ? apiData.conditions : [],
+                        medicalDirectives: Array.isArray(apiData.medical_directives)
+                            ? apiData.medical_directives
+                            : (Array.isArray(apiData.directives) ? apiData.directives : []),
+                        emergencyNotes: apiData.emergency_notes || '',
+                        emergencyContact: contacts.length > 0
+                            ? contacts[0]
                             : { name: '', relationship: '', phone: '' },
-                        photoUrl: apiData.photo_url
+                        secondaryEmergencyContact: contacts.length > 1
+                            ? contacts[1]
+                            : undefined,
+                        photoUrl: apiData.photo_url || ''
                     };
 
                     // Update local storage
@@ -78,19 +93,29 @@ export const MedicalProfileService = {
             const jsonValue = JSON.stringify(profile);
             await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
 
+            // Assemble contacts array for API
+            const emergencyContacts: EmergencyContact[] = [];
+            if (profile.emergencyContact && profile.emergencyContact.name) {
+                emergencyContacts.push(profile.emergencyContact);
+            }
+            if (profile.secondaryEmergencyContact && profile.secondaryEmergencyContact.name) {
+                emergencyContacts.push(profile.secondaryEmergencyContact);
+            }
+
             // Map to API format
             const apiPayload = {
-                fullName: profile.fullName, // handled specially in backend for users table
+                fullName: profile.fullName,
                 dob: profile.dob,
                 blood_type: profile.bloodType,
                 gender: profile.gender,
-                genotype: profile.genotype,
                 weight: profile.weight,
                 height: profile.height,
                 allergies: profile.allergies,
                 medications: profile.medications,
                 conditions: profile.conditions,
-                emergency_contacts: [profile.emergencyContact],
+                medical_directives: profile.medicalDirectives || [],
+                emergency_notes: profile.emergencyNotes || '',
+                emergency_contacts: emergencyContacts,
                 photo_url: profile.photoUrl
             };
 

@@ -22,11 +22,14 @@ import { ProviderListScreen } from '../screens/ProviderListScreen';
 import { ProviderDetailScreen } from '../screens/ProviderDetailScreen';
 
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
 import { AIAnalysisScreen } from '../screens/AIAnalysisScreen';
 import { AIChatScreen } from '../screens/AIChatScreen';
 import { AIToolsScreen } from '../screens/AIToolsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { FirstAidListScreen } from '../screens/FirstAidListScreen';
+import { WoundScannerScreen } from '../screens/WoundScannerScreen';
+import { LiveTriageScreen } from '../screens/LiveTriageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -63,12 +66,15 @@ export const AppNavigator = () => {
                         <Stack.Screen name="ProviderList" component={ProviderListScreen} />
                         <Stack.Screen name="ProviderDetail" component={ProviderDetailScreen} />
                         <Stack.Screen name="Settings" component={SettingsScreen} />
+                        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
                         <Stack.Screen name="PhotoPreview" component={PhotoPreviewScreen} />
                         <Stack.Screen name="AIAnalysis" component={AIAnalysisScreen} />
                         <Stack.Screen name="AIChat" component={AIChatScreen} />
                         <Stack.Screen name="AITools" component={AIToolsScreen} />
                         <Stack.Screen name="Notifications" component={NotificationsScreen} />
                         <Stack.Screen name="FirstAidList" component={FirstAidListScreen} />
+                        <Stack.Screen name="WoundScanner" component={WoundScannerScreen} />
+                        <Stack.Screen name="LiveTriage" component={LiveTriageScreen} />
                     </>
                 )}
             </Stack.Navigator>

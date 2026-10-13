@@ -1,401 +1,310 @@
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    Alert,
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    SafeAreaView
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
+import { TactileButton } from '../components/ui/TactileButton';
+import { theme } from '../theme';
 
-type AuthMethod = 'email' | 'phone';
+export const LoginScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const { enterGuestMode } = useAuth();
 
-export const LoginScreen = () => {
-    const navigation = useNavigation<any>();
-    const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-    // Email State
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  const handleEmailLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
 
-    // Phone State
-    const [phone, setPhone] = useState('');
-    const [otpCode, setOtpCode] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
 
-    // UI State
-    const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
+    if (error) {
+      Alert.alert('Login Failed', error.message);
+    }
+  };
 
-    const handleEmailLogin = async () => {
-        if (!email || !password) {
-            Alert.alert('Error', 'Please enter email and password');
-            return;
-        }
+  const handleGoogleLogin = () => {
+    Alert.alert('Google Sign-In', 'Google authentication is ready to connect with your Supabase credentials.');
+  };
 
-        setLoading(true);
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        setLoading(false);
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo iAid+ from sketch.webp */}
+          <View style={styles.logoRow}>
+            <View style={styles.logoBadge}>
+              <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+            </View>
+            <Text style={styles.logoText}>iAid<Text style={styles.logoPlus}>+</Text></Text>
+          </View>
 
-        if (error) {
-            Alert.alert('Login Failed', error.message);
-        }
-    };
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Sign in</Text>
+            <Text style={styles.subtitle}>Please login to your account</Text>
+          </View>
 
-    const handleSendOtp = async () => {
-        if (!phone) {
-            Alert.alert('Error', 'Please enter a mobile number');
-            return;
-        }
+          {/* Sign in with Google Button from sketch.webp */}
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleGoogleLogin}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="google" size={20} color={theme.colors.text.primary} />
+            <Text style={styles.socialButtonText}>Sign in with Google</Text>
+          </TouchableOpacity>
 
-        // Basic formatting/validation could go here
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-        setLoading(true);
-        const { error } = await supabase.auth.signInWithOtp({
-            phone: phone,
-        });
-        setLoading(false);
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={theme.colors.text.muted}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+            </View>
 
-        if (error) {
-            Alert.alert('Error', error.message);
-        } else {
-            setOtpSent(true);
-            Alert.alert('Success', 'OTP sent to your mobile number');
-        }
-    };
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor={theme.colors.text.muted}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <MaterialCommunityIcons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={20}
+                    color={theme.colors.text.muted}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-    const handleVerifyOtp = async () => {
-        if (!otpCode) {
-            Alert.alert('Error', 'Please enter the verification code');
-            return;
-        }
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+            </TouchableOpacity>
 
-        setLoading(true);
-        const { error } = await supabase.auth.verifyOtp({
-            phone: phone,
-            token: otpCode,
-            type: 'sms',
-        });
-        setLoading(false);
+            <TactileButton
+              label="Sign in"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
+              onPress={handleEmailLogin}
+            />
 
-        if (error) {
-            Alert.alert('Error', error.message);
-        }
-    };
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={enterGuestMode}
+              style={styles.guestButton}
             >
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+              <Text style={styles.guestButtonText}>Continue without sign in</Text>
+            </TouchableOpacity>
 
-                    {/* Header Section */}
-                    <View style={styles.header}>
-                        <Text style={styles.title}>Welcome Back</Text>
-                        <Text style={styles.subtitle}>Sign in to continue your health journey</Text>
-                    </View>
-
-                    {/* Toggle Auth Method */}
-                    <View style={styles.toggleContainer}>
-                        <TouchableOpacity
-                            style={[styles.toggleButton, authMethod === 'email' && styles.toggleButtonActive]}
-                            onPress={() => setAuthMethod('email')}
-                        >
-                            <Text style={[styles.toggleText, authMethod === 'email' && styles.toggleTextActive]}>Email</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.toggleButton, authMethod === 'phone' && styles.toggleButtonActive]}
-                            onPress={() => setAuthMethod('phone')}
-                        >
-                            <Text style={[styles.toggleText, authMethod === 'phone' && styles.toggleTextActive]}>Mobile</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Form Section */}
-                    {authMethod === 'email' ? (
-                        <View style={styles.form}>
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Email Address</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="jendoe.mobbin@gmail.com"
-                                        placeholderTextColor="#999"
-                                        value={email}
-                                        onChangeText={setEmail}
-                                        autoCapitalize="none"
-                                        keyboardType="email-address"
-                                    />
-                                    {email.includes('@') && (
-                                        <MaterialCommunityIcons name="check-circle" size={20} color="#4CAF50" />
-                                    )}
-                                </View>
-                            </View>
-
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Password</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Min. 8 characters"
-                                        placeholderTextColor="#999"
-                                        value={password}
-                                        onChangeText={setPassword}
-                                        secureTextEntry={!showPassword}
-                                    />
-                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                        <MaterialCommunityIcons
-                                            name={showPassword ? "eye-off" : "eye"}
-                                            size={20}
-                                            color="#666"
-                                        />
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-
-                            <TouchableOpacity style={styles.forgotPassword}>
-                                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.primaryButton}
-                                onPress={handleEmailLogin}
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <Text style={styles.primaryButtonText}>Sign In</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <View style={styles.form}>
-                            {!otpSent ? (
-                                <>
-                                    <View style={styles.inputContainer}>
-                                        <Text style={styles.label}>Mobile Number</Text>
-                                        <View style={styles.inputWrapper}>
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder="+1 234 567 8900"
-                                                placeholderTextColor="#999"
-                                                value={phone}
-                                                onChangeText={setPhone}
-                                                keyboardType="phone-pad"
-                                            />
-                                        </View>
-                                    </View>
-                                    <TouchableOpacity
-                                        style={styles.primaryButton}
-                                        onPress={handleSendOtp}
-                                        disabled={loading}
-                                    >
-                                        {loading ? (
-                                            <ActivityIndicator color="#fff" />
-                                        ) : (
-                                            <Text style={styles.primaryButtonText}>Send Code</Text>
-                                        )}
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                <>
-                                    <View style={styles.inputContainer}>
-                                        <Text style={styles.label}>Verification Code</Text>
-                                        <View style={styles.inputWrapper}>
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder="123456"
-                                                placeholderTextColor="#999"
-                                                value={otpCode}
-                                                onChangeText={setOtpCode}
-                                                keyboardType="number-pad"
-                                                maxLength={6}
-                                            />
-                                        </View>
-                                    </View>
-                                    <TouchableOpacity
-                                        style={styles.primaryButton}
-                                        onPress={handleVerifyOtp}
-                                        disabled={loading}
-                                    >
-                                        {loading ? (
-                                            <ActivityIndicator color="#fff" />
-                                        ) : (
-                                            <Text style={styles.primaryButtonText}>Verify & Login</Text>
-                                        )}
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={styles.textButton}
-                                        onPress={() => setOtpSent(false)}
-                                    >
-                                        <Text style={styles.textButtonText}>Change Number</Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
-                        </View>
-                    )}
-
-                    {/* Footer */}
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>Don't have an account? </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                            <Text style={styles.linkText}>Sign Up</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    );
+            <View style={styles.footerRow}>
+              <Text style={styles.footerText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                <Text style={styles.footerLink}>Sign up</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    scrollContent: {
-        flexGrow: 1,
-        padding: 24,
-        justifyContent: 'center',
-    },
-    header: {
-        marginBottom: 32,
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#1a1a1a',
-        marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#666',
-    },
-    toggleContainer: {
-        flexDirection: 'row',
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
-        padding: 4,
-        marginBottom: 32,
-    },
-    toggleButton: {
-        flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-        borderRadius: 8,
-    },
-    toggleButtonActive: {
-        backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    toggleText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#666',
-    },
-    toggleTextActive: {
-        color: '#E53935',
-    },
-    form: {
-        marginBottom: 24,
-    },
-    inputContainer: {
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
-        fontWeight: '500',
-    },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#fff',
-    },
-    input: {
-        flex: 1,
-        fontSize: 16,
-        color: '#333',
-        marginRight: 10,
-    },
-    forgotPassword: {
-        alignSelf: 'flex-end',
-        marginBottom: 24,
-    },
-    forgotPasswordText: {
-        color: '#E53935',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    primaryButton: {
-        backgroundColor: '#E53935',
-        paddingVertical: 16,
-        borderRadius: 30,
-        alignItems: 'center',
-        shadowColor: '#E53935',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    primaryButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    textButton: {
-        alignItems: 'center',
-        marginTop: 16,
-    },
-    textButtonText: {
-        color: '#666',
-        fontSize: 14,
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 'auto',
-        paddingTop: 24,
-    },
-    footerText: {
-        color: '#666',
-        fontSize: 16,
-    },
-    linkText: {
-        color: '#E53935',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.canvas.background,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 28,
+  },
+  logoBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: theme.colors.primary.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    letterSpacing: -0.5,
+  },
+  logoPlus: {
+    color: '#10B981',
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: theme.colors.text.primary,
+    marginBottom: 6,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: theme.colors.canvas.surface,
+    borderColor: theme.colors.canvas.border,
+    borderWidth: 1,
+    paddingVertical: 14,
+    borderRadius: theme.spatial.radii.pill,
+    marginBottom: 20,
+    ...theme.spatial.shadows.card,
+  },
+  socialButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.canvas.border,
+  },
+  dividerText: {
+    fontSize: 13,
+    color: theme.colors.text.muted,
+  },
+  form: {
+    gap: 16,
+  },
+  inputGroup: {
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.canvas.surface,
+    borderColor: theme.colors.canvas.border,
+    borderWidth: 1,
+    borderRadius: theme.spatial.radii.pill,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    ...theme.spatial.shadows.card,
+  },
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: theme.colors.text.primary,
+  },
+  eyeIcon: {
+    padding: 4,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.primary.main,
+  },
+  guestButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  guestButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  footerText: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+  },
+  footerLink: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.primary.main,
+  },
 });
