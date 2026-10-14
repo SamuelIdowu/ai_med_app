@@ -342,15 +342,33 @@ export const HomeScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Notification & Settings Icon Buttons */}
+            {/* Medical Profile, AI Tools, Notification & Settings Icon Buttons */}
             <View style={styles.headerActions}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('MedicalProfile')}
+                style={styles.circleActionButton}
+                accessibilityLabel="Medical Profile"
+              >
+                <MaterialCommunityIcons name="card-account-details-outline" size={19} color="#FFFFFF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('AITools')}
+                style={styles.circleActionButton}
+                accessibilityLabel="AI Clinical Suite"
+              >
+                <MaterialCommunityIcons name="creation" size={19} color="#FFFFFF" />
+              </TouchableOpacity>
+
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('Notifications')}
                 style={styles.circleActionButton}
                 accessibilityLabel="Notifications"
               >
-                <MaterialCommunityIcons name="bell-outline" size={20} color="#FFFFFF" />
+                <MaterialCommunityIcons name="bell-outline" size={19} color="#FFFFFF" />
                 <View style={styles.unreadBadgeDot} />
               </TouchableOpacity>
 
@@ -360,7 +378,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Settings"
               >
-                <MaterialCommunityIcons name="cog-outline" size={20} color="#FFFFFF" />
+                <MaterialCommunityIcons name="cog-outline" size={19} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
@@ -712,6 +730,46 @@ export const HomeScreen: React.FC = () => {
                 <Text style={styles.aiTriageTitle}>AI Emergency Triage</Text>
                 <Text style={styles.aiTriageSub}>
                   Unsure what steps to take? Instant AI symptom triage
+                </Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#000000" />
+          </TouchableOpacity>
+
+          {/* AI Clinical Suite Hub Card */}
+          <TouchableOpacity
+            style={styles.aiTriageCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('AITools')}
+          >
+            <View style={styles.aiTriageLeft}>
+              <View style={styles.aiTriageIcon}>
+                <MaterialCommunityIcons name="creation" size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.aiTriageTextCol}>
+                <Text style={styles.aiTriageTitle}>AI Clinical Suite</Text>
+                <Text style={styles.aiTriageSub}>
+                  Live streaming SSE triage, CV wound scanner & diagnostic photo lab
+                </Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#000000" />
+          </TouchableOpacity>
+
+          {/* Nearest Clinics & Live Map Banner */}
+          <TouchableOpacity
+            style={styles.aiTriageCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('ProviderList')}
+          >
+            <View style={styles.aiTriageLeft}>
+              <View style={styles.aiTriageIcon}>
+                <MaterialCommunityIcons name="map-marker-radius" size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.aiTriageTextCol}>
+                <Text style={styles.aiTriageTitle}>Nearest Clinics & Live Map</Text>
+                <Text style={styles.aiTriageSub}>
+                  Locate closest hospitals, urgent cares & live routing with GPS
                 </Text>
               </View>
             </View>

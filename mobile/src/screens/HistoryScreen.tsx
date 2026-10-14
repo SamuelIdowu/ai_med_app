@@ -18,12 +18,14 @@ import { ConcentricVitalsRing } from '../components/charts/ConcentricVitalsRing'
 import { ClinicalBarChart } from '../components/charts/ClinicalBarChart';
 import { TimeSegmentControl, TimeSegment } from '../components/charts/TimeSegmentControl';
 import { TactileButton } from '../components/ui/TactileButton';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { EncounterService } from '../services/encounterService';
 import { reportService } from '../services/reportService';
 import { theme } from '../theme';
 
 export const HistoryScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const { session } = useAuth();
   const [encounters, setEncounters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,7 +238,11 @@ export const HistoryScreen: React.FC = () => {
               </MedicalCard>
             ) : (
               encounters.map((enc) => (
-                <MedicalCard key={enc.id} style={styles.encounterCard}>
+                <MedicalCard
+                  key={enc.id}
+                  style={styles.encounterCard}
+                  onPress={() => navigation.navigate('ReportPreview', { encounterId: enc.id })}
+                >
                   <View style={styles.encounterRow}>
                     <View style={styles.encIconCircle}>
                       <MaterialCommunityIcons
@@ -259,6 +265,13 @@ export const HistoryScreen: React.FC = () => {
                   </View>
 
                   <View style={styles.encActionsRow}>
+                    <TactileButton
+                      label="View Details"
+                      variant="primary"
+                      size="sm"
+                      icon="file-document-outline"
+                      onPress={() => navigation.navigate('ReportPreview', { encounterId: enc.id })}
+                    />
                     <TactileButton
                       label="PDF Report"
                       variant="outline"

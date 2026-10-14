@@ -306,22 +306,49 @@ export const AIChatScreen: React.FC = () => {
       onPress: () => navigation.navigate('FirstAidList'),
     },
     {
+      id: 'live-triage',
+      title: 'Live Streaming Triage',
+      description: 'Real-time markdown SSE clinical triage with escalation detection',
+      icon: 'lightning-bolt',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => navigation.navigate('LiveTriage'),
+    },
+    {
+      id: 'wound-scan',
+      title: 'CV Wound Scanner',
+      description: 'Reticle camera frame for lacerations, burns & severity grading',
+      icon: 'camera-iris',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => navigation.navigate('WoundScanner'),
+    },
+    {
+      id: 'ai-analysis',
+      title: 'AI Photo Diagnostic Lab',
+      description: 'Multi-image clinical assessment, severity rating & report export',
+      icon: 'image-search-outline',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => navigation.navigate('AIAnalysis'),
+    },
+    {
+      id: 'nearby-clinics',
+      title: 'Nearest Clinics & Map',
+      description: 'Locate closest hospitals and urgent care centers with GPS distance',
+      icon: 'map-marker-radius',
+      iconBgColor: '#F3F4F6',
+      iconColor: '#0F1115',
+      onPress: () => navigation.navigate('ProviderList'),
+    },
+    {
       id: 'video-triage',
-      title: 'Video Triage (Live Capture)',
+      title: 'Video Capture Triage',
       description: 'Record a video clip for motion, bleed & airway assessment',
       icon: 'video-outline',
       iconBgColor: '#F3F4F6',
       iconColor: '#0F1115',
       onPress: () => handleSelectMediaAction('record_video'),
-    },
-    {
-      id: 'wound-scan',
-      title: 'Wound & Photo Assessment',
-      description: 'Upload or capture a photo for clinical AI inspection',
-      icon: 'camera-iris',
-      iconBgColor: '#F3F4F6',
-      iconColor: '#0F1115',
-      onPress: () => setMediaModalVisible(true),
     },
     {
       id: 'emergency-services',
@@ -363,6 +390,18 @@ export const AIChatScreen: React.FC = () => {
         </View>
 
         <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate('AITools')}
+            activeOpacity={0.7}
+            accessibilityLabel="All AI Clinical Tools"
+          >
+            <MaterialCommunityIcons
+              name="creation"
+              size={22}
+              color={theme.colors.text.primary}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={handleNewChat}

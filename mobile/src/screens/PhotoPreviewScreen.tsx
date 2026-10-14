@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -20,16 +20,11 @@ export const PhotoPreviewScreen = () => {
 
     const handleSave = () => {
         if (!consent) {
-            alert("Please provide consent to proceed.");
+            Alert.alert("Consent Required", "Please provide consent to proceed with clinical photo analysis.");
             return;
         }
-        // Logic to save/upload specific encounter photo would go here
-        // For now, assume success and maybe go back to home or next step
-        console.log("Saving photo:", photoUri);
-        // navigation.navigate('ShareReportPreview'); // Next flow? Or back to Home? 
-        // Based on flow, it seems to go to Share Report or Emergency Summary if part of flow
-        // For now, let's just go back to Home or previous screen
-        navigation.popToTop();
+        console.log("Photo confirmed:", photoUri);
+        navigation.navigate('AIAnalysis');
     };
 
     return (

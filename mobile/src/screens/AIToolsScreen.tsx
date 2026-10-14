@@ -162,6 +162,60 @@ export const AIToolsScreen: React.FC = () => {
                 iconColor="#0F1115"
               />
             </MedicalCard>
+
+            {/* 6. AI Photo Diagnostic Lab */}
+            <MedicalCard
+              style={styles.toolCard}
+              onPress={() => navigation.navigate('AIAnalysis')}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+                <MaterialCommunityIcons
+                  name="image-search-outline"
+                  size={26}
+                  color="#0F1115"
+                />
+              </View>
+
+              <View style={styles.textContainer}>
+                <Text style={styles.toolTitle}>AI Photo Diagnostic Lab</Text>
+                <Text style={styles.toolDescription}>
+                  Upload multi-angle injury photos for clinical severity grading, symptoms & clinician report export.
+                </Text>
+              </View>
+
+              <CircularDrilldownButton
+                onPress={() => navigation.navigate('AIAnalysis')}
+                size={36}
+                iconColor="#0F1115"
+              />
+            </MedicalCard>
+
+            {/* 7. Clinical Camera Guide */}
+            <MedicalCard
+              style={styles.toolCard}
+              onPress={() => navigation.navigate('PhotoInstructions')}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+                <MaterialCommunityIcons
+                  name="camera-metering-center"
+                  size={26}
+                  color="#0F1115"
+                />
+              </View>
+
+              <View style={styles.textContainer}>
+                <Text style={styles.toolTitle}>Clinical Camera Guide</Text>
+                <Text style={styles.toolDescription}>
+                  3-step capture guide ensuring proper lighting, distance & angle for AI diagnostic accuracy.
+                </Text>
+              </View>
+
+              <CircularDrilldownButton
+                onPress={() => navigation.navigate('PhotoInstructions')}
+                size={36}
+                iconColor="#0F1115"
+              />
+            </MedicalCard>
           </View>
 
           <View style={{ height: 110 }} />
