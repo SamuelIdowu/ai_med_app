@@ -80,10 +80,8 @@ async function run() {
     console.log(`Testing generateReport for User: ${userId}, Encounter: ${encounterId}`);
 
     try {
-        // TODO: Obtain a valid access token for the user if needed for RLS/Auth checks.
-        // For now, passing a mock token to satisfy the function signature.
-        const mockToken = 'mock-token-for-verification';
-        const report = await generateReport(userId, encounterId, mockToken);
+        const token = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+        const report = await generateReport(userId, encounterId, token);
         console.log('Report generated successfully! Length:', report.length);
     } catch (error: any) {
         console.error('CAUGHT EXPECTED ERROR:', error.message);

@@ -24,10 +24,7 @@ interface Notification {
 export const NotificationsScreen = () => {
     const navigation = useNavigation();
 
-    // Mock data - set to empty array to test empty state initially, 
-    // or populate to test list state.
-    // For now, I'll start with empty to match the user request of "add an empty state".
-    // I can toggle this to test the list view.
+    // Notifications state populated via live backend API
     const [notifications, setNotifications] = React.useState<Notification[]>([]);
     const [refreshing, setRefreshing] = React.useState(false);
     const { session } = useAuth(); // Assuming useAuth is exported from AuthContext

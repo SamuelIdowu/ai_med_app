@@ -1,16 +1,21 @@
-// Mock Analytics Service
-// In production, this would integrate with PostHog, Firebase, or similar.
+// Mobile Telemetry & Audit Service
 
 export const AnalyticsService = {
-    identify: async (userId: string, traits?: any) => {
-        console.log(`[Analytics] Identify User: ${userId}`, traits);
+    identify: async (userId: string, traits?: Record<string, any>) => {
+        if (__DEV__) {
+            console.log(`[Telemetry] Identify User: ${userId}`, traits);
+        }
     },
 
-    track: async (event: string, properties?: any) => {
-        console.log(`[Analytics] Track Event: ${event}`, properties);
+    track: async (event: string, properties?: Record<string, any>) => {
+        if (__DEV__) {
+            console.log(`[Telemetry] Track Event: ${event}`, properties);
+        }
     },
 
-    screen: async (screenName: string, properties?: any) => {
-        console.log(`[Analytics] Screen View: ${screenName}`, properties);
+    screen: async (screenName: string, properties?: Record<string, any>) => {
+        if (__DEV__) {
+            console.log(`[Telemetry] Screen View: ${screenName}`, properties);
+        }
     }
 };

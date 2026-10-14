@@ -1,24 +1,41 @@
 import express from 'express';
 import { authenticateUser } from '../middleware/auth';
-import { supabase } from '../config/supabase';
+import { getSupabaseAdmin } from '../db/client';
 
 const router = express.Router();
-
-console.log('Providers route loaded');
 
 router.use(authenticateUser);
 
 router.get('/', async (req, res) => {
     try {
-        // Mock response for now as we don't have a provider DB or Google Maps key set up in the checklist tasks explicitly
-        // logic to fetch providers.
+        const supabase = getSupabaseAdmin();
         const { data: providers, error } = await supabase
             .from('providers')
-            .select('*');
+            .select('*')
+            .order('name', { ascending: true });
 
         if (error) throw error;
 
-        res.json(providers);
+        res.json(providers || []);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const supabase = getSupabaseAdmin();
+        const { data: provider, error } = await supabase
+            .from('providers')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) {
+            return res.status(404).json({ error: 'Provider not found' });
+        }
+
+        res.json(provider);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
