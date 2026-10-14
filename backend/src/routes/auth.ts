@@ -21,9 +21,13 @@ router.post('/check', async (req, res) => {
         });
 
         if (error) {
-            // Check for specific error message indicating existence
-            // Supabase/GoTrue usually returns "User already registered"
-            if (error.message.includes('already registered') || error.message.includes('User already exists')) {
+            // Check for specific error message or code indicating existence
+            if (
+                error.code === 'email_exists' ||
+                (error as any).status === 422 ||
+                error.message.includes('already registered') ||
+                error.message.includes('User already exists')
+            ) {
                 return res.json({ exists: true });
             }
             // Other error?

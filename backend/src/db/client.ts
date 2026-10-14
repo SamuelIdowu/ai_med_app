@@ -10,11 +10,7 @@ import fetch from 'node-fetch';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config();
 
-let adminClientInstance: SupabaseClient | null = null;
-
 export function getSupabaseAdmin(): SupabaseClient {
-  if (adminClientInstance) return adminClientInstance;
-
   const url = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -22,17 +18,20 @@ export function getSupabaseAdmin(): SupabaseClient {
     throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment');
   }
 
-  adminClientInstance = createClient(url, serviceKey, {
+  // Always supply the service role key explicitly in headers to prevent session pollution
+  return createClient(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
     global: {
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+      },
       fetch: fetch as any,
     },
   });
-
-  return adminClientInstance;
 }
 
 export function createAuthenticatedClient(accessToken: string): SupabaseClient {

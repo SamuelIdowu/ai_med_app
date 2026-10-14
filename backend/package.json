@@ -6,7 +6,12 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "jest src/tests/e2e_all_features.test.ts",
+    "test:load": "ts-node load-tests/run-benchmark.ts",
+    "test:load:smoke": "k6 run load-tests/k6-smoke.js",
+    "test:load:ramp": "k6 run load-tests/k6-concurrency-ramp.js",
+    "test:load:journey": "k6 run load-tests/k6-user-journey.js"
   },
   "keywords": [],
   "author": "",

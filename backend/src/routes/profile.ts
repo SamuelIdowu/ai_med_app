@@ -16,6 +16,7 @@ router.get('/', async (req, res) => {
         }
         res.json(profile);
     } catch (error: any) {
+        console.error('GET /api/v1/profile error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -26,6 +27,7 @@ router.post('/', async (req, res) => {
         const profile = await upsertProfile(req.user.id, req.body, token);
         res.json(profile);
     } catch (error: any) {
+        console.error('POST /api/v1/profile error:', error);
         res.status(500).json({ error: error.message });
     }
 });

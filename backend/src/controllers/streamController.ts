@@ -149,7 +149,7 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
       .from(STORAGE_BUCKET)
       .upload(storagePath, imageBuffer, {
         contentType: 'image/jpeg',
-        upsert: false,
+        upsert: true,
       });
 
     if (uploadError) {
