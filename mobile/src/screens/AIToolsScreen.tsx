@@ -135,6 +135,33 @@ export const AIToolsScreen: React.FC = () => {
                 iconColor="#0F1115"
               />
             </MedicalCard>
+
+            {/* 5. Nearest Medical Facilities & Live Map */}
+            <MedicalCard
+              style={styles.toolCard}
+              onPress={() => navigation.navigate('ProviderList')}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+                <MaterialCommunityIcons
+                  name="map-marker-radius"
+                  size={26}
+                  color="#0F1115"
+                />
+              </View>
+
+              <View style={styles.textContainer}>
+                <Text style={styles.toolTitle}>Nearest Clinics & Live Map</Text>
+                <Text style={styles.toolDescription}>
+                  Locate closest hospitals, urgent care centers & pharmacies with proximity and routing.
+                </Text>
+              </View>
+
+              <CircularDrilldownButton
+                onPress={() => navigation.navigate('ProviderList')}
+                size={36}
+                iconColor="#0F1115"
+              />
+            </MedicalCard>
           </View>
 
           <View style={{ height: 110 }} />
