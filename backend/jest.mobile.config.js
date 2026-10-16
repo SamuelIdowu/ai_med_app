@@ -23,6 +23,10 @@ module.exports = {
   moduleNameMapper: {
     '^@react-native-async-storage/async-storage$': '<rootDir>/mobile/src/__mocks__/asyncStorage.ts',
     '^expo-secure-store$': '<rootDir>/mobile/src/__mocks__/expo-secure-store.ts',
+    '^expo-file-system$': '<rootDir>/mobile/src/__mocks__/expo-file-system.ts',
+    '^expo-file-system/(.*)$': '<rootDir>/mobile/src/__mocks__/expo-file-system.ts',
+    '^expo-sharing$': '<rootDir>/mobile/src/__mocks__/expo-sharing.ts',
+    '^expo-image-manipulator$': '<rootDir>/mobile/src/__mocks__/expo-image-manipulator.ts',
     '^react-native$': '<rootDir>/mobile/src/__mocks__/react-native.ts',
   },
 };

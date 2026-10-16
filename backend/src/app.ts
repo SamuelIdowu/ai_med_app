@@ -15,6 +15,7 @@ import providerRoutes from './routes/providers';
 import authRoutes from './routes/auth';
 import aiRoutes from './routes/ai';
 import notificationRoutes from './routes/notifications';
+import analyticsRoutes from './routes/analytics';
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use('/api/v1/providers', providerRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

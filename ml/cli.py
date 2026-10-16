@@ -32,8 +32,19 @@ from app.services.safety_engine import SafetyEngine
 from app.services.vision_engine import WoundVisionEngine
 from app.services.embedding_engine import EmbeddingEngine
 from app.services.triage_engine import TriageEngine
-from train.dataset_curator import create_synthetic_dataset, create_dataset_splits
+from app.services.classical_ml_service import ClassicalMLService
+from train.dataset_curator import (
+    create_synthetic_dataset,
+    create_dataset_splits,
+    generate_clinical_tabular_dataset,
+    generate_protocols_dataset
+)
 from train.finetune_lora import run_training_pipeline
+from train.train_classical_model import (
+    train_and_evaluate_triage_models,
+    format_training_summary
+)
+from eda.clinical_eda import run_clinical_eda, format_eda_summary_text
 
 def cmd_serve(args):
     import uvicorn
@@ -48,10 +59,69 @@ def cmd_curate(args):
     count = create_synthetic_dataset(output_path)
     print(f"[SUCCESS] Curated {count} clinical instruction samples.")
 
+    if args.tabular:
+        csv_path = args.csv_output or "data/clinical_triage_features.csv"
+        df = generate_clinical_tabular_dataset(output_csv_path=csv_path, num_samples=args.samples)
+        print(f"[TABULAR] Generated tabular clinical dataset ({df.shape[0]} rows, {df.shape[1]} cols) -> {csv_path}")
+
     if args.split:
         data_dir = os.path.dirname(output_path) or "data"
         train_cnt, val_cnt = create_dataset_splits(data_dir)
         print(f"[SPLIT] Created dataset splits: {train_cnt} train, {val_cnt} validation.")
+
+def cmd_eda(args):
+    csv_path = args.dataset or "data/clinical_triage_features.csv"
+    plots_dir = args.plots_dir or "data/eda"
+    print(f"[EDA] Running Exploratory Data Analysis on {csv_path}...")
+    report = run_clinical_eda(csv_path=csv_path, output_plot_dir=plots_dir)
+    print(format_eda_summary_text(report))
+
+def cmd_train_classical(args):
+    csv_path = args.dataset or "data/clinical_triage_features.csv"
+    models_dir = args.models_dir or "models"
+    print(f"[TRAIN] Launching Classical ML Benchmark & Training Pipeline ({csv_path})...")
+    result = train_and_evaluate_triage_models(dataset_csv=csv_path, models_dir=models_dir)
+    print(format_training_summary(result))
+
+def cmd_predict_vitals(args):
+    vitals = {
+        "heart_rate": args.hr,
+        "systolic_bp": args.bp_sys,
+        "diastolic_bp": args.bp_dia,
+        "respiratory_rate": args.rr,
+        "oxygen_saturation": args.spo2,
+        "body_temperature": args.temp,
+        "pain_score": args.pain,
+        "severe_bleeding": 1 if args.bleeding else 0,
+        "altered_mental_status": 1 if args.altered else 0,
+        "age": args.age
+    }
+
+    service = ClassicalMLService()
+    if not service.is_model_available():
+        print("[ERROR] Model artifacts not found. Please run `python cli.py train-classical` first.")
+        sys.exit(1)
+
+    result = service.predict(vitals)
+
+    print("\n" + "=" * 50)
+    print("  PHYSIOLOGICAL VITALS TRIAGE ASSESSMENT")
+    print("=" * 50)
+    print(f"  Triage Classification : {result['triage_label'].upper()}")
+    print(f"  Emergency Escalation  : {'YES (EMERGENCY)' if result['is_emergency'] else 'NO'}")
+    print(f"  Model Confidence      : {result['confidence'] * 100:.1f}%")
+    print("\n  Class Probabilities:")
+    for cls_name, prob in result["probabilities"].items():
+        bar = "#" * int(prob * 20)
+        print(f"    • {cls_name:<12}: {prob * 100:>5.1f}%  {bar}")
+
+    if result["risk_drivers"]:
+        print("\n  Clinical Risk Drivers & Red Flags:")
+        for driver in result["risk_drivers"]:
+            print(f"    ! {driver}")
+    else:
+        print("\n  Clinical Risk Drivers: None detected (vitals within physiological bounds)")
+    print("=" * 50 + "\n")
 
 def cmd_train(args):
     dataset_path = args.dataset or settings.DATASET_PATH
@@ -240,7 +310,36 @@ def main():
     p_curate = subparsers.add_parser("curate", help="Curate training dataset")
     p_curate.add_argument("--output", default=None, help="Output path for JSONL dataset")
     p_curate.add_argument("--split", action="store_true", help="Generate train/val splits")
+    p_curate.add_argument("--tabular", action="store_true", help="Generate tabular clinical CSV dataset")
+    p_curate.add_argument("--samples", type=int, default=3500, help="Number of tabular samples (default 3500)")
+    p_curate.add_argument("--csv-output", default="data/clinical_triage_features.csv", help="CSV output destination")
     p_curate.set_defaults(func=cmd_curate)
+
+    # eda
+    p_eda = subparsers.add_parser("eda", help="Run Exploratory Data Analysis (EDA) on clinical dataset")
+    p_eda.add_argument("--dataset", default="data/clinical_triage_features.csv", help="Path to clinical CSV dataset")
+    p_eda.add_argument("--plots-dir", default="data/eda", help="Output directory for EDA plots")
+    p_eda.set_defaults(func=cmd_eda)
+
+    # train-classical
+    p_train_c = subparsers.add_parser("train-classical", help="Train and benchmark classical ML triage models")
+    p_train_c.add_argument("--dataset", default="data/clinical_triage_features.csv", help="Path to clinical CSV dataset")
+    p_train_c.add_argument("--models-dir", default="models", help="Output directory for .joblib models")
+    p_train_c.set_defaults(func=cmd_train_classical)
+
+    # predict-vitals
+    p_pred_v = subparsers.add_parser("predict-vitals", help="Predict triage urgency from physiological vitals")
+    p_pred_v.add_argument("--hr", type=float, default=80.0, help="Heart rate (bpm)")
+    p_pred_v.add_argument("--bp-sys", type=float, default=120.0, help="Systolic blood pressure (mmHg)")
+    p_pred_v.add_argument("--bp-dia", type=float, default=80.0, help="Diastolic blood pressure (mmHg)")
+    p_pred_v.add_argument("--rr", type=float, default=16.0, help="Respiratory rate (breaths/min)")
+    p_pred_v.add_argument("--spo2", type=float, default=98.0, help="Oxygen saturation (% SpO2)")
+    p_pred_v.add_argument("--temp", type=float, default=37.0, help="Body temperature (°C)")
+    p_pred_v.add_argument("--pain", type=int, default=0, help="Pain score (0-10)")
+    p_pred_v.add_argument("--bleeding", action="store_true", help="Flag if severe active bleeding is present")
+    p_pred_v.add_argument("--altered", action="store_true", help="Flag if altered mental status / confusion is present")
+    p_pred_v.add_argument("--age", type=int, default=40, help="Patient age in years")
+    p_pred_v.set_defaults(func=cmd_predict_vitals)
 
     # train
     p_train = subparsers.add_parser("train", help="Run LoRA training pipeline")

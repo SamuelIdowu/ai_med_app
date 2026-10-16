@@ -22,12 +22,14 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { EncounterService } from '../services/encounterService';
 import { reportService } from '../services/reportService';
+import { VitalsService, VitalsTelemetry } from '../services/vitalsService';
 import { theme } from '../theme';
 
 export const HistoryScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { session } = useAuth();
   const [encounters, setEncounters] = useState<any[]>([]);
+  const [vitals, setVitals] = useState<VitalsTelemetry | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSegment, setActiveSegment] = useState<TimeSegment>('Hourly');
   const [activeTab, setActiveTab] = useState<'vitals' | 'activity'>('vitals');
@@ -37,6 +39,10 @@ export const HistoryScreen: React.FC = () => {
     loadHistory();
   }, []);
 
+  useEffect(() => {
+    loadVitals(activeSegment);
+  }, [activeSegment]);
+
   const loadHistory = async () => {
     try {
       const data = await EncounterService.getEncounters();
@@ -45,6 +51,15 @@ export const HistoryScreen: React.FC = () => {
       console.warn('Error loading encounters:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadVitals = async (segment: TimeSegment) => {
+    try {
+      const data = await VitalsService.getVitalsTelemetry(segment);
+      setVitals(data);
+    } catch (error) {
+      console.warn('Error loading vitals telemetry:', error);
     }
   };
 
@@ -140,10 +155,14 @@ export const HistoryScreen: React.FC = () => {
                 <View>
                   <Text style={styles.metricSub}>Heart Rate</Text>
                   <View style={styles.metricRow}>
-                    <Text style={styles.metricValue}>78</Text>
+                    <Text style={styles.metricValue}>
+                      {vitals?.currentHeartRate ?? '—'}
+                    </Text>
                     <Text style={styles.metricUnit}>BPM</Text>
                   </View>
-                  <Text style={styles.metricStatus}>Near to average (±80)</Text>
+                  <Text style={styles.metricStatus}>
+                    {vitals?.heartRateStatus || 'Awaiting live biometric reading'}
+                  </Text>
                 </View>
 
                 <View style={styles.heartIconCircle}>
@@ -158,27 +177,28 @@ export const HistoryScreen: React.FC = () => {
               {/* Area Chart with Vertical Pin from ref 2 */}
               <VitalsAreaChart
                 height={170}
-                highlightIndex={2}
-                highlightLabel="78 BPM"
+                data={vitals?.heartRatePoints}
+                highlightIndex={vitals ? Math.max(0, vitals.heartRatePoints.length - 1) : 0}
+                highlightLabel={vitals ? `${vitals.currentHeartRate} BPM` : '—'}
               />
 
               {/* 3-Column Stats: Average | Minimum | Maximum (ref 2) */}
               <View style={styles.threeColRow}>
                 <View style={styles.colStat}>
                   <Text style={styles.colLabel}>Average</Text>
-                  <Text style={styles.colValue}>78</Text>
+                  <Text style={styles.colValue}>{vitals?.average ?? '—'}</Text>
                   <Text style={styles.colUnit}>BPM</Text>
                 </View>
                 <View style={styles.colDivider} />
                 <View style={styles.colStat}>
                   <Text style={styles.colLabel}>Minimum</Text>
-                  <Text style={styles.colValue}>58</Text>
+                  <Text style={styles.colValue}>{vitals?.min ?? '—'}</Text>
                   <Text style={styles.colUnit}>BPM</Text>
                 </View>
                 <View style={styles.colDivider} />
                 <View style={styles.colStat}>
                   <Text style={styles.colLabel}>Maximum</Text>
-                  <Text style={styles.colValue}>89</Text>
+                  <Text style={styles.colValue}>{vitals?.max ?? '—'}</Text>
                   <Text style={styles.colUnit}>BPM</Text>
                 </View>
               </View>
@@ -197,7 +217,8 @@ export const HistoryScreen: React.FC = () => {
               <ConcentricVitalsRing
                 size={130}
                 strokeWidth={9}
-                centerText="8.2h"
+                rings={vitals?.sleepRings}
+                centerText={vitals?.sleepDuration || '—'}
                 centerSubtext="Sleep time"
               />
             </MedicalCard>
@@ -207,10 +228,10 @@ export const HistoryScreen: React.FC = () => {
               <View style={styles.cardHeaderWithBadge}>
                 <Text style={styles.cardSectionTitle}>Hemoglobin (Hgb)</Text>
                 <View style={styles.badgeNorm}>
-                  <Text style={styles.badgeNormText}>112 Hgb Normal</Text>
+                  <Text style={styles.badgeNormText}>{vitals?.labBadge || 'Clinical Norm'}</Text>
                 </View>
               </View>
-              <ClinicalBarChart height={160} />
+              <ClinicalBarChart height={160} data={vitals?.labBars} />
             </MedicalCard>
           </>
         ) : (
@@ -256,7 +277,7 @@ export const HistoryScreen: React.FC = () => {
                         {enc.category || 'Emergency First Aid'}
                       </Text>
                       <Text style={styles.encNotes} numberOfLines={2}>
-                        {enc.notes || 'General triage assistance logged.'}
+                        {enc.notes || (enc.symptoms?.length ? enc.symptoms.join(', ') : 'Clinical triage assessment recorded')}
                       </Text>
                       <Text style={styles.encDate}>
                         {new Date(enc.created_at).toLocaleDateString()}
