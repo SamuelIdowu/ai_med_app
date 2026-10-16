@@ -475,7 +475,7 @@ export const AIChatScreen: React.FC = () => {
             <View style={styles.welcomeSection}>
               <View style={styles.orbShadow}>
                 <LinearGradient
-                  colors={['#0F1115', '#262A33', '#4B5563']}
+                  colors={[theme.colors.palette.coralCoast, theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal]}
                   start={{ x: 0.1, y: 0.1 }}
                   end={{ x: 0.9, y: 0.9 }}
                   style={styles.orb}
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.status.success.primary,
   },
   statusText: {
     fontSize: 11,
@@ -728,11 +728,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
+    ...theme.spatial.shadows3d.accentGlow,
     marginBottom: 16,
   },
   orb: {
@@ -784,13 +780,14 @@ const styles = StyleSheet.create({
   userBubble: {
     backgroundColor: theme.colors.primary.main,
     borderBottomRightRadius: 4,
+    ...theme.spatial.shadows3d.tactileButton,
   },
   modelBubble: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
     borderColor: theme.colors.canvas.border,
     borderBottomLeftRadius: 4,
-    ...theme.spatial.shadows.card,
+    ...theme.spatial.shadows3d.card3d,
   },
   userMessageText: {
     fontSize: 15,
@@ -808,12 +805,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderColor: theme.colors.canvas.border,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: theme.spatial.radii.pill,
+    ...theme.spatial.shadows.sm,
   },
   suggestionText: {
     fontSize: 12,

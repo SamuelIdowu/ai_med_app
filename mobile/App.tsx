@@ -29,7 +29,7 @@ import {
   Inter_800ExtraBold,
 } from '@expo-google-fonts/inter';
 import './src/theme/fontPatch';
-import { theme } from './src/theme';
+import { theme, ThemeProvider } from './src/theme';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import { registerForPushNotificationsAsync, saveTokenToBackend, addNotificationListeners } from './src/services/NotificationService';
@@ -82,7 +82,7 @@ export default function App() {
   }, []);
 
   if (!fontsLoaded && !fontError && !fontTimeout) {
-    const isDark = theme.colors.canvas.background === '#0B0F19';
+    const isDark = theme.colors.canvas.background === '#061011' || theme.colors.canvas.background === '#0B0F19';
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.canvas.background }]}>
         <StatusBar
@@ -95,9 +95,11 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

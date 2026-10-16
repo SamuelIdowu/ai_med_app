@@ -74,11 +74,12 @@ const styles = StyleSheet.create({
   banner: {
     backgroundColor: theme.colors.status.emergency.surface,
     borderColor: theme.colors.status.emergency.border,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: theme.spatial.radii.lg,
     padding: theme.spatial.spacing.md,
     marginHorizontal: theme.spatial.spacing.md,
     marginBottom: theme.spatial.spacing.md,
+    ...theme.spatial.shadows3d.emergencyGlow,
   },
   textColumn: {
     marginBottom: 10,

@@ -48,6 +48,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           container: {
             backgroundColor: theme.colors.status.emergency.primary,
             borderColor: theme.colors.status.emergency.primary,
+            ...theme.spatial.shadows3d.emergencyGlow,
           },
           text: { color: theme.colors.text.inverse },
           iconColor: theme.colors.text.inverse,
@@ -57,6 +58,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           container: {
             backgroundColor: theme.colors.canvas.surface,
             borderColor: theme.colors.canvas.border,
+            ...theme.spatial.shadows.sm,
           },
           text: { color: theme.colors.text.primary },
           iconColor: theme.colors.text.primary,
@@ -87,6 +89,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           container: {
             backgroundColor: theme.colors.primary.main,
             borderColor: theme.colors.primary.main,
+            ...theme.spatial.shadows3d.tactileButton,
           },
           text: { color: theme.colors.text.inverse },
           iconColor: theme.colors.text.inverse,

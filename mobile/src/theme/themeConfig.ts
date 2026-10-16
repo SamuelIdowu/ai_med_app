@@ -4,7 +4,7 @@
 // Change theme presets, fonts, or colors right here in one place.
 // Every screen, card, button, chart, and text component updates automatically!
 
-export type ThemePreset = 'monochrome' | 'clinicalWarm' | 'cleanSlate' | 'modernTeal' | 'midnightDark';
+export type ThemePreset = 'coralTeal' | 'monochrome' | 'clinicalWarm' | 'cleanSlate' | 'modernTeal' | 'midnightDark';
 export type FontPreset =
   | 'MontserratAlt_SpaceGrotesk' // Modern Pair: Space Grotesk Headings/Metrics + Montserrat Alt Body
   | 'SpaceGrotesk'             // Complete Space Grotesk
@@ -13,14 +13,24 @@ export type FontPreset =
   | 'Inter'                    // Neutral UI Sans
   | 'System';                  // Native OS Sans
 
+export const BRAND_PALETTE = {
+  blissfulBlue: '#b1c8d8',
+  pompeiiAsh: '#6a787d',
+  coralCoast: '#0e88a0',
+  petroBlue: '#305762',
+  eliteTeal: '#0f333a',
+  darkSideMoon: '#061011',
+} as const;
+
 export interface ThemeConfig {
   /**
    * Active visual theme preset:
+   * - 'coralTeal'     : 3D Clinical Coral Coast & Elite Teal (User Brand Palette)
    * - 'monochrome'    : Sleek Black & White (Onyx #0F1115, White #FFFFFF, Light Gray #F3F4F6)
    * - 'clinicalWarm' : Warm off-white #F8F7F4 + Electric Cobalt (Matches reference.webp)
    * - 'cleanSlate'    : Pure clinical white #F8FAFC + Deep Sapphire #0284C7
    * - 'modernTeal'    : Soft mint canvas #F0FDFA + Medical Emerald Teal #0D9488
-   * - 'midnightDark'  : Deep charcoal #0B0F19 + Luminous Sky #38BDF8
+   * - 'midnightDark'  : Deep charcoal #061011 + Luminous Sky #0e88a0
    */
   activePreset: ThemePreset;
 
@@ -51,7 +61,7 @@ export interface ThemeConfig {
 // 👉 ACTIVE CONFIGURATION SWITCH - EDIT HERE TO SWAP THEME OR FONT
 // ============================================================================
 export const activeDesignConfig: ThemeConfig = {
-  activePreset: 'monochrome', // 👈 Black and White theme throughout the app
+  activePreset: 'coralTeal', // 👈 Primary Coral Coast & Elite Teal with 3D/Glassmorphism feel
   activeFont: 'MontserratAlt_SpaceGrotesk',
 };
 
@@ -59,7 +69,50 @@ export const activeDesignConfig: ThemeConfig = {
 // THEME PRESET PALETTES
 // ============================================================================
 export const THEME_PRESETS = {
-  // 0. Monochrome / Black and White (Consistent Onyx & White)
+  // 0. Coral Teal (User Brand Palette - Coral Coast #0e88a0, Elite Teal #0f333a, Dark Side Moon #061011)
+  coralTeal: {
+    canvas: {
+      background: '#F8FAFC',
+      surface: '#FFFFFF',
+      surfaceSubtle: '#F0F9FA',
+      border: '#E2E8F0',
+      borderFocus: BRAND_PALETTE.coralCoast,
+    },
+    primary: {
+      main: BRAND_PALETTE.coralCoast,
+      hover: '#0c7388',
+      light: '#E6F6F9',
+      border: '#B6E5EE',
+    },
+    navPill: {
+      background: BRAND_PALETTE.eliteTeal,
+      border: 'rgba(255, 255, 255, 0.12)',
+      activeIndicator: BRAND_PALETTE.coralCoast,
+      activeIcon: '#FFFFFF',
+      inactiveIcon: BRAND_PALETTE.pompeiiAsh,
+      shadow: 'rgba(6, 16, 17, 0.35)',
+    },
+    text: {
+      primary: BRAND_PALETTE.darkSideMoon,
+      secondary: BRAND_PALETTE.petroBlue,
+      muted: BRAND_PALETTE.pompeiiAsh,
+      inverse: '#FFFFFF',
+    },
+    chart: {
+      linePrimary: BRAND_PALETTE.coralCoast,
+      lineGradientStart: 'rgba(14, 136, 160, 0.22)',
+      lineGradientEnd: 'rgba(14, 136, 160, 0.00)',
+      donutRingOuter: BRAND_PALETTE.coralCoast,
+      donutRingMiddle: BRAND_PALETTE.petroBlue,
+      donutRingInner: BRAND_PALETTE.blissfulBlue,
+      barNormal: BRAND_PALETTE.coralCoast,
+      barElevated: '#EF4444',
+      barMuted: '#E2E8F0',
+      gridLine: '#F1F5F9',
+    },
+  },
+
+  // 1. Monochrome / Black and White (Consistent Onyx & White)
   monochrome: {
     canvas: {
       background: '#F8F9FA',
@@ -343,30 +396,34 @@ export const FONT_PRESETS = {
   },
 } as const;
 
-// Status colors adapted for monochrome Black & White theme (colors will be re-added later)
+// Clinical Status Colors (Strict WCAG AAA, Vivid Red for Emergency)
 export const STATUS_COLORS = {
   emergency: {
-    primary: '#0F1115',
-    surface: '#F3F4F6',
-    border: '#E5E7EB',
-    text: '#0F1115',
+    primary: '#EF4444',
+    surface: '#FEF2F2',
+    border: '#FCA5A5',
+    text: '#991B1B',
+    glow: 'rgba(239, 68, 68, 0.25)',
   },
   warning: {
-    primary: '#374151',
-    surface: '#F3F4F6',
-    border: '#E5E7EB',
-    text: '#0F1115',
+    primary: '#F59E0B',
+    surface: '#FFFBEB',
+    border: '#FCD34D',
+    text: '#92400E',
+    glow: 'rgba(245, 158, 11, 0.20)',
   },
   success: {
-    primary: '#0F1115',
-    surface: '#F3F4F6',
-    border: '#E5E7EB',
-    text: '#0F1115',
+    primary: '#10B981',
+    surface: '#ECFDF5',
+    border: '#A7F3D0',
+    text: '#065F46',
+    glow: 'rgba(16, 185, 129, 0.18)',
   },
   info: {
-    primary: '#0F1115',
-    surface: '#F3F4F6',
-    border: '#E5E7EB',
-    text: '#0F1115',
+    primary: BRAND_PALETTE.coralCoast,
+    surface: '#F0F9FA',
+    border: '#B6E5EE',
+    text: BRAND_PALETTE.eliteTeal,
+    glow: 'rgba(14, 136, 160, 0.18)',
   },
 } as const;

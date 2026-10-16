@@ -16,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { AnalyticsService } from '../services/analyticsService';
+import { theme } from '../theme';
 import firstAidData from '../content/first-aid-content.json';
 
 // Types for Emergency Protocols
@@ -933,17 +934,13 @@ const styles = StyleSheet.create({
 
   // 1. HERO BANNER
   heroContainer: {
-    backgroundColor: '#0F1115', // Pure deep onyx black
+    backgroundColor: theme.colors.palette.eliteTeal, // Rich brand Elite Teal
     paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 20) + 12 : 54,
     paddingHorizontal: 20,
     paddingBottom: 28,
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8,
+    ...theme.spatial.shadows3d.floating3d,
   },
   heroHeaderRow: {
     flexDirection: 'row',
@@ -966,11 +963,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#262A33',
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#3D4250',
+    borderColor: 'rgba(255, 255, 255, 0.20)',
   },
   headerActions: {
     flexDirection: 'row',
@@ -981,11 +978,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#262A33',
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#3D4250',
+    borderColor: 'rgba(255, 255, 255, 0.20)',
     position: 'relative',
   },
   unreadBadgeDot: {
@@ -995,9 +992,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.colors.status.emergency.primary,
     borderWidth: 1.5,
-    borderColor: '#262A33',
+    borderColor: theme.colors.palette.eliteTeal,
   },
   heroBodyRow: {
     flexDirection: 'row',
@@ -1015,14 +1012,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
 
-  // Blank Image Placeholder in Hero
+  // 3D Model / Image Touchpoint in Hero
   blankImagePlaceholder: {
     width: 90,
     height: 90,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#333842',
-    backgroundColor: '#181A20',
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(14, 136, 160, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1034,7 +1031,7 @@ const styles = StyleSheet.create({
   placeholderLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -1273,19 +1270,15 @@ const styles = StyleSheet.create({
     rowGap: 14,
   },
 
-  // EMERGENCY CARDS (CLEAN EMERGENCY DESIGN - NO PROGRESS/TRAINING)
+  // EMERGENCY CARDS (CLEAN EMERGENCY DESIGN WITH 3D TACTILE DEPTH)
   emergencyCard: {
     width: '48%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#EAECEF',
+    borderColor: theme.colors.canvas.border,
     padding: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...theme.spatial.shadows3d.card3d,
     justifyContent: 'space-between',
     minHeight: 154,
   },
@@ -1299,24 +1292,24 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardStepsBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
   },
   cardStepsBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   emergencyCardTitle: {
     fontSize: 15,
@@ -1407,12 +1400,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
     padding: 16,
     marginTop: 20,
+    ...theme.spatial.shadows3d.card3d,
   },
   aiTriageLeft: {
     flexDirection: 'row',
@@ -1424,9 +1418,10 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
+    ...theme.spatial.shadows3d.accentGlow,
   },
   aiTriageTextCol: {
     flex: 1,
@@ -1434,35 +1429,36 @@ const styles = StyleSheet.create({
   aiTriageTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   aiTriageSub: {
     fontSize: 12,
-    color: '#666666',
+    color: theme.colors.text.secondary,
     lineHeight: 16,
   },
 
   // 3. FILTER BOTTOM SHEET MODAL (Screen 3 in mockup)
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: 'rgba(6, 16, 17, 0.55)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     maxHeight: '85%',
+    ...theme.spatial.shadows3d.floating3d,
   },
   modalHandleBar: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.canvas.border,
     alignSelf: 'center',
     marginBottom: 16,
   },
@@ -1475,20 +1471,20 @@ const styles = StyleSheet.create({
   modalHeaderTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   modalCloseBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalSubHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginTop: 20,
     marginBottom: 12,
   },
@@ -1506,19 +1502,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   modalPillInactive: {
-    backgroundColor: '#F3F4F6',
-    borderColor: '#E5E7EB',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
+    borderColor: theme.colors.canvas.border,
   },
   modalPillActive: {
-    backgroundColor: '#0F1115',
-    borderColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
+    ...theme.spatial.shadows3d.tactileButton,
   },
   modalPillText: {
     fontSize: 13,
     fontWeight: '600',
   },
   modalPillTextInactive: {
-    color: '#1F2937',
+    color: theme.colors.text.secondary,
   },
   modalPillTextActive: {
     color: '#FFFFFF',
@@ -1531,7 +1528,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: theme.colors.canvas.border,
   },
   modalClearBtn: {
     paddingVertical: 12,
@@ -1540,13 +1537,14 @@ const styles = StyleSheet.create({
   modalClearBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#6B7280',
+    color: theme.colors.text.muted,
   },
   modalApplyBtn: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 32,
+    ...theme.spatial.shadows3d.tactileButton,
   },
   modalApplyBtnText: {
     fontSize: 15,

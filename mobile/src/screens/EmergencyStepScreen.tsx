@@ -14,6 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
+import { theme } from '../theme';
 
 type RootStackParamList = {
   EmergencySteps: { categoryId: string };
@@ -506,30 +507,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#0F1115',
+    borderColor: theme.colors.status.emergency.border,
   },
   heroPillAlertText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.status.emergency.primary,
   },
 
-  // Critical Warning Banner
+  // Critical Warning Banner (Vivid Medical Red with 3D Emergency Glow)
   criticalWarningBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.status.emergency.surface,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#0F1115',
+    borderColor: theme.colors.status.emergency.border,
     padding: 16,
     marginBottom: 20,
     gap: 12,
+    ...theme.spatial.shadows3d.emergencyGlow,
   },
   criticalWarningContent: {
     flex: 1,
@@ -537,14 +539,14 @@ const styles = StyleSheet.create({
   criticalWarningTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.status.emergency.primary,
     marginBottom: 2,
   },
   criticalWarningText: {
     fontSize: 13,
-    color: '#374151',
+    color: theme.colors.status.emergency.text,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 
   // Steps Section Header
@@ -557,33 +559,34 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   sectionStepCounter: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.text.secondary,
   },
 
-  // Step Capsule Row
+  // Step Capsule Row with 3D Depth
   stepListContainer: {
     gap: 10,
   },
   stepCapsuleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
     padding: 14,
     gap: 12,
+    ...theme.spatial.shadows3d.card3d,
   },
   stepBadge: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
   },
