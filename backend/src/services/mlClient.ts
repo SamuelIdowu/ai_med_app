@@ -31,6 +31,30 @@ export interface SyncTriageResult {
   processing_time_ms: number;
 }
 
+export interface VitalsTriagePayload {
+  heart_rate?: number;
+  systolic_bp?: number;
+  diastolic_bp?: number;
+  respiratory_rate?: number;
+  oxygen_saturation?: number;
+  body_temperature?: number;
+  pain_score?: number;
+  severe_bleeding?: number;
+  altered_mental_status?: number;
+  age?: number;
+}
+
+export interface VitalsTriageResult {
+  triage_level: number;
+  triage_label: 'Non-Urgent' | 'Urgent' | 'Emergency' | string;
+  confidence: number;
+  probabilities: Record<string, number>;
+  risk_drivers: string[];
+  is_emergency: boolean;
+  is_urgent: boolean;
+  latency_ms: number;
+}
+
 export class MLClient {
   private baseUrl: string;
   private client: AxiosInstance;
@@ -129,6 +153,16 @@ export class MLClient {
   async embedText(text: string): Promise<number[]> {
     const response = await this.client.post(`${this.baseUrl}/v1/ml/embed`, { text });
     return response.data.embedding;
+  }
+
+  /**
+   * Evaluates patient physiological vitals using Python Classical ML Scikit-Learn service
+   */
+  async evaluateVitalsTriage(vitals: VitalsTriagePayload): Promise<VitalsTriageResult> {
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/vitals`, vitals, {
+      timeout: 5000,
+    });
+    return response.data as VitalsTriageResult;
   }
 
   /**

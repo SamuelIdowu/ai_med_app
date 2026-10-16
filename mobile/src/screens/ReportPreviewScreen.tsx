@@ -149,6 +149,72 @@ export const ReportPreviewScreen = () => {
                     </View>
                 </View>
 
+                {/* Vitals & Triage Assessment (if recorded) */}
+                {encounter?.vitals ? (
+                    <View style={styles.card}>
+                        <View style={styles.vitalsHeaderRow}>
+                            <View style={styles.vitalsTitleGroup}>
+                                <MaterialCommunityIcons name="heart-pulse" size={20} color="#E53734" />
+                                <Text style={styles.vitalsCardTitle}>Vitals & ML Triage</Text>
+                            </View>
+                            <View style={[
+                                styles.triageBadge,
+                                encounter.vitals.triage_label === 'Emergency' ? styles.badgeEmergency :
+                                encounter.vitals.triage_label === 'Urgent' ? styles.badgeUrgent : styles.badgeNonUrgent
+                            ]}>
+                                <Text style={[
+                                    styles.triageBadgeText,
+                                    encounter.vitals.triage_label === 'Emergency' ? styles.badgeTextEmergency :
+                                    encounter.vitals.triage_label === 'Urgent' ? styles.badgeTextUrgent : styles.badgeTextNonUrgent
+                                ]}>
+                                    {encounter.vitals.triage_label || 'Evaluated'}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.vitalsGrid}>
+                            <View style={styles.vitalMetricBox}>
+                                <Text style={styles.vitalMetricLabel}>Heart Rate</Text>
+                                <Text style={styles.vitalMetricValue}>{encounter.vitals.heart_rate ?? '--'} <Text style={styles.vitalMetricUnit}>bpm</Text></Text>
+                            </View>
+                            <View style={styles.vitalMetricBox}>
+                                <Text style={styles.vitalMetricLabel}>Blood Pressure</Text>
+                                <Text style={styles.vitalMetricValue}>
+                                    {encounter.vitals.systolic_bp ?? '--'}/{encounter.vitals.diastolic_bp ?? '--'} <Text style={styles.vitalMetricUnit}>mmHg</Text>
+                                </Text>
+                            </View>
+                            <View style={styles.vitalMetricBox}>
+                                <Text style={styles.vitalMetricLabel}>SpO2 Oxygen</Text>
+                                <Text style={styles.vitalMetricValue}>{encounter.vitals.oxygen_saturation ?? '--'} <Text style={styles.vitalMetricUnit}>%</Text></Text>
+                            </View>
+                            <View style={styles.vitalMetricBox}>
+                                <Text style={styles.vitalMetricLabel}>Resp. Rate</Text>
+                                <Text style={styles.vitalMetricValue}>{encounter.vitals.respiratory_rate ?? '--'} <Text style={styles.vitalMetricUnit}>br/min</Text></Text>
+                            </View>
+                            <View style={styles.vitalMetricBox}>
+                                <Text style={styles.vitalMetricLabel}>Temperature</Text>
+                                <Text style={styles.vitalMetricValue}>{encounter.vitals.body_temperature ?? '--'} <Text style={styles.vitalMetricUnit}>°C</Text></Text>
+                            </View>
+                            <View style={styles.vitalMetricBox}>
+                                <Text style={styles.vitalMetricLabel}>Pain Level</Text>
+                                <Text style={styles.vitalMetricValue}>{encounter.vitals.pain_score ?? '0'} <Text style={styles.vitalMetricUnit}>/10</Text></Text>
+                            </View>
+                        </View>
+
+                        {encounter.vitals.risk_drivers && encounter.vitals.risk_drivers.length > 0 ? (
+                            <View style={styles.vitalsRiskContainer}>
+                                <Text style={styles.vitalsRiskTitle}>Clinical Risk Drivers & Red Flags:</Text>
+                                {encounter.vitals.risk_drivers.map((driver: string, idx: number) => (
+                                    <View key={idx} style={styles.riskRow}>
+                                        <MaterialIcons name="warning-amber" size={16} color="#DC2626" />
+                                        <Text style={styles.riskText}>{driver}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        ) : null}
+                    </View>
+                ) : null}
+
                 {/* Added Notes */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Added Notes</Text>
@@ -349,5 +415,103 @@ const styles = StyleSheet.create({
         color: '#EF4444',
         textAlign: 'center',
         marginTop: 20,
+    },
+    vitalsHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 14,
+    },
+    vitalsTitleGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    vitalsCardTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#171717',
+    },
+    triageBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+    badgeEmergency: {
+        backgroundColor: '#FEE2E2',
+    },
+    badgeUrgent: {
+        backgroundColor: '#FEF3C7',
+    },
+    badgeNonUrgent: {
+        backgroundColor: '#DCFCE7',
+    },
+    triageBadgeText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    badgeTextEmergency: {
+        color: '#DC2626',
+    },
+    badgeTextUrgent: {
+        color: '#D97706',
+    },
+    badgeTextNonUrgent: {
+        color: '#16A34A',
+    },
+    vitalsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+    },
+    vitalMetricBox: {
+        flexBasis: '30%',
+        flexGrow: 1,
+        backgroundColor: '#F9FAFB',
+        padding: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    vitalMetricLabel: {
+        fontSize: 11,
+        color: '#6B7280',
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+    vitalMetricValue: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    vitalMetricUnit: {
+        fontSize: 11,
+        fontWeight: 'normal',
+        color: '#9CA3AF',
+    },
+    vitalsRiskContainer: {
+        marginTop: 14,
+        padding: 10,
+        backgroundColor: '#FEF2F2',
+        borderRadius: 8,
+        borderLeftWidth: 4,
+        borderLeftColor: '#EF4444',
+    },
+    vitalsRiskTitle: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#B91C1C',
+        marginBottom: 6,
+    },
+    riskRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginVertical: 2,
+    },
+    riskText: {
+        fontSize: 12,
+        color: '#7F1D1D',
+        fontWeight: '500',
     },
 });

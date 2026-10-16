@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import { Platform } from 'react-native';
 
 const getBaseUrl = (): string => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
+    if (typeof window !== 'undefined' && typeof (window as any).location?.hostname === 'string') {
         // If web browser is viewing on localhost or LAN, route to the same host on backend port 3000
         const host = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
         return `http://${host}:3000/api/v1`;

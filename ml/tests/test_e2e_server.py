@@ -50,7 +50,7 @@ def test_live_server_health(live_server_url):
         data = res.json()
         assert data["status"] == "ok"
         assert data["service"] == "ai-med-ml"
-        assert data["version"] == "1.2.0"
+        assert data["version"] == "1.3.0"
 
 def test_live_server_triage_stream_e2e(live_server_url):
     payload = {"query": "Patient is choking on hard candy, lips turning blue and cannot cough"}

@@ -94,4 +94,42 @@ describe('MLClient Inter-Service Bridge', () => {
       })
     );
   });
+
+  it('evaluates vitals triage via Python Scikit-Learn microservice', async () => {
+    mockedAxios.post.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        triage_level: 2,
+        triage_label: 'Emergency',
+        confidence: 0.99,
+        probabilities: { 'Non-Urgent': 0.0, Urgent: 0.01, Emergency: 0.99 },
+        risk_drivers: ['Critical Hypoxemia (SpO2 82% < 90%)'],
+        is_emergency: true,
+        is_urgent: true,
+        latency_ms: 1.45,
+      },
+    });
+
+    const client = new MLClient('http://127.0.0.1:8000');
+    const result = await client.evaluateVitalsTriage({
+      heart_rate: 145,
+      oxygen_saturation: 82,
+      systolic_bp: 75,
+      severe_bleeding: 1,
+    });
+
+    expect(result.triage_label).toBe('Emergency');
+    expect(result.is_emergency).toBe(true);
+    expect(result.risk_drivers).toContain('Critical Hypoxemia (SpO2 82% < 90%)');
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/v1/ml/triage/vitals',
+      {
+        heart_rate: 145,
+        oxygen_saturation: 82,
+        systolic_bp: 75,
+        severe_bleeding: 1,
+      },
+      expect.any(Object)
+    );
+  });
 });

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { GeminiService } from '../services/geminiService';
+import { defaultMLClient } from '../services/mlClient';
 import { AIServiceError } from '../types/errors';
 
 export const chat = async (req: Request, res: Response) => {
@@ -135,5 +136,20 @@ export const analyze = async (req: Request, res: Response) => {
                 userMessage: 'Failed to analyze image. Please try again.'
             });
         }
+    }
+};
+
+export const triageVitals = async (req: Request, res: Response) => {
+    try {
+        const vitals = req.body;
+        const result = await defaultMLClient.evaluateVitalsTriage(vitals);
+        res.json(result);
+    } catch (error: any) {
+        console.error('Triage Vitals Controller Error:', error);
+        res.status(error.response?.status || 500).json({
+            error: error.message || 'Failed to evaluate vitals triage',
+            code: 'ML_VITALS_EVAL_ERROR',
+            userMessage: 'Unable to evaluate vitals at this moment. If in doubt, seek immediate emergency care.'
+        });
     }
 };

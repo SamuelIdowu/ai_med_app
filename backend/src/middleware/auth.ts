@@ -44,3 +44,24 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
         return;
     }
 };
+
+export const optionalAuthenticateUser = async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return next();
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return next();
+    }
+    try {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
+            req.user = user;
+        }
+        next();
+    } catch {
+        next();
+    }
+};
+

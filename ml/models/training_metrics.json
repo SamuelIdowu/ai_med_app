@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-16 22:52:59",
+  "timestamp": "2026-10-16 23:56:31",
   "best_model": "GradientBoosting",
   "feature_columns": [
     "age",
@@ -38,7 +38,7 @@
       "precision_macro": 0.905,
       "recall_macro": 0.9648,
       "f1_macro": 0.9315,
-      "fit_time_seconds": 0.09,
+      "fit_time_seconds": 0.047,
       "confusion_matrix": [
         [
           57,
@@ -95,7 +95,7 @@
       "precision_macro": 0.9537,
       "recall_macro": 0.9826,
       "f1_macro": 0.9671,
-      "fit_time_seconds": 0.557,
+      "fit_time_seconds": 0.346,
       "confusion_matrix": [
         [
           57,
@@ -152,7 +152,7 @@
       "precision_macro": 0.984,
       "recall_macro": 0.9703,
       "f1_macro": 0.977,
-      "fit_time_seconds": 1.869,
+      "fit_time_seconds": 0.937,
       "confusion_matrix": [
         [
           56,

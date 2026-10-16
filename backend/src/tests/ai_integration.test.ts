@@ -95,6 +95,46 @@ describe('ML & AI Dual-Tier Gateway Integration Suite', () => {
       expect(Array.isArray(vector)).toBe(true);
       expect(vector.length).toBe(384);
     });
+
+    it('handles scikit-learn vitals triage classification contract', async () => {
+      const clientAny = mlClient as any;
+      clientAny.client = {
+        post: async (path: string, payload: any) => {
+          if (path.includes('/v1/ml/triage/vitals')) {
+            return {
+              status: 200,
+              data: {
+                triage_level: 2,
+                triage_label: 'Emergency',
+                confidence: 0.96,
+                probabilities: { 'Non-Urgent': 0.01, 'Urgent': 0.03, 'Emergency': 0.96 },
+                risk_drivers: ['Hypoxemia (SpO2: 84%)', 'Tachycardia (HR: 142 bpm)'],
+                is_emergency: true,
+                is_urgent: false,
+                latency_ms: 1.45,
+              },
+            };
+          }
+        },
+      };
+
+      const result = await mlClient.evaluateVitalsTriage({
+        heart_rate: 142,
+        systolic_bp: 85,
+        oxygen_saturation: 84,
+        respiratory_rate: 30,
+        body_temperature: 38.8,
+        severe_bleeding: 0,
+        altered_mental_status: 1
+      });
+
+      expect(result).toBeDefined();
+      expect(result.triage_label).toBe('Emergency');
+      expect(result.confidence).toBeGreaterThan(0.9);
+      expect(result.is_emergency).toBe(true);
+      expect(result.risk_drivers.length).toBe(2);
+      expect(result.latency_ms).toBeGreaterThan(0);
+    });
   });
 
   describe('Cloud AI Service & Safety Guardrails', () => {

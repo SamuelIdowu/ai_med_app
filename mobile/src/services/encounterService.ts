@@ -14,7 +14,8 @@ export const EncounterService = {
     createEncounter: async (
         category: string,
         notes: string,
-        photoUris: string[] = []
+        photoUris: string[] = [],
+        vitals?: any
     ) => {
         const timestamp = new Date().toISOString();
         const localId = `local_${Date.now()}`;
@@ -26,6 +27,7 @@ export const EncounterService = {
             created_at: timestamp,
             photos: photoUris,
             synced: false,
+            vitals,
         };
 
         // 1. Save Locally
