@@ -30,7 +30,10 @@ The `cli.py` tool allows running the ML subsystem completely decoupled from back
 | Command | Description | Example |
 |---|---|---|
 | `serve` | Launch FastAPI server | `python cli.py serve --port 8000` |
-| `curate` | Generate structured clinical instruction dataset | `python cli.py curate --split` |
+| `curate` | Generate 35-condition tabular CSV or JSONL protocols | `python cli.py curate --tabular --split` |
+| `eda` | Run Exploratory Data Analysis & export plots | `python cli.py eda` |
+| `train-classical` | Train & benchmark Scikit-Learn models, save `.joblib` | `python cli.py train-classical` |
+| `predict-vitals` | Predict triage urgency from live physiological vitals | `python cli.py predict-vitals --hr 140 --spo2 84` |
 | `train` | Run LoRA adapter fine-tuning pipeline | `python cli.py train --epochs 3` |
 | `evaluate` | Run 30-scenario clinical safety benchmark | `python cli.py evaluate --report-file report.json` |
 | `triage` | Run clinical first-aid triage on symptoms | `python cli.py triage --query "Deep bleeding cut"` |
