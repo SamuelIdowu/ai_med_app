@@ -24,9 +24,10 @@ import { offlineStorage } from '../services/offlineStorage';
 interface WoundAnalysisResult {
   classification: string;
   confidence: number;
-  severityGrade: 'mild' | 'moderate' | 'severe' | 'critical';
+  severityGrade: 'mild' | 'moderate' | 'severe' | 'critical' | 'none';
   instructions: string[];
   emergencyFlag: boolean;
+  isNonMedical?: boolean;
 }
 
 export const WoundScannerScreen: React.FC = () => {
@@ -100,10 +101,11 @@ export const WoundScannerScreen: React.FC = () => {
       const base64Data = manipulated.base64 ? `data:image/jpeg;base64,${manipulated.base64}` : '';
 
       // 2. Upload to backend wound assessment endpoint
-      let classification = 'Laceration / Skin Abrasion';
-      let confidence = 0.88;
-      let severityGrade: 'mild' | 'moderate' | 'severe' | 'critical' = 'moderate';
+      let classification = '';
+      let confidence = 0;
+      let severityGrade: 'mild' | 'moderate' | 'severe' | 'critical' | 'none' = 'mild';
       let emergencyFlag = false;
+      let isNonMedical = false;
 
       try {
         const response = await api.post(`/encounters/${encounterId}/wound`, {
@@ -113,13 +115,36 @@ export const WoundScannerScreen: React.FC = () => {
 
         if (response.data?.analysis) {
           const a = response.data.analysis;
-          classification = a.classification || classification;
-          confidence = a.confidence ?? confidence;
-          severityGrade = (a.severity_grade as any) || severityGrade;
+          classification = a.classification || 'unknown';
+          confidence = a.confidence ?? 0;
+          severityGrade = (a.severity_grade as any) || 'mild';
           emergencyFlag = severityGrade === 'severe' || severityGrade === 'critical';
+          isNonMedical = classification === 'non_medical_image' || severityGrade === 'none';
         }
       } catch (apiErr) {
-        console.warn('Backend wound API unreachable, generating local clinical fallback:', apiErr);
+        console.warn('Backend wound API unreachable:', apiErr);
+        Alert.alert(
+          'Analysis Unavailable',
+          'Could not reach the clinical vision server. Please ensure the backend is running and retry.'
+        );
+        return;
+      }
+
+      if (isNonMedical) {
+        setAnalysisResult({
+          classification: 'Non-Medical Image Detected',
+          confidence: 0,
+          severityGrade: 'none',
+          instructions: [
+            'No human skin, tissue, or physical wound was detected in this scan.',
+            'Center the camera directly on the injury or skin condition.',
+            'Ensure bright, even lighting and eliminate glare or heavy shadows.',
+            'Avoid scanning logos, graphics, text documents, or non-biological objects.',
+          ],
+          emergencyFlag: false,
+          isNonMedical: true,
+        });
+        return;
       }
 
       // 3. Match relevant first-aid instructions from offline storage
@@ -141,6 +166,7 @@ export const WoundScannerScreen: React.FC = () => {
         severityGrade,
         instructions,
         emergencyFlag,
+        isNonMedical: false,
       });
     } catch (err) {
       console.error('Image processing failure:', err);
@@ -151,7 +177,7 @@ export const WoundScannerScreen: React.FC = () => {
   };
 
   const handleProceedToTriage = () => {
-    if (analysisResult) {
+    if (analysisResult && !analysisResult.isNonMedical) {
       navigation.navigate('LiveTriage', {
         encounterId,
         initialQuery: `Wound assessment findings: ${analysisResult.classification} (${analysisResult.severityGrade.toUpperCase()} severity, ${analysisResult.confidence}% confidence).`,
@@ -185,15 +211,14 @@ export const WoundScannerScreen: React.FC = () => {
             <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
           ) : (
             <View style={styles.cameraPlaceholder}>
-              <MaterialCommunityIcons name="camera-plus" size={48} color="#9CA3AF" />
-              <Text style={styles.placeholderPrompt}>Center wound inside frame</Text>
+              <MaterialCommunityIcons name="camera-plus" size={44} color="#6B7280" />
             </View>
           )}
 
           {/* Camera Reticle corner guide overlay */}
           <CameraReticle
             instruction={analyzing ? 'Analyzing clinical features...' : 'Center wound in reticle'}
-            size={240}
+            size={200}
           />
 
           {analyzing && (
@@ -212,8 +237,8 @@ export const WoundScannerScreen: React.FC = () => {
             disabled={analyzing}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="camera" size={20} color="#FFFFFF" />
-            <Text style={styles.captureBtnText}>Capture Photo</Text>
+            <MaterialCommunityIcons name="camera" size={18} color="#FFFFFF" />
+            <Text style={styles.captureBtnText} numberOfLines={1}>Capture Photo</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -222,8 +247,8 @@ export const WoundScannerScreen: React.FC = () => {
             disabled={analyzing}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="image-multiple" size={20} color={theme.colors.text.primary} />
-            <Text style={styles.captureSecondaryText}>Photo Library</Text>
+            <MaterialCommunityIcons name="image-multiple" size={18} color={theme.colors.text.primary} />
+            <Text style={styles.captureSecondaryText} numberOfLines={1}>Photo Library</Text>
           </TouchableOpacity>
         </View>
 
@@ -238,42 +263,82 @@ export const WoundScannerScreen: React.FC = () => {
               />
             )}
 
-            <View style={styles.assessmentCard}>
-              <View style={styles.cardHeader}>
-                <View>
-                  <Text style={styles.classificationTitle}>{analysisResult.classification}</Text>
-                  <Text style={styles.confidenceSubtitle}>
-                    AI Confidence: {analysisResult.confidence}%
-                  </Text>
-                </View>
-                <View style={styles.severityBadge}>
-                  <Text style={styles.severityBadgeText}>
-                    {analysisResult.severityGrade.toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.divider} />
-
-              <Text style={styles.instructionsHeader}>Recommended Clinical Protocol</Text>
-              {analysisResult.instructions.map((step, idx) => (
-                <View key={idx} style={styles.stepRow}>
-                  <View style={styles.stepNumberBadge}>
-                    <Text style={styles.stepNumberText}>{idx + 1}</Text>
+            {analysisResult.isNonMedical ? (
+              <View style={[styles.assessmentCard, styles.nonMedicalCard]}>
+                <View style={styles.cardHeader}>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#D97706" />
+                      <Text style={styles.classificationTitle}>Non-Medical Subject</Text>
+                    </View>
+                    <Text style={styles.confidenceSubtitle}>
+                      No biological tissue or clinical injury detected
+                    </Text>
                   </View>
-                  <Text style={styles.stepText}>{step}</Text>
+                  <View style={[styles.severityBadge, { backgroundColor: '#FEF3C7' }]}>
+                    <Text style={[styles.severityBadgeText, { color: '#B45309' }]}>INVALID SCAN</Text>
+                  </View>
                 </View>
-              ))}
 
-              <TouchableOpacity
-                style={styles.triageProceedBtn}
-                onPress={handleProceedToTriage}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.triageProceedText}>Continue to Live AI Triage</Text>
-                <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
+                <View style={styles.divider} />
+
+                <Text style={styles.instructionsHeader}>Clinical Photo Guidelines</Text>
+                {analysisResult.instructions.map((step, idx) => (
+                  <View key={idx} style={styles.stepRow}>
+                    <View style={[styles.stepNumberBadge, { borderColor: '#FDE68A', backgroundColor: '#FFFBEB' }]}>
+                      <Text style={[styles.stepNumberText, { color: '#B45309' }]}>{idx + 1}</Text>
+                    </View>
+                    <Text style={styles.stepText}>{step}</Text>
+                  </View>
+                ))}
+
+                <TouchableOpacity
+                  style={[styles.triageProceedBtn, { backgroundColor: '#374151' }]}
+                  onPress={capturePhoto}
+                  activeOpacity={0.8}
+                >
+                  <MaterialCommunityIcons name="camera-retake-outline" size={18} color="#FFFFFF" />
+                  <Text style={styles.triageProceedText}>Retake Photo of Injury</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.assessmentCard}>
+                <View style={styles.cardHeader}>
+                  <View>
+                    <Text style={styles.classificationTitle}>{analysisResult.classification}</Text>
+                    <Text style={styles.confidenceSubtitle}>
+                      AI Confidence: {analysisResult.confidence}%
+                    </Text>
+                  </View>
+                  <View style={styles.severityBadge}>
+                    <Text style={styles.severityBadgeText}>
+                      {analysisResult.severityGrade.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <Text style={styles.instructionsHeader}>Recommended Clinical Protocol</Text>
+                {analysisResult.instructions.map((step, idx) => (
+                  <View key={idx} style={styles.stepRow}>
+                    <View style={styles.stepNumberBadge}>
+                      <Text style={styles.stepNumberText}>{idx + 1}</Text>
+                    </View>
+                    <Text style={styles.stepText}>{step}</Text>
+                  </View>
+                ))}
+
+                <TouchableOpacity
+                  style={styles.triageProceedBtn}
+                  onPress={handleProceedToTriage}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.triageProceedText}>Continue to Live AI Triage</Text>
+                  <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -310,17 +375,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: theme.colors.text.primary,
+    flexShrink: 1,
   },
   scrollArea: {
     flex: 1,
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 36,
+    maxWidth: 480,
+    width: '100%',
+    alignSelf: 'center',
   },
   reticleContainer: {
     width: '100%',
-    height: 300,
+    height: 290,
     borderRadius: 20,
     backgroundColor: '#0F1115',
     overflow: 'hidden',
@@ -336,6 +405,7 @@ const styles = StyleSheet.create({
   cameraPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
+    opacity: 0.7,
   },
   placeholderPrompt: {
     color: '#9CA3AF',
@@ -358,8 +428,9 @@ const styles = StyleSheet.create({
   },
   captureActionsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     marginBottom: 20,
+    width: '100%',
   },
   capturePrimaryBtn: {
     flex: 1,
@@ -369,12 +440,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
+    paddingHorizontal: 10,
   },
   captureBtnText: {
     color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
   },
   captureSecondaryBtn: {
     flex: 1,
@@ -386,12 +458,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
+    paddingHorizontal: 10,
   },
   captureSecondaryText: {
     color: theme.colors.text.primary,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
   },
   resultContainer: {
     marginTop: 4,
@@ -403,6 +476,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     ...theme.spatial.shadows.card,
+  },
+  nonMedicalCard: {
+    borderColor: '#F59E0B',
+    borderWidth: 1.5,
+    backgroundColor: '#FFFBEB',
   },
   cardHeader: {
     flexDirection: 'row',

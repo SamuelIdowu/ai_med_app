@@ -12,7 +12,7 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY || '');
 
 const model = genAI.getGenerativeModel({
-    model: 'gemini-flash-latest',
+    model: 'gemini-2.5-flash',
     systemInstruction: `You are an AI First Aid Assistant providing emergency medical guidance.
 
 CRITICAL RULES:
@@ -173,11 +173,19 @@ IMPORTANT: Respond with a structured analysis in this EXACT JSON format:
 }
 
 CRITICAL GUIDELINES:
+- First, check if the image depicts a human wound, trauma, rash, or medical injury.
+- If this is NOT a medical injury or human skin condition (e.g., logo, badge, emblem, cartoon, animal, building, document, food, household object):
+  Set "injuryType" to "non_medical_image"
+  Set "severity" to "none"
+  Set "confidence" to 0
+  Set "emergencyFlag" to false
+  Set "symptoms" to ["Non-medical subject or synthetic graphic detected"]
+  Set "recommendations" to ["No human skin or injury detected. Center camera on the affected skin or wound and re-scan."]
+  Set "warnings" to ["Computer vision scan is reserved exclusively for clinical wound triage."]
 - If severe bleeding, difficulty breathing, chest pain, loss of consciousness, or severe allergic reaction: set emergencyFlag to true and severity to "critical"
 - Include clear, actionable first aid steps in recommendations
 - Number all recommendations as clear steps
 - Include when to seek professional care in warnings
-- If this is not a medical image, still provide the JSON format with appropriate values
 
 Analyze the image now:`;
 

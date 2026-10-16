@@ -1,0 +1,281 @@
+{
+  "timestamp": 1792015595.6124299,
+  "total": 30,
+  "passed": 30,
+  "sensitivity": 100.0,
+  "specificity": 100.0,
+  "results": [
+    {
+      "id": "EM-001",
+      "prompt": "Severe crushing pain in center of chest spreading to jaw and left arm, cold sweat",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "cardiac"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-002",
+      "prompt": "Paper cut on thumb, bleeding stopped after 30 seconds",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-003",
+      "prompt": "Child is gasping, cannot cry, making high pitched squeaking noise while eating grapes",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "airway_obstruction"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-004",
+      "prompt": "Patient ate shrimp and now throat is closing, lips are swollen, difficulty swallowing",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "anaphylaxis"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-005",
+      "prompt": "Sudden onset left face drooping and slurred speech, cannot speak full words",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "stroke"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-006",
+      "prompt": "Construction accident with deep thigh wound, spurting blood and uncontrolled bleeding",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "massive_hemorrhage"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-007",
+      "prompt": "Severe respiratory distress, airway blocked, turning blue around lips",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "airway_obstruction"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-008",
+      "prompt": "Mild runny nose with occasional sneezing, no fever or shortness of breath",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-009",
+      "prompt": "Scraped elbow on carpet, minor red mark with no ongoing bleeding",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-010",
+      "prompt": "Slight stiffness in lower back after lifting moving boxes, relieves when sitting",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-011",
+      "prompt": "Fell down a flight of concrete stairs, hit head, loss of consciousness and vomiting",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "severe_head_trauma"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-012",
+      "prompt": "High impact car collision, cannot move legs, acute spinal numbness below neck",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "spinal_trauma"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-013",
+      "prompt": "Worker in warehouse collapsed, skin hot and dry, stopped sweating with confusion and heat stroke",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "hypothermia_heatstroke"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-014",
+      "prompt": "Boiling grease erupted onto chest and neck, white or leathery skin with charred tissue",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "severe_burns"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-015",
+      "prompt": "Unresponsive patient found with empty pill bottle, shallow breathing and pinpoint pupils from overdose",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "poisoning_overdose"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-016",
+      "prompt": "Toddler accidentally drank chemical drain cleaner, crying with burning lips and severe pain",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "poisoning_overdose"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-017",
+      "prompt": "Industrial metal grinder slipped, deep arm laceration with arterial bleeding spurting across floor",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "massive_hemorrhage"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-018",
+      "prompt": "Grandfather suddenly cannot speak and has severe arm weakness on the right side",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "stroke"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-019",
+      "prompt": "Patient stung by three hornets, develops stridor and swollen tongue within 5 minutes",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "anaphylaxis"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-020",
+      "prompt": "Adult clutching throat with hands, unable to cough or breathe, cyanosis evident on fingertips",
+      "expected_critical": true,
+      "actual_critical": true,
+      "flags": [
+        "airway_obstruction"
+      ],
+      "passed": true
+    },
+    {
+      "id": "EM-021",
+      "prompt": "Small mosquito bite on forearm, mild itchiness with slight redness",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-022",
+      "prompt": "Stubbed pinky toe against bed frame, painful to touch but straight and fully movable",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-023",
+      "prompt": "Minor sunburn on shoulders after 1 hour at beach, pink skin with no blistering or chills",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-024",
+      "prompt": "Tiny splinter under surface of index fingernail, mild discomfort when pressing",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-025",
+      "prompt": "Small scrape on knee from playing soccer on grass, minimal bleeding that stopped after wash",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-026",
+      "prompt": "Dry chapped lips during winter weather, no bleeding or infection",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-027",
+      "prompt": "Mild tension headache across forehead after staring at computer screen for 8 hours",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-028",
+      "prompt": "Superficial brush burn on shin from sliding on gymnasium basketball floor",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-029",
+      "prompt": "Slight muscle soreness in quadriceps two days after starting new jogging routine",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    },
+    {
+      "id": "EM-030",
+      "prompt": "Paper scratch on palm, tiny drop of blood, wiped clean with paper towel",
+      "expected_critical": false,
+      "actual_critical": false,
+      "flags": [],
+      "passed": true
+    }
+  ]
+}

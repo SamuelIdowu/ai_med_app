@@ -26,7 +26,7 @@ router.post('/:id/generate', async (req, res) => {
         res.send(Buffer.from(pdfBytes));
     } catch (error: any) {
         console.error('Report generation error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(error.statusCode || 500).json({ error: error.message });
     }
 });
 
@@ -39,7 +39,33 @@ router.post('/:id/generate', async (req, res) => {
 // Or better, let's stick to the "Generate" endpoint doing the work for now.
 
 router.get('/:id', async (req, res) => {
-    res.status(501).json({ message: 'Stored reports not yet implemented. Use POST .../generate to download directly.' });
+    try {
+        const encounterId = req.params.id;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            res.status(401).json({ error: 'Token missing' });
+            return;
+        }
+
+        if (req.query.format === 'pdf') {
+            const pdfBytes = await generateReport(req.user.id, encounterId, token);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=report-${encounterId}.pdf`);
+            res.send(Buffer.from(pdfBytes));
+            return;
+        }
+
+        // Return 501 for unpersisted reports as direct streaming via POST or ?format=pdf is supported
+        res.status(501).json({
+            message: 'Stored reports not yet implemented. Use POST /api/v1/reports/:id/generate to download directly.',
+            encounter_id: encounterId,
+        });
+    } catch (error: any) {
+        console.error('Report fetch error:', error);
+        res.status(error.statusCode || 500).json({ error: error.message });
+    }
 });
 
 export default router;

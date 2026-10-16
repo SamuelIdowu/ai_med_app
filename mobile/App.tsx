@@ -36,7 +36,7 @@ import { registerForPushNotificationsAsync, saveTokenToBackend, addNotificationL
 import * as Notifications from 'expo-notifications';
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     MontserratAlternates_400Regular,
     MontserratAlternates_500Medium,
     MontserratAlternates_600SemiBold,
@@ -58,7 +58,13 @@ export default function App() {
     Inter_800ExtraBold,
   });
 
+  const [fontTimeout, setFontTimeout] = useState(false);
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFontTimeout(true), 3500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then(token => {
@@ -75,7 +81,7 @@ export default function App() {
     };
   }, []);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !fontError && !fontTimeout) {
     const isDark = theme.colors.canvas.background === '#0B0F19';
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.canvas.background }]}>

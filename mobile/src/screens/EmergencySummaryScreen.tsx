@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import firstAidData from '../content/first-aid-content.json';
+import { EncounterService } from '../services/encounterService';
+import { offlineStorage } from '../services/offlineStorage';
+import { Encounter } from '../services/types';
 
 const BG_LIGHT = '#f8f6f6';
 const CARD_LIGHT = '#ffffff';
@@ -14,7 +17,7 @@ const SUCCESS_COLOR = '#27ae60';
 const TEXT_DARK = '#1b0e0e';
 
 type RootStackParamList = {
-    EmergencySummary: { categoryId: string; encounterId?: string };
+    EmergencySummary: { categoryId: string; encounterId?: string; symptoms?: string[] };
 };
 
 type EmergencySummaryRouteProp = RouteProp<RootStackParamList, 'EmergencySummary'>;
@@ -22,8 +25,42 @@ type EmergencySummaryRouteProp = RouteProp<RootStackParamList, 'EmergencySummary
 export const EmergencySummaryScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<EmergencySummaryRouteProp>();
-    const { categoryId, encounterId } = route.params;
+    const { categoryId, encounterId, symptoms: routeSymptoms } = route.params;
     const category = firstAidData.categories.find(c => c.id === categoryId);
+    const [encounter, setEncounter] = useState<Encounter | null>(null);
+
+    useEffect(() => {
+        if (!encounterId) return;
+        let isMounted = true;
+        EncounterService.getEncounters().then((encounters: Encounter[]) => {
+            const found = encounters.find((e: Encounter) => e.id === encounterId);
+            if (isMounted && found) {
+                setEncounter(found);
+            }
+        }).catch(() => {
+            offlineStorage.getPendingEncounters().then((pending) => {
+                const found = pending.find((p) => p.id === encounterId);
+                if (isMounted && found) {
+                    setEncounter({
+                        id: found.id,
+                        created_at: new Date(found.createdAt).toISOString(),
+                        status: 'in_progress',
+                        category: categoryId || 'general',
+                        symptoms: found.symptoms,
+                        notes: found.notes,
+                    } as unknown as Encounter);
+                }
+            }).catch(() => {});
+        });
+        return () => { isMounted = false; };
+    }, [encounterId]);
+
+    const displaySymptoms: string[] =
+        (routeSymptoms && routeSymptoms.length > 0)
+            ? routeSymptoms
+            : (encounter?.symptoms && encounter.symptoms.length > 0)
+            ? encounter.symptoms
+            : (encounter?.notes ? [encounter.notes] : []);
 
     const handleGoHome = () => {
         navigation.dispatch(
@@ -82,12 +119,10 @@ export const EmergencySummaryScreen = () => {
                             <MaterialCommunityIcons name="calendar-month" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
                             <View>
                                 <Text style={styles.label}>Date & Time</Text>
-                                {/* Static date for design match or dynamic? Let's use dynamic but format clearly. */}
-                                {/* Design says "Oct 26, 2023, 10:45 AM" */}
                                 <Text style={styles.value}>
-                                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    {new Date(encounter?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                     {", "}
-                                    {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                    {new Date(encounter?.created_at || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                                 </Text>
                             </View>
                         </View>
@@ -98,19 +133,19 @@ export const EmergencySummaryScreen = () => {
                     <View style={styles.cardSection}>
                         <Text style={[styles.label, { marginBottom: 8 }]}>Assessed Symptoms</Text>
                         <View style={styles.bulletList}>
-                            {/* Hardcoded sample symptoms matching design, or generic if no data */}
-                            <View style={styles.bulletItem}>
-                                <View style={styles.bullet} />
-                                <Text style={styles.bulletText}>Redness and mild swelling</Text>
-                            </View>
-                            <View style={styles.bulletItem}>
-                                <View style={styles.bullet} />
-                                <Text style={styles.bulletText}>Pain at the site</Text>
-                            </View>
-                            <View style={styles.bulletItem}>
-                                <View style={styles.bullet} />
-                                <Text style={styles.bulletText}>No blistering</Text>
-                            </View>
+                            {displaySymptoms.length > 0 ? (
+                                displaySymptoms.map((symptom, idx) => (
+                                    <View key={idx} style={styles.bulletItem}>
+                                        <View style={styles.bullet} />
+                                        <Text style={styles.bulletText}>{symptom}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.bulletItem}>
+                                    <View style={styles.bullet} />
+                                    <Text style={styles.bulletText}>No specific symptoms recorded</Text>
+                                </View>
+                            )}
                         </View>
                     </View>
 

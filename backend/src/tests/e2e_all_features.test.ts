@@ -8,6 +8,7 @@ import { EventEmitter } from 'events';
 import { setMLClient } from '../controllers/streamController';
 
 describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
+  jest.setTimeout(30000);
   let supabase: any;
   let testUserId: string;
   let testUserEmail: string;
@@ -522,9 +523,19 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
   // Feature 10: AI First Aid Validation & Rate Limiting
   // -------------------------------------------------------------
   describe('Feature 10: AI First Aid Validation & Rate Limiting Flow', () => {
+    it('POST /api/v1/ai/chat rejects unauthenticated requests', async () => {
+      const res = await request(app)
+        .post('/api/v1/ai/chat')
+        .send({});
+
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBeDefined();
+    });
+
     it('POST /api/v1/ai/chat rejects request missing message payload', async () => {
       const res = await request(app)
         .post('/api/v1/ai/chat')
+        .set('Authorization', `Bearer ${testUserToken}`)
         .send({});
 
       expect(res.status).toBe(400);
@@ -534,6 +545,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
     it('POST /api/v1/ai/analyze rejects request missing image payload', async () => {
       const res = await request(app)
         .post('/api/v1/ai/analyze')
+        .set('Authorization', `Bearer ${testUserToken}`)
         .send({});
 
       expect(res.status).toBe(400);
@@ -543,6 +555,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
     it('enforces rate limiting headers on AI endpoints', async () => {
       const res = await request(app)
         .post('/api/v1/ai/chat')
+        .set('Authorization', `Bearer ${testUserToken}`)
         .send({});
 
       expect(res.headers['ratelimit-limit']).toBeDefined();

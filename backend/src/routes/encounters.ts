@@ -7,6 +7,8 @@ import { handleTriageStream, handleWoundUpload } from '../controllers/streamCont
 import { getUploadUrl } from '../services/storageService';
 import { authenticateUser } from '../middleware/auth';
 
+import { getEncounter } from '../services/encounterService';
+
 const router = express.Router();
 
 // Enforce JWT authentication on all encounter routes
@@ -29,6 +31,11 @@ router.post('/:id/photos', async (req, res) => {
     const { fileName } = req.body;
     if (!fileName) {
       return res.status(400).json({ error: 'fileName is required' });
+    }
+    const token = req.headers.authorization?.split(' ')[1] || '';
+    const encounterRecord = await getEncounter(req.params.id, req.user.id, token);
+    if (!encounterRecord) {
+      return res.status(404).json({ error: 'Encounter not found' });
     }
     const uploadData = await getUploadUrl(req.user.id, fileName);
     res.json(uploadData);

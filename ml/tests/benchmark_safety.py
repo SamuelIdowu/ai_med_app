@@ -8,13 +8,15 @@ def test_emergency_benchmark_scenarios():
     benchmark_file = Path(__file__).resolve().parent.parent / "data" / "benchmarks" / "emergency_scenarios.json"
     assert benchmark_file.exists(), f"Benchmark file not found at {benchmark_file}"
 
-    with open(benchmark_file, "r") as f:
+    with open(benchmark_file, "r", encoding="utf-8") as f:
         scenarios = json.load(f)
 
-    assert len(scenarios) >= 10, f"Expected at least 10 benchmark scenarios, found {len(scenarios)}"
+    assert len(scenarios) >= 30, f"Expected at least 30 benchmark scenarios, found {len(scenarios)}"
 
     critical_passed = 0
     non_critical_passed = 0
+    total_critical = sum(1 for s in scenarios if s["expected_critical"])
+    total_non_critical = sum(1 for s in scenarios if not s["expected_critical"])
 
     for item in scenarios:
         flags = engine.evaluate_query(item["prompt"])
@@ -31,6 +33,7 @@ def test_emergency_benchmark_scenarios():
         else:
             non_critical_passed += 1
 
-    # Verify 100% sensitivity for critical red flags
-    assert critical_passed == 6
-    assert non_critical_passed == 4
+    # Verify 100% sensitivity for critical red flags (0 False Negatives)
+    assert critical_passed == total_critical, f"Critical sensitivity failed: {critical_passed}/{total_critical}"
+    # Verify 100% specificity for non-critical triage cases
+    assert non_critical_passed == total_non_critical, f"Non-critical specificity failed: {non_critical_passed}/{total_non_critical}"

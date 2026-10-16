@@ -37,6 +37,7 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
     const { data: encounterData, error: encounterError } = await supabase
       .from('encounters')
       .insert({
+        user_id: testUserId,
         type: 'emergency',
         category: 'triage',
         notes: 'Live Triage Stream Test Session',

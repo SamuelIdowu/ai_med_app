@@ -102,14 +102,22 @@ export const saveTokenToBackend = async (token: string) => {
 };
 
 export const addNotificationListeners = () => {
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-        console.log('Notification Received:', notification);
-    });
+    try {
+        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+            console.log('Notification Received:', notification);
+        });
 
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-        console.log('Notification Tapped:', response);
-        // Navigate to specific screen if needed
-    });
+        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log('Notification Tapped:', response);
+            // Navigate to specific screen if needed
+        });
 
-    return { notificationListener, responseListener };
+        return { notificationListener, responseListener };
+    } catch (e) {
+        console.warn('Notifications listeners not supported on this platform:', e);
+        return {
+            notificationListener: { remove: () => {} },
+            responseListener: { remove: () => {} },
+        };
+    }
 };

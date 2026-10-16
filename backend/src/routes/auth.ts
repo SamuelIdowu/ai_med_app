@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase } from '../config/supabase';
 
+import crypto from 'crypto';
 const router = express.Router();
 
 router.post('/check', async (req, res) => {
@@ -12,10 +13,11 @@ router.post('/check', async (req, res) => {
 
     try {
         // Try to create a user. If it fails with "User already registered", they exist.
-        // We use a dummy password that meets complexity requirements.
+        // We use a cryptographically random password that meets complexity requirements.
+        const probePassword = crypto.randomBytes(24).toString('base64') + '!Aa1';
         const { data, error } = await supabase.auth.admin.createUser({
             email: email,
-            password: 'CheckingUserExistence123!',
+            password: probePassword,
             email_confirm: false, // Don't confirm automatically
             user_metadata: { is_probe: true }
         });

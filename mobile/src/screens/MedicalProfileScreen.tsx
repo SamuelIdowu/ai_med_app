@@ -19,6 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { MedicalProfileService, MedicalProfile, EmergencyContact } from '../services/medicalProfileService';
+import { useAuth } from '../context/AuthContext';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { theme } from '../theme';
@@ -38,33 +39,30 @@ const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'Unknown'
 
 export const MedicalProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isEditingModal, setIsEditingModal] = useState(false);
 
   // Active Profile State
   const [profile, setProfile] = useState<MedicalProfile>({
-    email: '',
-    fullName: 'Max Egger',
-    dob: '1995-06-15',
-    bloodType: 'O+',
-    gender: 'Male',
-    weight: '74 kg',
-    height: '180 cm',
-    allergies: ['Penicillin', 'Peanuts'],
-    medications: ['Salbutamol Inhaler (PRN)', 'Cetirizine 10mg'],
-    conditions: ['Mild Asthma', 'Seasonal Rhinitis'],
-    medicalDirectives: ['Organ Donor', 'Carries EpiPen'],
-    emergencyNotes: 'Emergency inhaler in backpack front compartment. Penicillin causes severe rash.',
+    email: user?.email || '',
+    fullName: (user?.user_metadata as any)?.name || (user?.user_metadata as any)?.full_name || '',
+    dob: '',
+    bloodType: '',
+    gender: '',
+    weight: '',
+    height: '',
+    allergies: [],
+    medications: [],
+    conditions: [],
+    medicalDirectives: [],
+    emergencyNotes: '',
     emergencyContact: {
-      name: 'Sarah Connor',
-      relationship: 'Spouse',
-      phone: '+1 (555) 234-5678',
+      name: '',
+      relationship: '',
+      phone: '',
     },
-    secondaryEmergencyContact: {
-      name: 'Dr. Robert Kelly',
-      relationship: 'Brother / Physician',
-      phone: '+1 (555) 876-5432',
-    },
+    secondaryEmergencyContact: undefined,
     photoUrl: '',
   });
 
@@ -86,11 +84,11 @@ export const MedicalProfileScreen: React.FC = () => {
         setProfile((prev) => ({
           ...prev,
           ...savedProfile,
-          // Ensure arrays are initialized
-          allergies: savedProfile.allergies || prev.allergies,
-          medications: savedProfile.medications || prev.medications,
-          conditions: savedProfile.conditions || prev.conditions,
-          medicalDirectives: savedProfile.medicalDirectives || prev.medicalDirectives,
+          // Ensure arrays are initialized safely without fallback to old dummy data
+          allergies: Array.isArray(savedProfile.allergies) ? savedProfile.allergies : (prev.allergies || []),
+          medications: Array.isArray(savedProfile.medications) ? savedProfile.medications : (prev.medications || []),
+          conditions: Array.isArray(savedProfile.conditions) ? savedProfile.conditions : (prev.conditions || []),
+          medicalDirectives: Array.isArray(savedProfile.medicalDirectives) ? savedProfile.medicalDirectives : (prev.medicalDirectives || []),
         }));
       }
     } catch (e) {
@@ -263,19 +261,23 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <MedicalCard style={styles.heroCard}>
           <View style={styles.heroImageWrapper}>
-            <Image
-              source={{
-                uri:
-                  profile.photoUrl ||
-                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-              }}
-              style={styles.heroAvatar}
-            />
+            {profile.photoUrl ? (
+              <Image
+                source={{
+                  uri: profile.photoUrl,
+                }}
+                style={styles.heroAvatar}
+              />
+            ) : (
+              <View style={[styles.heroAvatar, styles.heroAvatarPlaceholder]}>
+                <MaterialCommunityIcons name="account" size={72} color="#9CA3AF" />
+              </View>
+            )}
           </View>
 
           <View style={styles.heroCardBottom}>
             <View style={styles.heroNameCol}>
-              <Text style={styles.heroName}>{profile.fullName || 'Max Egger'}</Text>
+              <Text style={styles.heroName}>{profile.fullName || user?.email?.split('@')[0] || 'Patient'}</Text>
               <Text style={styles.heroSub}>
                 {profile.gender || 'Patient'}
                 {ageStr ? ` • ${ageStr}` : ''}
@@ -284,7 +286,7 @@ export const MedicalProfileScreen: React.FC = () => {
 
             <View style={styles.bloodTypePill}>
               <MaterialCommunityIcons name="water" size={16} color="#0F1115" />
-              <Text style={styles.bloodTypeText}>{profile.bloodType || 'Unknown'}</Text>
+              <Text style={styles.bloodTypeText}>{profile.bloodType || '—'}</Text>
             </View>
           </View>
         </MedicalCard>
@@ -295,17 +297,17 @@ export const MedicalProfileScreen: React.FC = () => {
         <View style={styles.biometricsRow}>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Blood Group</Text>
-            <Text style={styles.statValue}>{profile.bloodType || 'O+'}</Text>
+            <Text style={styles.statValue}>{profile.bloodType || '—'}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Weight</Text>
-            <Text style={styles.statValue}>{profile.weight || '74 kg'}</Text>
+            <Text style={styles.statValue}>{profile.weight ? `${profile.weight}` : '—'}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Height</Text>
-            <Text style={styles.statValue}>{profile.height || '180 cm'}</Text>
+            <Text style={styles.statValue}>{profile.height ? `${profile.height}` : '—'}</Text>
           </View>
         </View>
 
@@ -435,42 +437,50 @@ export const MedicalProfileScreen: React.FC = () => {
           </View>
 
           {/* Primary Contact */}
-          <MedicalCard style={styles.contactCard}>
-            <View style={styles.contactLeft}>
-              <View style={styles.contactAvatar}>
-                <MaterialCommunityIcons name="account" size={20} color="#0F1115" />
-              </View>
-              <View style={styles.contactDetails}>
-                <View style={styles.contactBadgeRow}>
-                  <Text style={styles.contactName}>
-                    {profile.emergencyContact?.name || 'Primary Contact'}
-                  </Text>
-                  <View style={styles.primaryPill}>
-                    <Text style={styles.primaryPillText}>Primary</Text>
-                  </View>
+          {profile.emergencyContact?.name ? (
+            <MedicalCard style={styles.contactCard}>
+              <View style={styles.contactLeft}>
+                <View style={styles.contactAvatar}>
+                  <MaterialCommunityIcons name="account" size={20} color="#0F1115" />
                 </View>
-                <Text style={styles.contactRelationship}>
-                  {profile.emergencyContact?.relationship || 'Family'}
-                </Text>
-                <Text style={styles.contactPhone}>
-                  {profile.emergencyContact?.phone || 'No phone'}
-                </Text>
+                <View style={styles.contactDetails}>
+                  <View style={styles.contactBadgeRow}>
+                    <Text style={styles.contactName}>
+                      {profile.emergencyContact.name}
+                    </Text>
+                    <View style={styles.primaryPill}>
+                      <Text style={styles.primaryPillText}>Primary</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.contactRelationship}>
+                    {profile.emergencyContact.relationship || 'Emergency Contact'}
+                  </Text>
+                  <Text style={styles.contactPhone}>
+                    {profile.emergencyContact.phone || 'No phone provided'}
+                  </Text>
+                </View>
               </View>
-            </View>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.callButton}
-              onPress={() =>
-                handleDialContact(
-                  profile.emergencyContact?.phone || '',
-                  profile.emergencyContact?.name || 'Primary Contact'
-                )
-              }
-            >
-              <MaterialCommunityIcons name="phone" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-          </MedicalCard>
+              {profile.emergencyContact.phone ? (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.callButton}
+                  onPress={() =>
+                    handleDialContact(
+                      profile.emergencyContact?.phone || '',
+                      profile.emergencyContact?.name || 'Primary Contact'
+                    )
+                  }
+                >
+                  <MaterialCommunityIcons name="phone" size={18} color="#FFFFFF" />
+                </TouchableOpacity>
+              ) : null}
+            </MedicalCard>
+          ) : (
+            <MedicalCard style={styles.emptyCard}>
+              <Text style={styles.emptyCardText}>No primary emergency contact specified</Text>
+            </MedicalCard>
+          )}
 
           {/* Secondary Contact (Backup) */}
           {profile.secondaryEmergencyContact && profile.secondaryEmergencyContact.name ? (
@@ -570,14 +580,18 @@ export const MedicalProfileScreen: React.FC = () => {
           >
             {/* Avatar Section */}
             <View style={styles.modalAvatarRow}>
-              <Image
-                source={{
-                  uri:
-                    editForm.photoUrl ||
-                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-                }}
-                style={styles.modalAvatarImage}
-              />
+              {editForm.photoUrl ? (
+                <Image
+                  source={{
+                    uri: editForm.photoUrl,
+                  }}
+                  style={styles.modalAvatarImage}
+                />
+              ) : (
+                <View style={[styles.modalAvatarImage, styles.modalAvatarPlaceholder]}>
+                  <MaterialCommunityIcons name="account" size={32} color="#9CA3AF" />
+                </View>
+              )}
               <TouchableOpacity
                 style={styles.modalChangePhotoBtn}
                 onPress={handlePickImage}
@@ -1042,6 +1056,11 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
+  heroAvatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F4F6',
+  },
   heroCardBottom: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1407,6 +1426,10 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     backgroundColor: '#F3F4F6',
+  },
+  modalAvatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalChangePhotoBtn: {
     flexDirection: 'row',

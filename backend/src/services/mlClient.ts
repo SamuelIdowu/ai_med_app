@@ -11,13 +11,32 @@ export interface WoundAnalysisResult {
   classification: string;
   confidence: number;
   severity_grade: 'mild' | 'moderate' | 'severe';
+  recommendation?: string;
+  red_flags?: string[];
   annotations?: Record<string, any>;
-  recommendations?: string[];
+  latency_ms?: number;
+}
+
+export interface SyncTriageResult {
+  query: string;
+  is_critical: boolean;
+  flags: string[];
+  contraindications: string[];
+  escalation_message: string | null;
+  protocol: {
+    protocol_name: string;
+    steps: string[];
+    red_flags: string[];
+  };
+  processing_time_ms: number;
 }
 
 export class MLClient {
   private baseUrl: string;
   private client: AxiosInstance;
+  private lastHealthCheckTime = 0;
+  private lastHealthCheckResult = false;
+  private readonly HEALTH_CACHE_TTL_MS = 10000;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
@@ -39,13 +58,22 @@ export class MLClient {
   }
 
   /**
-   * Health check to verify Python FastAPI ML engine is responsive
+   * Health check to verify Python FastAPI ML engine is responsive with caching
    */
-  async checkHealth(): Promise<boolean> {
+  async checkHealth(force = false): Promise<boolean> {
+    const now = Date.now();
+    if (!force && now - this.lastHealthCheckTime < this.HEALTH_CACHE_TTL_MS) {
+      return this.lastHealthCheckResult;
+    }
+
     try {
-      const response = await this.client.get(`${this.baseUrl}/v1/ml/health`, { timeout: 5000 });
-      return response.status === 200;
+      const response = await this.client.get(`${this.baseUrl}/v1/ml/health`, { timeout: 3000 });
+      this.lastHealthCheckResult = response.status === 200;
+      this.lastHealthCheckTime = now;
+      return this.lastHealthCheckResult;
     } catch {
+      this.lastHealthCheckResult = false;
+      this.lastHealthCheckTime = now;
       return false;
     }
   }
@@ -71,6 +99,14 @@ export class MLClient {
   }
 
   /**
+   * Synchronously evaluates triage query using the ML engine
+   */
+  async evaluateTriageSync(query: string, symptoms: string[] = []): Promise<SyncTriageResult> {
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/evaluate`, { query, symptoms });
+    return response.data as SyncTriageResult;
+  }
+
+  /**
    * Submits wound or injury photograph to Python WoundVisionEngine for severity grading & classification
    */
   async analyzeWoundImage(fileBuffer: Buffer, fileName: string): Promise<WoundAnalysisResult> {
@@ -85,6 +121,14 @@ export class MLClient {
     });
 
     return response.data as WoundAnalysisResult;
+  }
+
+  /**
+   * Computes 384-dimensional dense vector embeddings for medical text
+   */
+  async embedText(text: string): Promise<number[]> {
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/embed`, { text });
+    return response.data.embedding;
   }
 
   /**

@@ -280,6 +280,8 @@ export type Encounter = {
     photos?: string[]; // Local photos
     synced?: boolean;
     user_id?: string | null;
+    symptoms?: string[];
+    location?: string | null;
 };
 
 export type MedicalProfile = Database['public']['Tables']['medical_profiles']['Row'];

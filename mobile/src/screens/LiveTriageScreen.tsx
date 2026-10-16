@@ -48,7 +48,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     props.apiBaseUrl ||
     route.params?.apiBaseUrl ||
     process.env.EXPO_PUBLIC_BACKEND_URL ||
-    'http://localhost:5000';
+    'http://localhost:3000/api/v1';
 
   const [query, setQuery] = useState(props.initialQuery || route.params?.initialQuery || '');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);

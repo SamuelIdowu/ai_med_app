@@ -76,15 +76,15 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 8,
   },
   badge: {
-    marginTop: 20,
-    backgroundColor: 'rgba(17, 19, 24, 0.75)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginTop: 12,
+    backgroundColor: 'rgba(17, 19, 24, 0.85)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: theme.spatial.radii.pill,
   },
   instructionText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

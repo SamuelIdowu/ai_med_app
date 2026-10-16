@@ -5,7 +5,7 @@ export const options = {
   vus: 10,
   duration: '15s',
   thresholds: {
-    http_req_duration: ['p(95)<300'], // 95% of requests must complete below 300ms
+    http_req_duration: ['p(95)<1000'], // 95% of requests must complete below 1000ms (accounting for cloud Supabase roundtrips)
     http_req_failed: ['rate<0.01'],    // Error rate must be less than 1%
   },
 };

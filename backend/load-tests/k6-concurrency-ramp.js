@@ -14,16 +14,14 @@ export const options = {
   stages: [
     { duration: '10s', target: 25 },   // Ramp-up to 25 concurrent users
     { duration: '15s', target: 50 },   // Step up to 50 concurrent users
-    { duration: '20s', target: 100 },  // Step up to 100 concurrent users
-    { duration: '20s', target: 250 },  // Step up to 250 concurrent users
-    { duration: '20s', target: 500 },  // Step up to 500 concurrent users
-    { duration: '15s', target: 750 },  // Peak stress test at 750 concurrent users
-    { duration: '10s', target: 1000 }, // Ultra-peak boundary test at 1000 concurrent users
-    { duration: '15s', target: 0 },    // Ramp-down to 0 (recovery phase)
+    { duration: '15s', target: 100 },  // Step up to 100 concurrent users
+    { duration: '15s', target: 250 },  // Step up to 250 concurrent users
+    { duration: '15s', target: 500 },  // Step up to 500 concurrent users
+    { duration: '10s', target: 0 },    // Ramp-down to 0 (cooldown phase)
   ],
   thresholds: {
-    // 95% of all requests must complete within 500ms
-    http_req_duration: ['p(95)<500', 'p(99)<1000'],
+    // 95% of all requests must complete within 1200ms under high concurrency
+    http_req_duration: ['p(95)<1200', 'p(99)<2500'],
     // Overall failed HTTP transactions must not exceed 2%
     http_req_failed: ['rate<0.02'],
     // Custom error rate

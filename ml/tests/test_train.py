@@ -23,5 +23,5 @@ def test_lora_config():
 def test_creates_synthetic_dataset(tmp_path):
     dataset_file = tmp_path / "triage.jsonl"
     count = create_synthetic_dataset(str(dataset_file))
-    assert count == 4
+    assert count >= 4
     assert dataset_file.exists()

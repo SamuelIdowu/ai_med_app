@@ -2,6 +2,12 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { getProfile } from './profileService';
 import { getEncounter } from './encounterService';
 
+// Sanitize strings to avoid pdf-lib WinAnsi font crashes on non-ASCII characters
+const sanitizePdfText = (text: string | null | undefined): string => {
+    if (!text) return '';
+    return text.replace(/[^\x20-\x7E\xA0-\xFF]/g, ' ').trim();
+};
+
 export const generateReport = async (userId: string, encounterId: string, token: string) => {
     const [profile, encounter] = await Promise.all([
         getProfile(userId, token),
@@ -10,7 +16,9 @@ export const generateReport = async (userId: string, encounterId: string, token:
 
     if (!encounter) {
         console.error(`Encounter not found for ID: ${encounterId} and User: ${userId}`);
-        throw new Error('Encounter not found');
+        const notFoundError: any = new Error('Encounter not found');
+        notFoundError.statusCode = 404;
+        throw notFoundError;
     }
 
     const pdfDoc = await PDFDocument.create();
@@ -29,12 +37,13 @@ export const generateReport = async (userId: string, encounterId: string, token:
     page.drawText('Patient Profile', { x: 50, y, size: 16, font: boldFont });
     y -= 20;
     if (profile) {
-        page.drawText(`Name: ${profile.first_name || 'N/A'} ${profile.last_name || ''}`, { x: 50, y, size: 12, font });
+        const patientName = sanitizePdfText(`${profile.first_name || 'N/A'} ${profile.last_name || ''}`);
+        page.drawText(`Name: ${patientName}`, { x: 50, y, size: 12, font });
         y -= 20;
-        page.drawText(`Blood Type: ${profile.blood_type || 'N/A'}`, { x: 50, y, size: 12, font });
+        page.drawText(`Blood Type: ${sanitizePdfText(profile.blood_type || 'N/A')}`, { x: 50, y, size: 12, font });
         y -= 20;
         const allergies = profile.allergies ? JSON.stringify(profile.allergies) : 'None';
-        page.drawText(`Allergies: ${allergies}`, { x: 50, y, size: 12, font });
+        page.drawText(`Allergies: ${sanitizePdfText(allergies)}`, { x: 50, y, size: 12, font });
         y -= 30;
     } else {
         page.drawText('No profile data available.', { x: 50, y, size: 12, font });
@@ -44,11 +53,13 @@ export const generateReport = async (userId: string, encounterId: string, token:
     // Encounter Info
     page.drawText('Encounter Details', { x: 50, y, size: 16, font: boldFont });
     y -= 20;
-    page.drawText(`Date: ${new Date(encounter.started_at).toLocaleString()}`, { x: 50, y, size: 12, font });
+    const dateStr = encounter.started_at ? new Date(encounter.started_at).toLocaleString() : new Date().toLocaleString();
+    page.drawText(`Date: ${sanitizePdfText(dateStr)}`, { x: 50, y, size: 12, font });
     y -= 20;
-    page.drawText(`Status: ${encounter.status}`, { x: 50, y, size: 12, font });
+    page.drawText(`Status: ${sanitizePdfText(encounter.status || 'active')}`, { x: 50, y, size: 12, font });
     y -= 20;
-    page.drawText(`Description: ${encounter.description || 'No description provided.'}`, { x: 50, y, size: 12, font });
+    const desc = sanitizePdfText(encounter.description || encounter.title || 'No description provided.');
+    page.drawText(`Description: ${desc}`, { x: 50, y, size: 12, font });
 
     // Serialize
     const pdfBytes = await pdfDoc.save();

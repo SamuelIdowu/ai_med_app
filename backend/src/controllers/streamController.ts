@@ -2,6 +2,7 @@
 // Real-Time SSE Triage Streaming Gateway & Wound Upload Handler
 
 import { Request, Response } from 'express';
+import path from 'path';
 import { MLClient } from '../services/mlClient';
 import { getSupabaseAdmin } from '../db/client';
 
@@ -25,10 +26,32 @@ const STORAGE_BUCKET = 'medical-images';
  */
 export async function handleTriageStream(req: Request, res: Response): Promise<void> {
   const { encounterId, query, symptoms = [] } = req.body;
+  const userId = (req as any).user?.id;
 
   if (!encounterId || !query) {
     res.status(400).json({ error: 'encounterId and query are required' });
     return;
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  // Enforce encounter ownership to prevent IDOR / cross-tenant tampering
+  if (userId) {
+    const { data: encounter, error: encError } = await supabase
+      .from('encounters')
+      .select('id, user_id')
+      .eq('id', encounterId)
+      .maybeSingle();
+
+    if (encError || !encounter) {
+      res.status(404).json({ error: 'Encounter not found' });
+      return;
+    }
+
+    if (encounter.user_id && encounter.user_id !== userId) {
+      res.status(403).json({ error: 'Unauthorized access to this encounter' });
+      return;
+    }
   }
 
   // Setup Server-Sent Events headers
@@ -39,7 +62,6 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
     res.flushHeaders();
   }
 
-  const supabase = getSupabaseAdmin();
   const mlClient = getMLClient();
   let accumulatedResponse = '';
 
@@ -121,11 +143,33 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
 export async function handleWoundUpload(req: Request, res: Response): Promise<void> {
   try {
     const encounterId = req.params.id;
+    const userId = (req as any).user?.id;
     const { image, fileName = `wound-${Date.now()}.jpg` } = req.body;
 
     if (!image) {
       res.status(400).json({ error: 'Image data is required' });
       return;
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // Enforce encounter ownership to prevent unauthorized wound image injection
+    if (userId) {
+      const { data: encounter, error: encError } = await supabase
+        .from('encounters')
+        .select('id, user_id')
+        .eq('id', encounterId)
+        .maybeSingle();
+
+      if (encError || !encounter) {
+        res.status(404).json({ error: 'Encounter not found' });
+        return;
+      }
+
+      if (encounter.user_id && encounter.user_id !== userId) {
+        res.status(403).json({ error: 'Unauthorized access to this encounter' });
+        return;
+      }
     }
 
     // Convert base64 data URL or raw base64 to Buffer
@@ -140,9 +184,9 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const supabase = getSupabaseAdmin();
     const mlClient = getMLClient();
-    const storagePath = `encounters/${encounterId}/${Date.now()}-${fileName}`;
+    const safeFileName = path.basename(fileName).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `encounters/${encounterId}/${Date.now()}-${safeFileName}`;
 
     // 1. Upload file to Supabase private medical-images bucket
     const { error: uploadError } = await supabase.storage
@@ -162,6 +206,11 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
     const analysis = await mlClient.analyzeWoundImage(imageBuffer, fileName);
 
     // 3. Persist wound assessment record in Supabase
+    const validSeverityGrades = ['mild', 'moderate', 'severe'];
+    const dbSeverity = validSeverityGrades.includes(analysis.severity_grade)
+      ? analysis.severity_grade
+      : null;
+
     const { data: assessment, error: dbError } = await supabase
       .from('wound_assessments')
       .insert({
@@ -169,7 +218,7 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
         storage_path: storagePath,
         classification: analysis.classification || 'unknown',
         confidence: analysis.confidence || 0.0,
-        severity_grade: analysis.severity_grade || 'mild',
+        severity_grade: dbSeverity,
         annotations: analysis.annotations || {},
       })
       .select()

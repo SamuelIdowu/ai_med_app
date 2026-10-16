@@ -11,7 +11,7 @@ import { MedicalProfileService, MedicalProfile } from '../services/medicalProfil
 import { reportService } from '../services/reportService';
 import { AnalyticsService } from '../services/analyticsService';
 import { ShareOptionsModal } from '../components/ShareOptionsModal';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 type ReportPreviewScreenRouteProp = RouteProp<RootStackParamList, 'ReportPreview'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -111,12 +111,18 @@ export const ReportPreviewScreen = () => {
                 {/* Patient Card */}
                 <View style={styles.card}>
                     <View style={styles.patientInfoRow}>
-                        <Image
-                            source={{ uri: profile?.photoUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAB9SOQ8kjrcKUgdbi0u-_6m6MoekDee1ONUHXFA3LopL9eC92V_BiDdu9XibjsMrsOT-lbu_560W41GBoxbrHORvpZpCbJdsbZLHe1GKFOUuQ4I2X_0m3QhPKEJAp5NnJkX2_Oe2f1YyCxcVDELPDaPJXUM_yNOHO1WAFgBmrrSVrJuLjuSbzcfUqAOWujEtXh1oiPQaMN9dr_mKo07kj9V937r_YCWMsY4Jwkus40Y_6qF4jcxCdTJxglR2KtR6__0e827I9e6RE' }}
-                            style={styles.avatar}
-                        />
+                        {profile?.photoUrl ? (
+                            <Image
+                                source={{ uri: profile.photoUrl }}
+                                style={styles.avatar}
+                            />
+                        ) : (
+                            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                                <MaterialCommunityIcons name="account" size={28} color="#737373" />
+                            </View>
+                        )}
                         <View style={styles.patientDetails}>
-                            <Text style={styles.patientName} numberOfLines={1}>{profile?.fullName || 'John Doe'}</Text>
+                            <Text style={styles.patientName} numberOfLines={1}>{profile?.fullName || 'Patient'}</Text>
                             <Text style={styles.patientSubDetail} numberOfLines={2}>
                                 {age ? `${age} years old` : 'Age unknown'}, Allergy: {allergies}
                             </Text>
@@ -130,7 +136,7 @@ export const ReportPreviewScreen = () => {
                         <View style={styles.gridItem}>
                             <Text style={styles.gridLabel}>Timestamp</Text>
                             <Text style={styles.gridValue}>
-                                {encounter.created_at ? new Date(encounter.created_at).toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) : 'Unknown'}
+                                {encounter?.created_at ? new Date(encounter.created_at).toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) : 'Unknown'}
                             </Text>
                         </View>
                     </View>
@@ -138,7 +144,7 @@ export const ReportPreviewScreen = () => {
                     <View style={styles.gridRow}>
                         <View style={styles.gridItem}>
                             <Text style={styles.gridLabel}>Location</Text>
-                            <Text style={styles.gridValue}>Central Park, New York</Text>
+                            <Text style={styles.gridValue}>{encounter?.location || 'Location not specified'}</Text>
                         </View>
                     </View>
                 </View>
@@ -147,7 +153,7 @@ export const ReportPreviewScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Added Notes</Text>
                     <Text style={styles.notesText}>
-                        {encounter.notes || 'Patient tripped and fell, sustaining a deep cut on the right forearm. Bleeding was controlled with direct pressure. Patient is conscious and alert, but experiencing moderate pain.'}
+                        {encounter?.notes || 'No responder notes recorded for this encounter.'}
                     </Text>
                 </View>
 
@@ -249,6 +255,10 @@ const styles = StyleSheet.create({
         height: 56,
         borderRadius: 28,
         backgroundColor: '#E5E7EB',
+    },
+    avatarPlaceholder: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     patientDetails: {
         flex: 1,

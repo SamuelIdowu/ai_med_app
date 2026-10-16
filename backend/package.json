@@ -4,14 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "start": "ts-node src/index.ts",
+    "start:prod": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "test": "jest",
+    "test": "jest --runInBand",
     "test:e2e": "jest src/tests/e2e_all_features.test.ts",
     "test:load": "ts-node load-tests/run-benchmark.ts",
     "test:load:smoke": "k6 run load-tests/k6-smoke.js",
     "test:load:ramp": "k6 run load-tests/k6-concurrency-ramp.js",
-    "test:load:journey": "k6 run load-tests/k6-user-journey.js"
+    "test:load:journey": "k6 run load-tests/k6-user-journey.js",
+    "test:mobile": "jest --config jest.mobile.config.js"
   },
   "keywords": [],
   "author": "",

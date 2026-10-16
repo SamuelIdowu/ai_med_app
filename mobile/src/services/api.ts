@@ -1,8 +1,19 @@
 import axios from 'axios';
 import { supabase } from './supabase';
 
+import { Platform } from 'react-native';
+
+const getBaseUrl = (): string => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
+        // If web browser is viewing on localhost or LAN, route to the same host on backend port 3000
+        const host = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
+        return `http://${host}:3000/api/v1`;
+    }
+    return process.env.EXPO_PUBLIC_BACKEND_URL || 'http://192.168.0.142:3000/api/v1';
+};
+
 export const api = axios.create({
-    baseURL: process.env.EXPO_PUBLIC_BACKEND_URL, // Ensure this env var is set correctly in .env
+    baseURL: getBaseUrl(),
     timeout: 60000, // 60 seconds — image uploads can be large over local WiFi
     maxBodyLength: Infinity,
     maxContentLength: Infinity,

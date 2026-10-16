@@ -1,10 +1,12 @@
 import express from 'express';
 import * as AIController from '../controllers/aiController';
 import { aiRateLimiter } from '../middleware/rateLimiter';
+import { authenticateUser } from '../middleware/auth';
 
 const router = express.Router();
 
-// Apply rate limiting to all AI routes
+// Enforce JWT authentication AND rate limiting on all AI routes
+router.use(authenticateUser);
 router.use(aiRateLimiter);
 
 router.post('/chat', AIController.chat);

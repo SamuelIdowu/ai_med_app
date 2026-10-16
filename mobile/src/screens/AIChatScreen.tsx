@@ -28,6 +28,7 @@ import { FloatingChatInput, AttachedMedia } from '../components/chat/FloatingCha
 import { VoiceWaveformModal } from '../components/chat/VoiceWaveformModal';
 import { MediaAttachmentModal, MediaCaptureAction } from '../components/chat/MediaAttachmentModal';
 import { MedicalCard } from '../components/ui/MedicalCard';
+import { VoiceService } from '../services/voiceService';
 import { theme } from '../theme';
 
 const QUICK_SUGGESTIONS = [
@@ -57,6 +58,9 @@ export const AIChatScreen: React.FC = () => {
 
   useEffect(() => {
     loadChatsFromStorage();
+    return () => {
+      VoiceService.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -555,7 +559,17 @@ export const AIChatScreen: React.FC = () => {
                   {isUser ? (
                     <Text style={styles.userMessageText}>{msg.text}</Text>
                   ) : (
-                    <Markdown style={markdownStyles}>{msg.text}</Markdown>
+                    <>
+                      <Markdown style={markdownStyles}>{msg.text}</Markdown>
+                      <TouchableOpacity
+                        style={styles.speakButton}
+                        onPress={() => VoiceService.speak(msg.text)}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons name="volume-high" size={15} color="#4B5563" />
+                        <Text style={styles.speakButtonText}>Listen to guidance</Text>
+                      </TouchableOpacity>
+                    </>
                   )}
                 </View>
               </View>
@@ -881,5 +895,20 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  speakButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    alignSelf: 'flex-start',
+  },
+  speakButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#4B5563',
   },
 });

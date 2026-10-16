@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Animated, Easing, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { MediaTypeOptions } from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
@@ -515,50 +515,42 @@ export const AIAnalysisScreen = () => {
                                 <Text style={styles.galleryButtonText}>Select from Gallery</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.analyzeButton,
-                                    images.length === 0 && styles.analyzeButtonDisabled
-                                ]}
-                                disabled={images.length === 0 || analyzing}
-                                onPress={handleAnalyze}
-                            >
-                                {analyzing ? (
-                                    <>
-                                        <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
-                                        <Text style={[styles.analyzeButtonText, { color: "#fff" }]}>Analyzing...</Text>
-                                    </>
-                                ) : (
-                                    <>
-                                        <LinearGradient
-                                            colors={images.length > 0 ? ['#0F1115', '#262A33'] : ['#F3F4F6', '#F3F4F6']}
-                                            style={StyleSheet.absoluteFillObject}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 0 }}
-                                        />
-                                        <MaterialCommunityIcons name="line-scan" size={24} color={images.length > 0 ? "#fff" : "#9ca3af"} style={{ zIndex: 1 }} />
-                                        <Text style={[styles.analyzeButtonText, { color: images.length > 0 ? "#fff" : "#9ca3af", zIndex: 1 }]}>
-                                            Scan {images.length > 0 ? `(${images.length})` : ''}
-                                        </Text>
-                                    </>
-                                )}
-                            </TouchableOpacity>
+                            {images.length > 0 && (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.analyzeButton,
+                                        analyzing && styles.analyzeButtonDisabled
+                                    ]}
+                                    disabled={analyzing}
+                                    onPress={handleAnalyze}
+                                >
+                                    {analyzing ? (
+                                        <>
+                                            <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
+                                            <Text style={[styles.analyzeButtonText, { color: "#fff" }]}>Analyzing...</Text>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <LinearGradient
+                                                colors={['#0F1115', '#262A33']}
+                                                style={StyleSheet.absoluteFillObject}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 0 }}
+                                            />
+                                            <MaterialCommunityIcons name="line-scan" size={24} color="#fff" style={{ zIndex: 1 }} />
+                                            <Text style={[styles.analyzeButtonText, { color: "#fff", zIndex: 1 }]}>
+                                                Scan & Analyze ({images.length})
+                                            </Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 )}
-
-                {/* Disclaimer */}
-                {/* <View style={styles.bottomSection}>
-                    <Text style={styles.disclaimer}>
-                        AI analysis results are saved to your history. Always seek professional help for serious emergencies.
-                    </Text>
-                </View> */}
             </ScrollView>
 
-            {/* Custom Bottom Nav Replica for this screen workflow if needed, 
-                but usually we might just rely on the main tab bar or hide it.
-                The design shows a specific nav. Implementing a simplified version.
-            */}
+            {/* Bottom Nav Bar */}
             <View style={styles.bottomNav}>
                 <TouchableOpacity
                     style={styles.navItem}
@@ -570,15 +562,31 @@ export const AIAnalysisScreen = () => {
 
                 <View style={styles.scanTabContainer}>
                     <TouchableOpacity
-                        style={styles.scanButton}
+                        style={[
+                            styles.scanButton,
+                            images.length > 0 && { backgroundColor: '#0F1115' }
+                        ]}
+                        disabled={analyzing}
                         onPress={() => images.length > 0 ? handleAnalyze() : pickImage()}
                     >
-                        <MaterialCommunityIcons name="line-scan" size={24} color="#fff" />
+                        {analyzing ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <MaterialCommunityIcons name="line-scan" size={24} color="#fff" />
+                        )}
+                        {images.length > 0 && (
+                            <View style={styles.badgeContainer}>
+                                <Text style={styles.badgeText}>{images.length}</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                     <Text style={styles.scanText}>Scan</Text>
                 </View>
 
-                <TouchableOpacity style={styles.navItem}>
+                <TouchableOpacity 
+                    style={styles.navItem}
+                    onPress={() => navigation.navigate('FirstAidList')}
+                >
                     <MaterialCommunityIcons name="book-open-variant" size={24} color="#9ca3af" />
                     <Text style={styles.navText}>Guides</Text>
                 </TouchableOpacity>
@@ -626,20 +634,23 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         paddingHorizontal: 20,
-        paddingTop: 24,
-        paddingBottom: 100,
+        paddingTop: 16,
+        paddingBottom: 130,
+        maxWidth: 520,
+        width: '100%',
+        alignSelf: 'center',
     },
     headlineContainer: {
-        marginBottom: 24,
+        marginBottom: 20,
     },
     headlineRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 16,
+        marginBottom: 12,
     },
     headlineText: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '700',
         color: TEXT_LIGHT,
     },
@@ -661,38 +672,39 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     subtext: {
-        fontSize: 16,
+        fontSize: 15,
         color: TEXT_SECONDARY,
-        lineHeight: 24,
+        lineHeight: 22,
     },
     uploadContainer: {
         flex: 1,
-        marginBottom: 32,
+        marginBottom: 24,
     },
     uploadBox: {
         width: '100%',
-        minHeight: 340,
+        minHeight: 220,
         borderWidth: 2,
         borderColor: '#e6d1d0',
         borderStyle: 'dashed',
-        borderRadius: 12,
+        borderRadius: 16,
         backgroundColor: '#ffffff',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
-        marginBottom: 24,
+        paddingVertical: 24,
+        paddingHorizontal: 20,
+        marginBottom: 20,
     },
     uploadIconCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 72,
+        height: 72,
+        borderRadius: 36,
         backgroundColor: 'rgba(229, 55, 52, 0.1)',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 16,
+        marginBottom: 14,
     },
     uploadTitle: {
-        fontSize: 18,
+        fontSize: 17,
         fontWeight: '700',
         color: TEXT_LIGHT,
         marginBottom: 4,
@@ -710,8 +722,9 @@ const styles = StyleSheet.create({
     actionButtons: {
         gap: 12,
         width: '100%',
-        maxWidth: 260,
+        maxWidth: 280,
         alignSelf: 'center',
+        marginBottom: 12,
     },
     cameraButton: {
         flexDirection: 'row',
@@ -755,15 +768,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 60,
-        borderRadius: 30, // Pill shape
+        height: 52,
+        borderRadius: 26, // Pill shape
         gap: 12,
         overflow: 'hidden', // For gradient
         shadowColor: PRIMARY_COLOR,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 8,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+        elevation: 6,
+        marginTop: 4,
     },
     analyzeButtonDisabled: {
         shadowOpacity: 0,
@@ -771,7 +785,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f3f4f6',
     },
     analyzeButtonText: {
-        fontSize: 20,
+        fontSize: 17,
         fontWeight: '700',
     },
     disclaimer: {
@@ -794,8 +808,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
-        height: 80,
-        paddingBottom: 20,
+        height: 72,
+        paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 8,
+        zIndex: 50,
     },
     navItem: {
         alignItems: 'center',
@@ -810,7 +830,7 @@ const styles = StyleSheet.create({
     },
     scanTabContainer: {
         position: 'relative',
-        top: -24,
+        top: -18,
         alignItems: 'center',
     },
     scanButton: {
@@ -833,6 +853,24 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: PRIMARY_COLOR,
         marginTop: 4,
+    },
+    badgeContainer: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        backgroundColor: '#0F1115',
+        borderRadius: 10,
+        minWidth: 20,
+        height: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: '800',
     },
     resultContainer: {
         flex: 1,

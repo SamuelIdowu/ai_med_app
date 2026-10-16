@@ -18,9 +18,29 @@ import notificationRoutes from './routes/notifications';
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : ['http://localhost:3000', 'http://localhost:8081', 'http://127.0.0.1:3000', 'http://127.0.0.1:8081'];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow mobile applications / server-to-server (no origin) or allowed domains
+        if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+            callback(null, true);
+        } else {
+            callback(new Error('Blocked by CORS policy'));
+        }
+    },
+    credentials: true,
+}));
 app.use(helmet());
-app.use(express.json({ limit: '50mb' }));
+
+// Scoped 50MB body limit specifically for image upload and computer vision endpoints
+app.use('/api/v1/encounters/:id/wound', express.json({ limit: '50mb' }));
+app.use('/api/v1/ai/analyze', express.json({ limit: '50mb' }));
+
+// Standard secure 1MB body limit for all other JSON routes
+app.use(express.json({ limit: '1mb' }));
 
 // Request Logger (only in non-test environment to keep test output clean)
 if (process.env.NODE_ENV !== 'test') {
@@ -55,9 +75,14 @@ app.use('/api/v1/notifications', notificationRoutes);
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (process.env.NODE_ENV !== 'test') {
-        console.error(err.stack);
+        console.error(err.stack || err);
     }
-    res.status(500).json({ error: 'Something went wrong!', details: err.message });
+    const statusCode = err.statusCode || err.status || 500;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const message = (statusCode === 500 && isProduction)
+        ? 'Internal server error'
+        : (err.message || 'Something went wrong!');
+    res.status(statusCode).json({ error: message });
 });
 
 export default app;

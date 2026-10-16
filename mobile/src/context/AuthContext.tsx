@@ -30,12 +30,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Wait for both session check and splash animation (2.5s)
         const checkSession = supabase.auth.getSession();
         const minDelay = new Promise(resolve => setTimeout(resolve, 2500));
-
-        Promise.all([checkSession, minDelay]).then(([{ data: { session } }]) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        Promise.all([checkSession, minDelay])
+            .then(([sessionResult]) => {
+                const currentSession = sessionResult?.data?.session ?? null;
+                setSession(currentSession);
+                setUser(currentSession?.user ?? null);
+            })
+            .catch((err) => {
+                console.warn('Session check error:', err);
+                setSession(null);
+                setUser(null);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
