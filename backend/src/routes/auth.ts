@@ -1,53 +1,54 @@
 import express from 'express';
-import { supabase } from '../config/supabase';
+import rateLimit from 'express-rate-limit';
+import { getSupabaseAdmin } from '../db/client';
 
-import crypto from 'crypto';
 const router = express.Router();
 
-router.post('/check', async (req, res) => {
+// Strict rate-limiting on auth check endpoint to prevent automated credential enumeration
+const authCheckLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // 100 checks per 15 min window
+    message: { exists: false, error: 'Too many authentication check requests. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+router.post('/check', authCheckLimiter, async (req, res) => {
     const { email } = req.body;
 
-    if (!email) {
+    if (!email || typeof email !== 'string') {
         return res.status(400).json({ exists: false, error: 'Email is required' });
     }
 
-    try {
-        // Try to create a user. If it fails with "User already registered", they exist.
-        // We use a cryptographically random password that meets complexity requirements.
-        const probePassword = crypto.randomBytes(24).toString('base64') + '!Aa1';
-        const { data, error } = await supabase.auth.admin.createUser({
-            email: email,
-            password: probePassword,
-            email_confirm: false, // Don't confirm automatically
-            user_metadata: { is_probe: true }
-        });
+    const normalizedEmail = email.toLowerCase().trim();
 
-        if (error) {
-            // Check for specific error message or code indicating existence
-            if (
-                error.code === 'email_exists' ||
-                (error as any).status === 422 ||
-                error.message.includes('already registered') ||
-                error.message.includes('User already exists')
-            ) {
-                return res.json({ exists: true });
-            }
-            // Other error?
-            console.error('Check user error:', error);
-            // If we can't tell, assume false to allow normal signup flow to handle it (or fail there)
-            return res.json({ exists: false });
+    try {
+        const supabase = getSupabaseAdmin();
+
+        // 1. Check primary users table
+        const { data: userRecord } = await supabase
+            .from('users')
+            .select('id')
+            .ilike('email', normalizedEmail)
+            .maybeSingle();
+
+        if (userRecord) {
+            return res.json({ exists: true });
         }
 
-        // If success, the user DID NOT KEY EXIST. We must DELETE this probe user immediately.
-        if (data.user) {
-            await supabase.auth.admin.deleteUser(data.user.id);
+        // 2. Safe check against auth admin without creating/deleting phantom probe accounts
+        const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+        if (!authError && authData?.users) {
+            const existsInAuth = authData.users.some(
+                (u) => u.email?.toLowerCase().trim() === normalizedEmail
+            );
+            return res.json({ exists: existsInAuth });
         }
 
         return res.json({ exists: false });
-
     } catch (e: any) {
         console.error('Unexpected error checking user:', e);
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ error: e.message || 'Error checking user' });
     }
 });
 

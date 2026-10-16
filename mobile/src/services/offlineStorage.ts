@@ -1,5 +1,66 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import crypto from 'crypto';
 import firstAidContent from '../content/first-aid-content.json';
+
+const ENCRYPTION_PREFIX = 'enc:v1:';
+const MASTER_KEY_STORAGE_ALIAS = 'healthpulse_phi_vault_key';
+let cachedEncryptionKey: string | null = null;
+
+async function getOrCreateEncryptionKey(): Promise<string> {
+  if (cachedEncryptionKey) return cachedEncryptionKey;
+  try {
+    if (Platform.OS !== 'web' && SecureStore && typeof SecureStore.getItemAsync === 'function') {
+      let key = await SecureStore.getItemAsync(MASTER_KEY_STORAGE_ALIAS);
+      if (!key) {
+        key = crypto.randomBytes(32).toString('hex');
+        await SecureStore.setItemAsync(MASTER_KEY_STORAGE_ALIAS, key);
+      }
+      cachedEncryptionKey = key;
+      return key;
+    }
+  } catch {
+    // Fallback if secure store fails or in tests
+  }
+  if (!cachedEncryptionKey) {
+    cachedEncryptionKey = 'healthpulse_secure_offline_default_key_32bytes!';
+  }
+  return cachedEncryptionKey;
+}
+
+function encryptPayload(plaintext: string, keyHex: string): string {
+  try {
+    const key = crypto.createHash('sha256').update(keyHex).digest();
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return `${ENCRYPTION_PREFIX}${iv.toString('hex')}:${encrypted}`;
+  } catch {
+    return plaintext;
+  }
+}
+
+function decryptPayload(ciphertext: string, keyHex: string): string {
+  if (!ciphertext || !ciphertext.startsWith(ENCRYPTION_PREFIX)) {
+    // Plaintext / legacy data backwards compatibility
+    return ciphertext;
+  }
+  try {
+    const key = crypto.createHash('sha256').update(keyHex).digest();
+    const parts = ciphertext.slice(ENCRYPTION_PREFIX.length).split(':');
+    if (parts.length !== 2) return ciphertext;
+    const iv = Buffer.from(parts[0], 'hex');
+    const encryptedData = parts[1];
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch {
+    return ciphertext;
+  }
+}
 
 export interface OfflineGuide {
   id: string;
@@ -198,21 +259,27 @@ export class OfflineStorage {
     this.fallbackEncounters = [...this.fallbackEncounters.filter((e) => e.id !== encounter.id), updatedEncounter];
 
     try {
+      const key = await getOrCreateEncryptionKey();
       const existing = await this.getPendingEncounters();
       const updated = [...existing.filter((e) => e.id !== encounter.id), updatedEncounter];
-      await AsyncStorage.setItem(STORAGE_KEY_ENCOUNTERS, JSON.stringify(updated));
+      const serialized = JSON.stringify(updated);
+      const encrypted = encryptPayload(serialized, key);
+      await AsyncStorage.setItem(STORAGE_KEY_ENCOUNTERS, encrypted);
 
       if (this.db) {
+        const encComplaint = encryptPayload(encounter.chiefComplaint, key);
+        const encSymptoms = encryptPayload(JSON.stringify(encounter.symptoms), key);
+        const encNotes = encryptPayload(encounter.notes || '', key);
         this.db.runSync(
           `INSERT OR REPLACE INTO offline_encounters (id, patientId, chiefComplaint, symptoms, severity, notes, createdAt, synced)
            VALUES (?, ?, ?, ?, ?, ?, ?, 0);`,
           [
             encounter.id,
             encounter.patientId || '',
-            encounter.chiefComplaint,
-            JSON.stringify(encounter.symptoms),
+            encComplaint,
+            encSymptoms,
             encounter.severity || 'moderate',
-            encounter.notes || '',
+            encNotes,
             encounter.createdAt,
           ]
         );
@@ -226,7 +293,9 @@ export class OfflineStorage {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY_ENCOUNTERS);
       if (!raw) return this.fallbackEncounters;
-      const parsed = JSON.parse(raw);
+      const key = await getOrCreateEncryptionKey();
+      const decrypted = decryptPayload(raw, key);
+      const parsed = JSON.parse(decrypted);
       return Array.isArray(parsed) && parsed.length > 0 ? parsed : this.fallbackEncounters;
     } catch {
       return this.fallbackEncounters;
@@ -236,9 +305,12 @@ export class OfflineStorage {
   async removePendingEncounter(id: string): Promise<void> {
     this.fallbackEncounters = this.fallbackEncounters.filter((e) => e.id !== id);
     try {
+      const key = await getOrCreateEncryptionKey();
       const current = await this.getPendingEncounters();
       const filtered = current.filter((e) => e.id !== id);
-      await AsyncStorage.setItem(STORAGE_KEY_ENCOUNTERS, JSON.stringify(filtered));
+      const serialized = JSON.stringify(filtered);
+      const encrypted = encryptPayload(serialized, key);
+      await AsyncStorage.setItem(STORAGE_KEY_ENCOUNTERS, encrypted);
 
       if (this.db) {
         this.db.runSync(`DELETE FROM offline_encounters WHERE id = ?;`, [id]);

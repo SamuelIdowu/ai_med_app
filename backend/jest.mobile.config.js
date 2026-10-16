@@ -22,6 +22,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@react-native-async-storage/async-storage$': '<rootDir>/mobile/src/__mocks__/asyncStorage.ts',
+    '^expo-secure-store$': '<rootDir>/mobile/src/__mocks__/expo-secure-store.ts',
     '^react-native$': '<rootDir>/mobile/src/__mocks__/react-native.ts',
   },
 };
