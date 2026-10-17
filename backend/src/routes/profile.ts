@@ -1,6 +1,7 @@
 import express from 'express';
 import { getProfile, upsertProfile } from '../services/profileService';
 import { authenticateUser } from '../middleware/auth';
+import { logAudit } from '../services/auditService';
 
 const router = express.Router();
 
@@ -14,6 +15,14 @@ router.get('/', async (req, res) => {
         if (!profile) {
             return res.status(404).json({ message: 'Profile not found' });
         }
+        logAudit({
+            userId: req.user.id,
+            action: 'READ_PROFILE',
+            resourceType: 'PROFILE',
+            resourceId: req.user.id,
+            ipAddress: req.ip,
+            userAgent: req.get?.('user-agent'),
+        });
         res.json(profile);
     } catch (error: any) {
         console.error('GET /api/v1/profile error:', error);
@@ -25,6 +34,14 @@ router.post('/', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1] || '';
         const profile = await upsertProfile(req.user.id, req.body, token);
+        logAudit({
+            userId: req.user.id,
+            action: 'UPDATE_PROFILE',
+            resourceType: 'PROFILE',
+            resourceId: req.user.id,
+            ipAddress: req.ip,
+            userAgent: req.get?.('user-agent'),
+        });
         res.json(profile);
     } catch (error: any) {
         console.error('POST /api/v1/profile error:', error);

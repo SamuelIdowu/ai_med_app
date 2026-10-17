@@ -3,6 +3,7 @@
 
 import { Request, Response } from 'express';
 import * as encounterService from '../services/encounterService';
+import { logAudit } from '../services/auditService';
 
 const VALID_STATUSES = ['active', 'in_progress', 'escalated', 'resolved'];
 const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'];
@@ -38,6 +39,15 @@ export const create = async (req: Request, res: Response): Promise<void> => {
     };
 
     const encounter = await encounterService.createEncounter(userId, encounterPayload, token);
+    logAudit({
+      userId,
+      action: 'CREATE_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounter.id,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+      metadata: { severity, status },
+    });
     res.status(201).json(encounter);
   } catch (error: any) {
     console.error('Error in encounterController.create:', error);
@@ -62,6 +72,15 @@ export const getById = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    logAudit({
+      userId,
+      action: 'VIEW_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounterId,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+    });
+
     res.json(encounter);
   } catch (error: any) {
     console.error('Error in encounterController.getById:', error);
@@ -80,6 +99,14 @@ export const list = async (req: Request, res: Response): Promise<void> => {
     }
 
     const encounters = await encounterService.getEncounters(userId, token);
+    logAudit({
+      userId,
+      action: 'LIST_ENCOUNTERS',
+      resourceType: 'ENCOUNTER',
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+      metadata: { count: encounters.length },
+    });
     res.json(encounters);
   } catch (error: any) {
     console.error('Error in encounterController.list:', error);
@@ -121,6 +148,15 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
     if (symptoms !== undefined) updates.symptoms = symptoms;
 
     const updated = await encounterService.updateEncounter(encounterId, userId, updates, token);
+    logAudit({
+      userId,
+      action: 'UPDATE_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounterId,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+      metadata: updates,
+    });
     res.json(updated);
   } catch (error: any) {
     console.error('Error in encounterController.updateStatus:', error);
@@ -140,6 +176,14 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
     }
 
     await encounterService.deleteEncounter(encounterId, userId, token);
+    logAudit({
+      userId,
+      action: 'DELETE_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounterId,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+    });
     res.status(204).send();
   } catch (error: any) {
     console.error('Error in encounterController.remove:', error);

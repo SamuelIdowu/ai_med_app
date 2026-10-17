@@ -1,6 +1,7 @@
 import express from 'express';
 import { generateReport } from '../services/reportService';
 import { authenticateUser } from '../middleware/auth';
+import { logAudit } from '../services/auditService';
 
 const router = express.Router();
 
@@ -20,6 +21,16 @@ router.post('/:id/generate', async (req, res) => {
         }
 
         const pdfBytes = await generateReport(req.user.id, req.params.id, token);
+
+        logAudit({
+            userId: req.user.id,
+            action: 'GENERATE_REPORT',
+            resourceType: 'REPORT',
+            resourceId: req.params.id,
+            ipAddress: req.ip,
+            userAgent: req.get?.('user-agent'),
+            metadata: { format: 'pdf', byteSize: pdfBytes.length },
+        });
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=report-${req.params.id}.pdf`);

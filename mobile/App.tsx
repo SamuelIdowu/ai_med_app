@@ -34,6 +34,7 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import { registerForPushNotificationsAsync, saveTokenToBackend, addNotificationListeners } from './src/services/NotificationService';
 import * as Notifications from 'expo-notifications';
+import { EmergencyErrorBoundary } from './src/components/ui/EmergencyErrorBoundary';
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -95,11 +96,13 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppNavigator />
-      </AuthProvider>
-    </ThemeProvider>
+    <EmergencyErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
+      </ThemeProvider>
+    </EmergencyErrorBoundary>
   );
 }
 
