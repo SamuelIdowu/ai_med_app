@@ -335,9 +335,9 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.heroContainer}>
           {/* Top Bar inside Hero */}
           <View style={styles.heroHeaderRow}>
-            {/* Logo: iAid + Shield Icon */}
+            {/* Logo: Laso + Shield Icon */}
             <View style={styles.logoRow}>
-              <Text style={styles.logoText}>iAid</Text>
+              <Text style={styles.logoText}>Laso</Text>
               <View style={styles.logoShieldBadge}>
                 <MaterialCommunityIcons name="shield-cross" size={20} color="#FFFFFF" />
               </View>

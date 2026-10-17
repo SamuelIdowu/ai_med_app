@@ -4,12 +4,22 @@ import { supabase } from './supabase';
 import { Platform } from 'react-native';
 
 const getBaseUrl = (): string => {
+    if (process.env.EXPO_PUBLIC_BACKEND_URL) {
+        return process.env.EXPO_PUBLIC_BACKEND_URL.replace(/\/$/, '');
+    }
+
     if (typeof window !== 'undefined' && typeof (window as any).location?.hostname === 'string') {
-        // If web browser is viewing on localhost or LAN, route to the same host on backend port 3000
         const host = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
         return `http://${host}:3000/api/v1`;
     }
-    return process.env.EXPO_PUBLIC_BACKEND_URL || 'http://192.168.0.142:3000/api/v1';
+
+    // React Native Development Fallbacks
+    if (Platform.OS === 'android') {
+        // 10.0.2.2 is Android emulator's alias to host loopback interface
+        return 'http://10.0.2.2:3000/api/v1';
+    }
+
+    return 'http://localhost:3000/api/v1';
 };
 
 export const api = axios.create({

@@ -29,7 +29,7 @@ export const WelcomeScreen: React.FC = () => {
           <View style={styles.logoBadge}>
             <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
           </View>
-          <Text style={styles.logoText}>iAid<Text style={styles.logoPlus}>+</Text></Text>
+          <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
         </View>
 
         {/* Hero Illustration Card from full_sketch.webp & ref5.webp */}

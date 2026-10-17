@@ -68,7 +68,7 @@ export const SplashScreen = () => {
                     <Text style={styles.iconText}>+</Text>
                 </View>
 
-                <Text style={styles.logoText}>iAid<Text style={styles.logoAccent}>+</Text></Text>
+                <Text style={styles.logoText}>Laso<Text style={styles.logoAccent}>+</Text></Text>
                 <Text style={styles.tagline}>Fast. Offline. Reliable.</Text>
             </Animated.View>
 

@@ -84,12 +84,12 @@ export const SignupScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo iAid+ from sketch.webp */}
+          {/* Logo Laso+ */}
           <View style={styles.logoRow}>
             <View style={styles.logoBadge}>
               <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
             </View>
-            <Text style={styles.logoText}>iAid<Text style={styles.logoPlus}>+</Text></Text>
+            <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
           </View>
 
           {/* Header */}

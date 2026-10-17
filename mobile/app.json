@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Laso",
+    "slug": "laso",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,10 +13,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.laso.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Laso uses your camera to analyze injuries, scan wounds, and provide guided first-aid assistance.",
+        "NSMicrophoneUsageDescription": "Laso uses your microphone for hands-free voice triage during medical emergencies.",
+        "NSLocationWhenInUseUsageDescription": "Laso uses your location to identify nearest emergency clinics and medical facilities.",
+        "NSSpeechRecognitionUsageDescription": "Laso uses speech recognition to transcribe symptoms during emergency situations."
+      }
     },
     "android": {
-      "package": "com.healthpulse.app",
+      "package": "com.laso.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +32,7 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "CAMERA",
+        "RECORD_AUDIO",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "READ_EXTERNAL_STORAGE",
@@ -37,7 +45,19 @@
     "plugins": [
       "expo-secure-store",
       "expo-font",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Laso to access your camera to inspect wounds and injuries."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Laso to locate nearby healthcare clinics and emergency rooms."
+        }
+      ]
     ]
   }
 }
