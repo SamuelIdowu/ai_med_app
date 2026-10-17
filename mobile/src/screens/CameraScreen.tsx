@@ -102,14 +102,17 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     permissionButton: {
-        backgroundColor: '#e53734',
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: theme.colors.primary.main,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: theme.spatial.radii.pill,
         alignSelf: 'center',
+        ...theme.spatial.shadows3d.level1,
     },
     permissionButtonText: {
         color: 'white',
         fontWeight: 'bold',
+        fontSize: 16,
     },
     camera: {
         flex: 1,

@@ -5,12 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { theme } from '../theme';
 
-const BG_LIGHT = '#f8f6f6';
-const PRIMARY_COLOR = '#e53734';
-const TEXT_DARK = '#1c1917'; // stone-900 like
-const TEXT_SECONDARY = '#57534e'; // stone-600 like
-const CARD_BG = '#ffffff';
+const BG_LIGHT = theme.colors.canvas.background;
+const PRIMARY_COLOR = theme.colors.primary.main;
+const TEXT_DARK = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
+const CARD_BG = theme.colors.canvas.surface;
 
 export const PhotoInstructionsScreen = () => {
     const navigation = useNavigation<any>();
@@ -134,15 +135,13 @@ const styles = StyleSheet.create({
     },
     instructionCard: {
         backgroundColor: CARD_BG,
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 16,
         minHeight: 56,
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     instructionContent: {
         flexDirection: 'row',
@@ -150,15 +149,16 @@ const styles = StyleSheet.create({
         gap: 16,
     },
     iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        backgroundColor: 'rgba(229, 55, 52, 0.1)', // primary/10 approx
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: theme.colors.primary.light,
         alignItems: 'center',
         justifyContent: 'center',
     },
     instructionText: {
         fontSize: 16,
+        fontWeight: '600',
         color: TEXT_DARK,
         flex: 1,
     },
@@ -172,14 +172,10 @@ const styles = StyleSheet.create({
     button: {
         backgroundColor: PRIMARY_COLOR,
         height: 56,
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: PRIMARY_COLOR,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
+        ...theme.spatial.shadows3d.level2,
     },
     buttonText: {
         color: '#ffffff',

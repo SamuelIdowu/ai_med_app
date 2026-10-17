@@ -26,6 +26,7 @@ import {
   formatDistance,
   DEFAULT_USER_COORDS,
 } from '../services/geoUtils';
+import { theme } from '../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -275,7 +276,7 @@ export const ProviderListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.palette.darkSideMoon,
   },
   header: {
     flexDirection: 'row',
@@ -283,15 +284,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.palette.darkSideMoon,
     borderBottomWidth: 1,
-    borderBottomColor: '#222630',
+    borderBottomColor: theme.colors.palette.petroBlue,
   },
   headerBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.palette.eliteTeal,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -304,28 +305,28 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.palette.eliteTeal,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modeToggleBtnActive: {
-    backgroundColor: '#374151',
+    backgroundColor: theme.colors.palette.coralCoast,
   },
   searchContainer: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.palette.darkSideMoon,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     borderRadius: 14,
     paddingHorizontal: 12,
     height: 46,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.palette.petroBlue,
   },
   searchInput: {
     flex: 1,
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     paddingVertical: 8,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.palette.darkSideMoon,
   },
   filterList: {
     paddingHorizontal: 16,
@@ -345,32 +346,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.palette.petroBlue,
   },
   filterChipActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: theme.colors.palette.coralCoast,
+    borderColor: theme.colors.palette.coralCoast,
   },
   filterText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
   },
   filterTextActive: {
-    color: '#0F1115',
+    color: '#FFFFFF',
   },
   listContent: {
     padding: 16,
     gap: 12,
   },
   card: {
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.palette.petroBlue,
+    ...theme.spatial.shadows3d.level1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -390,12 +392,12 @@ const styles = StyleSheet.create({
   providerDistance: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
     marginBottom: 4,
   },
   providerAddress: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.palette.pompeiiAsh,
     marginBottom: 8,
   },
   tagContainer: {
@@ -405,20 +407,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: '#262C38',
+    backgroundColor: theme.colors.palette.petroBlue,
   },
   tagText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#D1D5DB',
+    color: theme.colors.palette.blissfulBlue,
   },
   callButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.palette.coralCoast,
     alignItems: 'center',
     justifyContent: 'center',
+    ...theme.spatial.shadows3d.level1,
   },
   centerContainer: {
     flex: 1,
@@ -429,7 +432,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
     marginTop: 4,
   },
   webMapContainer: {
@@ -465,11 +468,12 @@ const styles = StyleSheet.create({
   closeMapPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.palette.eliteTeal,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     gap: 4,
+    ...theme.spatial.shadows3d.level1,
   },
   closeMapText: {
     fontSize: 12,
@@ -480,20 +484,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   webMapCard: {
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.palette.petroBlue,
     gap: 12,
+    ...theme.spatial.shadows3d.level1,
   },
   webMapCardBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#262C38',
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -505,11 +510,12 @@ const styles = StyleSheet.create({
   directionsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: theme.colors.palette.coralCoast,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
+    ...theme.spatial.shadows3d.level1,
   },
   directionsBtnText: {
     fontSize: 12,

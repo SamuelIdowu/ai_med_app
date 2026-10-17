@@ -23,6 +23,7 @@ export const colors = {
     background: overrides.canvasBackground || activePresetData.canvas.background,
     surface: overrides.cardSurface || activePresetData.canvas.surface,
     surfaceSubtle: activePresetData.canvas.surfaceSubtle,
+    subtle: activePresetData.canvas.surfaceSubtle,
     border: overrides.cardBorder || activePresetData.canvas.border,
     borderFocus: activePresetData.canvas.borderFocus,
   },
@@ -39,7 +40,10 @@ export const colors = {
   navPill: activePresetData.navPill,
 
   // 4. Clinical Triage States (Strict WCAG AAA, Vivid Red for Emergency)
-  status: STATUS_COLORS,
+  status: {
+    ...STATUS_COLORS,
+    danger: STATUS_COLORS.emergency.primary,
+  },
 
   // 5. Typography & High-Contrast Neutrals
   text: activePresetData.text,

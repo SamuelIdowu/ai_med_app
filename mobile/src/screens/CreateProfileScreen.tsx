@@ -8,12 +8,13 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabase';
 import { MedicalProfileService } from '../services/medicalProfileService';
+import { theme } from '../theme';
 
-const PRIMARY_COLOR = '#E53734'; // Matching detailed UI color from PermissionsScreen/Welcome
-const BG_LIGHT = '#F8F6F6';
-const TEXT_DARK = '#1B0E0E';
-const TEXT_SECONDARY = '#96504F';
-const BORDER_COLOR = '#E6D1D0';
+const PRIMARY_COLOR = theme.colors.primary.main;
+const BG_LIGHT = theme.colors.canvas.background;
+const TEXT_DARK = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
+const BORDER_COLOR = theme.colors.canvas.border;
 
 export const CreateProfileScreen = () => {
     const navigation = useNavigation<any>();
@@ -463,15 +464,15 @@ const styles = StyleSheet.create({
     chip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(229, 55, 52, 0.1)',
-        borderRadius: 20,
+        backgroundColor: theme.colors.primary.light,
+        borderRadius: theme.spatial.radii.pill,
         paddingVertical: 6,
         paddingHorizontal: 12,
         gap: 4,
     },
     chipText: {
         color: PRIMARY_COLOR,
-        fontWeight: '500',
+        fontWeight: '600',
         fontSize: 14,
     },
     addInputContainer: {
@@ -490,14 +491,10 @@ const styles = StyleSheet.create({
     primaryButton: {
         backgroundColor: PRIMARY_COLOR,
         height: 56,
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: PRIMARY_COLOR,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        ...theme.spatial.shadows3d.level2,
     },
     disabledButton: {
         opacity: 0.7,

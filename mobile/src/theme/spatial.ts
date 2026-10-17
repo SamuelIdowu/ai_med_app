@@ -120,6 +120,28 @@ export const spatial = {
       shadowRadius: 14,
       elevation: 6,
     } as ViewStyle,
+    // Elevation level aliases for convenience
+    level1: {
+      shadowColor: '#061011',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 4,
+    } as ViewStyle,
+    level2: {
+      shadowColor: '#0e88a0',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.28,
+      shadowRadius: 10,
+      elevation: 5,
+    } as ViewStyle,
+    level3: {
+      shadowColor: '#061011',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.24,
+      shadowRadius: 24,
+      elevation: 12,
+    } as ViewStyle,
   },
   // 🪟 Subtle Glassmorphic Presets (Frosted backgrounds with specular edges)
   glassmorphism: {
@@ -141,6 +163,11 @@ export const spatial = {
     emergency: {
       backgroundColor: 'rgba(254, 242, 242, 0.80)',
       borderColor: 'rgba(239, 68, 68, 0.32)',
+      borderWidth: 1,
+    } as ViewStyle,
+    card: {
+      backgroundColor: 'rgba(240, 249, 250, 0.70)',
+      borderColor: 'rgba(14, 136, 160, 0.16)',
       borderWidth: 1,
     } as ViewStyle,
   },

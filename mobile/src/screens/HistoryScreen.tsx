@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
   },
   encActionsRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     marginTop: 10,
     borderTopWidth: 1,
     borderTopColor: theme.colors.canvas.border,

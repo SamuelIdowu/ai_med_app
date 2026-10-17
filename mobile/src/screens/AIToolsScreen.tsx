@@ -33,11 +33,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('LiveTriage')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="lightning-bolt"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -51,7 +51,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('LiveTriage')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -60,11 +60,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('WoundScanner')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="camera-iris"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -78,7 +78,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('WoundScanner')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -87,11 +87,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('AIChat')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="chat-processing-outline"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -105,7 +105,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('AIChat')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -114,11 +114,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('FirstAidList')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="medical-bag"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -132,7 +132,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('FirstAidList')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -141,11 +141,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('ProviderList')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="map-marker-radius"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -159,7 +159,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('ProviderList')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -168,11 +168,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('AIAnalysis')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="image-search-outline"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -186,7 +186,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('AIAnalysis')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -195,11 +195,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('PhotoInstructions')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
                 <MaterialCommunityIcons
                   name="camera-metering-center"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -213,7 +213,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('PhotoInstructions')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
           </View>

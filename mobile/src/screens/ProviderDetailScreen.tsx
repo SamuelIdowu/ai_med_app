@@ -22,6 +22,7 @@ import { RootStackParamList } from '../navigation/types';
 import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
 import { getCurrentUserLocation, calculateDistanceMiles, formatDistance } from '../services/geoUtils';
+import { theme } from '../theme';
 
 type ProviderDetailScreenRouteProp = RouteProp<RootStackParamList, 'ProviderDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -305,15 +306,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.palette.darkSideMoon,
     borderBottomWidth: 1,
-    borderBottomColor: '#222630',
+    borderBottomColor: theme.colors.palette.petroBlue,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.palette.eliteTeal,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -333,9 +334,10 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.palette.petroBlue,
+    ...theme.spatial.shadows3d.level1,
   },
   mapView: {
     width: '100%',
@@ -346,7 +348,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     gap: 8,
   },
   mapWebText: {
@@ -356,13 +358,13 @@ const styles = StyleSheet.create({
   },
   mapDistanceTag: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
   },
   pinBubble: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#111318',
+    backgroundColor: theme.colors.palette.eliteTeal,
     borderWidth: 2,
     borderColor: '#FFFFFF',
     alignItems: 'center',
@@ -384,7 +386,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   badge: {
-    backgroundColor: '#262C38',
+    backgroundColor: theme.colors.palette.petroBlue,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 8,
@@ -392,7 +394,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#D1D5DB',
+    color: theme.colors.palette.blissfulBlue,
   },
   distanceBadge: {
     flexDirection: 'row',
@@ -401,12 +403,12 @@ const styles = StyleSheet.create({
   },
   distanceBadgeText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: '#222630',
+    backgroundColor: theme.colors.palette.petroBlue,
     marginVertical: 16,
   },
   detailList: {
@@ -415,17 +417,18 @@ const styles = StyleSheet.create({
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.palette.eliteTeal,
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.palette.petroBlue,
+    ...theme.spatial.shadows3d.level1,
   },
   iconBox: {
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: '#262C38',
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -441,7 +444,7 @@ const styles = StyleSheet.create({
   },
   itemLabel: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: theme.colors.palette.blissfulBlue,
   },
   footer: {
     position: 'absolute',
@@ -450,9 +453,9 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.palette.darkSideMoon,
     borderTopWidth: 1,
-    borderTopColor: '#222630',
+    borderTopColor: theme.colors.palette.petroBlue,
     flexDirection: 'row',
     gap: 12,
   },
@@ -461,27 +464,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.palette.coralCoast,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: theme.spatial.radii.pill,
     gap: 8,
+    ...theme.spatial.shadows3d.level2,
   },
   primaryButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: '#FFFFFF',
   },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.palette.eliteTeal,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: theme.spatial.radii.pill,
     borderWidth: 1,
-    borderColor: '#2D3545',
+    borderColor: theme.colors.palette.petroBlue,
     gap: 6,
+    ...theme.spatial.shadows3d.level1,
   },
   secondaryButtonText: {
     fontSize: 14,

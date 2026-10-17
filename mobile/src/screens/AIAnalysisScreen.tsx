@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../services/api';
 import { ImageService, ProcessedImage } from '../services/imageService';
+import { theme } from '../theme';
 
 interface StructuredAnalysis {
     severity: 'minor' | 'moderate' | 'serious' | 'critical';
@@ -23,11 +24,11 @@ interface StructuredAnalysis {
     rawAnalysis?: string;
 }
 
-const PRIMARY_COLOR = '#0F1115';
-const BG_LIGHT = '#F8F9FA';
-const CARD_LIGHT = '#FFFFFF';
-const TEXT_LIGHT = '#0F1115';
-const TEXT_SECONDARY = '#6B7280';
+const PRIMARY_COLOR = theme.colors.primary.main;
+const BG_LIGHT = theme.colors.canvas.background;
+const CARD_LIGHT = theme.colors.canvas.surface;
+const TEXT_LIGHT = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
 
 export const AIAnalysisScreen = () => {
     const navigation = useNavigation<any>();
@@ -877,15 +878,13 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     resultCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        backgroundColor: CARD_LIGHT,
+        borderRadius: 16,
         padding: 20,
         marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     resultTitle: {
         fontSize: 18,
@@ -1038,11 +1037,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#0F1115',
-        borderRadius: 8,
+        backgroundColor: theme.colors.status.danger,
+        borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 10,
         marginBottom: 16,
+        ...theme.spatial.shadows3d.level1,
     },
     emergencyText: {
         color: '#fff',

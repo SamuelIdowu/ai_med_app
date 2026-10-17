@@ -22,6 +22,7 @@ import { streamTriage, parseSSELine } from '../services/streamingClient';
 import { offlineStorage, OfflineGuide } from '../services/offlineStorage';
 import { supabase } from '../services/supabase';
 import { VitalsService, VitalsTriageResponse } from '../services/vitalsService';
+import { EncounterService } from '../services/encounterService';
 
 const COMMON_SYMPTOMS = [
   'Bleeding',
@@ -199,6 +200,42 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
       console.error('Error evaluating vitals triage:', err);
     } finally {
       setEvaluatingVitals(false);
+    }
+  };
+
+  const handleSaveAndPreviewReport = async () => {
+    if (!vitalsResult) return;
+    try {
+      const vitalsPayload = {
+        heart_rate: parseFloat(hr) || 80,
+        systolic_bp: parseFloat(sysBp) || 120,
+        diastolic_bp: parseFloat(diaBp) || 80,
+        oxygen_saturation: parseFloat(spo2) || 98,
+        respiratory_rate: parseFloat(rr) || 16,
+        body_temperature: parseFloat(temp) || 37.0,
+        pain_score: parseInt(pain, 10) || 0,
+        severe_bleeding: bleeding ? 1 : 0,
+        altered_mental_status: altered ? 1 : 0,
+        triage_label: vitalsResult.triage_label,
+        triage_level: vitalsResult.triage_level,
+        risk_drivers: vitalsResult.risk_drivers,
+      };
+
+      const notes = `Clinical Vitals Triage Evaluation: ${vitalsResult.triage_label} (Confidence: ${Math.round(
+        vitalsResult.confidence * 100
+      )}%). ${vitalsResult.risk_drivers.length > 0 ? `Risk Drivers: ${vitalsResult.risk_drivers.join(', ')}` : 'No acute red flags.'}`;
+
+      const result = await EncounterService.createEncounter(
+        'Vitals Triage',
+        notes,
+        [],
+        vitalsPayload
+      );
+
+      const reportId = result.backendEncounter?.id || result.localId;
+      navigation.navigate('ReportPreview', { encounterId: reportId });
+    } catch (err) {
+      console.error('Failed to create encounter from vitals triage:', err);
     }
   };
 
@@ -534,6 +571,15 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                       ))}
                     </View>
                   )}
+
+                  <TouchableOpacity
+                    style={styles.saveReportButton}
+                    onPress={handleSaveAndPreviewReport}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="file-document-edit-outline" size={18} color="#FFFFFF" />
+                    <Text style={styles.saveReportButtonText}>Save & Preview Medical Report</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -986,5 +1032,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#991B1B',
+  },
+  saveReportButton: {
+    marginTop: 12,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  saveReportButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

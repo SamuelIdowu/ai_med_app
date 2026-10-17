@@ -8,13 +8,14 @@ import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
 import { offlineStorage } from '../services/offlineStorage';
 import { Encounter } from '../services/types';
+import { theme } from '../theme';
 
-const BG_LIGHT = '#f8f6f6';
-const CARD_LIGHT = '#ffffff';
-const TEXT_LIGHT = '#1b0e0e';
-const TEXT_SECONDARY = '#666666'; // gray-500/600ish
-const SUCCESS_COLOR = '#27ae60';
-const TEXT_DARK = '#1b0e0e';
+const BG_LIGHT = theme.colors.canvas.background;
+const CARD_LIGHT = theme.colors.canvas.surface;
+const TEXT_LIGHT = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
+const SUCCESS_COLOR = theme.colors.status.success.primary;
+const TEXT_DARK = theme.colors.text.primary;
 
 type RootStackParamList = {
     EmergencySummary: { categoryId: string; encounterId?: string; symptoms?: string[] };
@@ -247,12 +248,10 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 16,
         padding: 20,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     cardHeader: {
         fontSize: 18,
@@ -284,7 +283,7 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: '#e5e7eb', // gray-200
+        backgroundColor: theme.colors.canvas.border,
         marginVertical: 16,
     },
     bulletList: {
@@ -296,15 +295,14 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     bullet: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: TEXT_DARK,
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: theme.colors.primary.main,
         marginRight: 8,
-        // list-disc style
     },
     bulletText: {
-        fontSize: 16,
+        fontSize: 15,
         color: TEXT_LIGHT,
         lineHeight: 24,
     },
@@ -312,21 +310,17 @@ const styles = StyleSheet.create({
         padding: 16,
         backgroundColor: BG_LIGHT,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: theme.colors.canvas.border,
         gap: 12,
     },
     shareButton: {
         backgroundColor: SUCCESS_COLOR,
-        borderRadius: 12,
-        height: 52, // slightly smaller than hero button
+        borderRadius: theme.spatial.radii.pill,
+        height: 52,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
+        ...theme.spatial.shadows3d.level2,
     },
     shareButtonText: {
         color: 'white',
@@ -335,15 +329,15 @@ const styles = StyleSheet.create({
     },
     homeButton: {
         backgroundColor: 'transparent',
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         height: 52,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#333333', // Dark border
+        borderColor: theme.colors.canvas.border,
     },
     homeButtonText: {
-        color: '#333333',
+        color: theme.colors.text.primary,
         fontSize: 16,
         fontWeight: 'bold',
     },

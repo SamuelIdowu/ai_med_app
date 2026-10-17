@@ -5,12 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { theme } from '../theme';
 
-const BG_LIGHT = '#fbf8f8';
-const PRIMARY_COLOR = '#e53734';
-const TEXT_DARK = '#0f172a'; // slate-900 like
-const TEXT_SECONDARY = '#1e293b'; // slate-800 like
-const SURFACE_COLOR = '#e2e8f0'; // slate-200 like
+const BG_LIGHT = theme.colors.canvas.background;
+const PRIMARY_COLOR = theme.colors.primary.main;
+const TEXT_DARK = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
+const SURFACE_COLOR = theme.colors.canvas.surface;
 
 export const PhotoPreviewScreen = () => {
     const navigation = useNavigation<any>();
@@ -152,14 +153,14 @@ const styles = StyleSheet.create({
     shieldIconContainer: {
         width: 40,
         height: 40,
-        borderRadius: 8,
-        backgroundColor: '#e2e8f0', // slate-200
+        borderRadius: 12,
+        backgroundColor: theme.colors.primary.light,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 16,
     },
     consentText: {
-        fontSize: 16,
+        fontSize: 15,
         color: TEXT_SECONDARY,
         flex: 1,
     },
@@ -174,9 +175,10 @@ const styles = StyleSheet.create({
         maxWidth: 480,
         backgroundColor: PRIMARY_COLOR,
         height: 56,
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         justifyContent: 'center',
         alignItems: 'center',
+        ...theme.spatial.shadows3d.level2,
     },
     saveButtonText: {
         color: 'white',
@@ -186,11 +188,13 @@ const styles = StyleSheet.create({
     retakeButton: {
         width: '100%',
         maxWidth: 480,
-        backgroundColor: SURFACE_COLOR, // slate-200
+        backgroundColor: SURFACE_COLOR,
         height: 56,
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
     },
     retakeButtonText: {
         color: TEXT_DARK,

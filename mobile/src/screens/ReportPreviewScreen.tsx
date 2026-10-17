@@ -12,6 +12,7 @@ import { reportService } from '../services/reportService';
 import { AnalyticsService } from '../services/analyticsService';
 import { ShareOptionsModal } from '../components/ShareOptionsModal';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { theme } from '../theme';
 
 type ReportPreviewScreenRouteProp = RouteProp<RootStackParamList, 'ReportPreview'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -50,7 +51,6 @@ export const ReportPreviewScreen = () => {
     };
 
     const handleShareAction = async (action: string) => {
-        // In a real app, implement actual share logic here for each action
         console.log('Share action:', action);
         await AnalyticsService.track('share_report_action', {
             action,
@@ -76,7 +76,7 @@ export const ReportPreviewScreen = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#E53734" />
+                <ActivityIndicator size="large" color={theme.colors.primary.main} />
             </View>
         );
     }
@@ -94,12 +94,12 @@ export const ReportPreviewScreen = () => {
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F8F6F6" />
+            <StatusBar barStyle="dark-content" backgroundColor={theme.colors.canvas.background} />
 
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back-ios" size={20} color="#171717" />
+                    <MaterialIcons name="arrow-back-ios" size={20} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Preview Report</Text>
                 <View style={{ width: 44 }} />
@@ -257,7 +257,7 @@ export const ReportPreviewScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F6F6',
+        backgroundColor: theme.colors.canvas.background,
     },
     loadingContainer: {
         flex: 1,
@@ -270,14 +270,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#F8F6F6',
-        // Sticky header effect
+        backgroundColor: theme.colors.canvas.background,
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         zIndex: 10,
-        paddingTop: 50, // Approximate Status bar height compensation if SafeArea doesn't handle absolute
+        paddingTop: 50,
     },
     backButton: {
         width: 44,
@@ -289,27 +288,29 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#171717',
+        color: theme.colors.text.primary,
         textAlign: 'center',
     },
     content: {
         flex: 1,
         paddingHorizontal: 16,
-        paddingTop: 100, // Make space for absolute header
+        paddingTop: 100,
     },
     pageTitle: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#171717',
+        color: theme.colors.text.primary,
         marginBottom: 16,
         marginTop: 8,
     },
     card: {
-        backgroundColor: '#FFFFFF', // dark:bg-neutral-800/50
-        borderRadius: 12,
+        backgroundColor: theme.colors.canvas.surface,
+        borderRadius: 16,
         padding: 16,
         marginBottom: 16,
-        // No shadow in design snippet actually, just simple background, but card implies it.
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     patientInfoRow: {
         flexDirection: 'row',
@@ -392,18 +393,19 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         padding: 16,
-        backgroundColor: '#F8F6F6',
+        backgroundColor: theme.colors.canvas.background,
         borderTopWidth: 1,
-        borderTopColor: '#E5E7EB',
+        borderTopColor: theme.colors.canvas.border,
     },
     shareButton: {
-        backgroundColor: '#E53734',
-        borderRadius: 12,
+        backgroundColor: theme.colors.primary.main,
+        borderRadius: theme.spatial.radii.pill,
         paddingVertical: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
+        ...theme.spatial.shadows3d.level2,
     },
     shareButtonText: {
         color: '#FFFFFF',

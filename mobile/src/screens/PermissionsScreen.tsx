@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Switch
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { theme } from '../theme';
 
 export const PermissionsScreen = () => {
     const navigation = useNavigation<any>();
@@ -18,7 +19,7 @@ export const PermissionsScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#F8F6F6" />
+            <StatusBar barStyle="dark-content" backgroundColor={theme.colors.canvas.background} />
 
             {/* Top App Bar */}
             <View style={styles.header}>
@@ -26,7 +27,7 @@ export const PermissionsScreen = () => {
                     onPress={() => navigation.navigate('Welcome')}
                     style={styles.iconButton}
                 >
-                    <MaterialCommunityIcons name="chevron-left" size={32} color="#1B0E0E" />
+                    <MaterialCommunityIcons name="chevron-left" size={32} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Consent & Permissions</Text>
                 <View style={styles.iconButton} />
@@ -36,7 +37,7 @@ export const PermissionsScreen = () => {
                 {/* Header Text */}
                 <View style={styles.heroSection}>
                     <View style={styles.heroIconContainer}>
-                        <MaterialIcons name="health-and-safety" size={40} color="#E53734" />
+                        <MaterialIcons name="health-and-safety" size={40} color={theme.colors.primary.main} />
                     </View>
                     <Text style={styles.heroTitle}>Your Privacy Matters</Text>
                     <Text style={styles.heroSubtitle}>
@@ -58,9 +59,9 @@ export const PermissionsScreen = () => {
                             <Switch
                                 value={anonymousData}
                                 onValueChange={setAnonymousData}
-                                trackColor={{ false: '#F3E8E8', true: '#E53734' }}
+                                trackColor={{ false: theme.colors.canvas.subtle, true: theme.colors.primary.main }}
                                 thumbColor={'#FFFFFF'}
-                                ios_backgroundColor="#F3E8E8"
+                                ios_backgroundColor={theme.colors.canvas.subtle}
                             />
                         </View>
                     </View>
@@ -77,9 +78,9 @@ export const PermissionsScreen = () => {
                             <Switch
                                 value={cameraAccess}
                                 onValueChange={setCameraAccess}
-                                trackColor={{ false: '#F3E8E8', true: '#E53734' }}
+                                trackColor={{ false: theme.colors.canvas.subtle, true: theme.colors.primary.main }}
                                 thumbColor={'#FFFFFF'}
-                                ios_backgroundColor="#F3E8E8"
+                                ios_backgroundColor={theme.colors.canvas.subtle}
                             />
                         </View>
                     </View>
@@ -96,9 +97,9 @@ export const PermissionsScreen = () => {
                             <Switch
                                 value={reportSharing}
                                 onValueChange={setReportSharing}
-                                trackColor={{ false: '#F3E8E8', true: '#E53734' }}
+                                trackColor={{ false: theme.colors.canvas.subtle, true: theme.colors.primary.main }}
                                 thumbColor={'#FFFFFF'}
-                                ios_backgroundColor="#F3E8E8"
+                                ios_backgroundColor={theme.colors.canvas.subtle}
                             />
                         </View>
                     </View>
@@ -127,7 +128,7 @@ export const PermissionsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F6F6',
+        backgroundColor: theme.colors.canvas.background,
     },
     header: {
         flexDirection: 'row',
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: 'rgba(248, 246, 246, 0.8)',
+        backgroundColor: 'transparent',
     },
     iconButton: {
         width: 40,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1B0E0E',
+        color: theme.colors.text.primary,
         textAlign: 'center',
         flex: 1,
     },
@@ -162,37 +163,41 @@ const styles = StyleSheet.create({
     heroIconContainer: {
         width: 64,
         height: 64,
-        borderRadius: 32, // rounded-full
-        backgroundColor: 'rgba(229, 55, 52, 0.1)', // bg-primary/10
+        borderRadius: 32,
+        backgroundColor: theme.colors.primary.light,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
+        borderWidth: 1,
+        borderColor: theme.colors.palette.blissfulBlue,
+        ...theme.spatial.shadows3d.level1,
     },
     heroTitle: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#1B0E0E',
+        color: theme.colors.text.primary,
         textAlign: 'center',
         marginBottom: 8,
         lineHeight: 38,
     },
     heroSubtitle: {
         fontSize: 16,
-        color: '#96504F', // text-subtle-light
+        color: theme.colors.text.secondary,
         textAlign: 'center',
         lineHeight: 24,
         maxWidth: 300,
     },
     listContainer: {
-        gap: 12, // Gap between cards
+        gap: 12,
     },
     card: {
-        backgroundColor: '#FFFFFF', // bg-card-light
-        borderRadius: 12, // rounded-xl
+        backgroundColor: theme.colors.canvas.surface,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#E6D1D0', // border-card-border-light
+        borderColor: theme.colors.canvas.border,
         padding: 20,
-        marginBottom: 12, // fallback for gap
+        marginBottom: 12,
+        ...theme.spatial.shadows3d.level1,
     },
     cardContent: {
         flexDirection: 'row',
@@ -206,31 +211,27 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1B0E0E',
+        color: theme.colors.text.primary,
         marginBottom: 6,
         lineHeight: 20,
     },
     cardDescription: {
         fontSize: 14,
-        color: '#96504F', // text-subtle-light
+        color: theme.colors.text.secondary,
         lineHeight: 20,
     },
     footer: {
         padding: 16,
-        backgroundColor: '#F8F6F6',
+        backgroundColor: theme.colors.canvas.background,
         paddingBottom: 24,
     },
     primaryButton: {
-        backgroundColor: '#E53734',
-        height: 56, // h-14
-        borderRadius: 12, // rounded-xl
+        backgroundColor: theme.colors.primary.main,
+        height: 56,
+        borderRadius: theme.spatial.radii.pill,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#E53734',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        ...theme.spatial.shadows3d.level2,
     },
     primaryButtonText: {
         color: '#FFFFFF',
@@ -241,12 +242,12 @@ const styles = StyleSheet.create({
         marginTop: 16,
         textAlign: 'center',
         fontSize: 12,
-        color: '#96504F', // text-subtle-light
+        color: theme.colors.text.muted,
         lineHeight: 18,
     },
     linkText: {
-        color: '#E53734',
+        color: theme.colors.primary.main,
         textDecorationLine: 'underline',
-        fontWeight: '500',
+        fontWeight: '600',
     }
 });
