@@ -35,14 +35,51 @@ The `cli.py` tool allows running the ML subsystem completely decoupled from back
 | `train-classical` | Train & benchmark Scikit-Learn models, save `.joblib` | `python cli.py train-classical` |
 | `predict-vitals` | Predict triage urgency from live physiological vitals | `python cli.py predict-vitals --hr 140 --spo2 84` |
 | `train` | Run LoRA adapter fine-tuning pipeline | `python cli.py train --epochs 3` |
-| `evaluate` | Run 30-scenario clinical safety benchmark | `python cli.py evaluate --report-file report.json` |
+| `evaluate` | Run 50-scenario comprehensive clinical safety benchmark | `python cli.py evaluate --report-file report.json` |
 | `triage` | Run clinical first-aid triage on symptoms | `python cli.py triage --query "Deep bleeding cut"` |
 | `vision` | Classify injury/wound photograph | `python cli.py vision --image sample.png` |
 | `embed` | Compute 384-dimensional unit dense vector | `python cli.py embed --text "CPR protocol"` |
 
 ---
 
-## 3. Core Architecture
+## 3. Classical Machine Learning & Vitals Classification
+
+In addition to neural text and vision engines, a dedicated Scikit-Learn tabular pipeline predicts clinical urgency directly from physiological vital signs:
+- **Champion Model**: `HistGradientBoostingClassifier` serialized to `models/triage_classifier.joblib` (98.14% Accuracy, 0.9770 Macro F1, sub-2ms latency).
+- **Features (10)**: `respiratory_rate`, `oxygen_saturation`, `heart_rate`, `altered_mental_status`, `pain_score`, `body_temperature`, `systolic_bp`, `diastolic_bp`, `severe_bleeding`, `age`.
+- **Pre-processor**: `StandardScaler` serialized to `models/feature_scaler.joblib`.
+- **Safety Overrides**: Hard clinical rule thresholding in `ClassicalMLService` guarantees that critical vitals (e.g. $\text{SpO}_2 < 90\%$, Systolic $\text{BP} < 85\text{ mmHg}$, or severe active bleeding) trigger immediate emergency escalation regardless of statistical probabilities.
+
+### REST API: `/v1/ml/triage/vitals`
+- **Method**: `POST`
+- **Payload**:
+  ```json
+  {
+    "heart_rate": 142,
+    "systolic_bp": 85,
+    "oxygen_saturation": 84,
+    "respiratory_rate": 30,
+    "severe_bleeding": 0,
+    "altered_mental_status": 1
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "triage_level": 2,
+    "triage_label": "Emergency",
+    "confidence": 1.0,
+    "probabilities": { "Non-Urgent": 0.0, "Urgent": 0.0, "Emergency": 1.0 },
+    "risk_drivers": ["Critical Hypoxemia (SpO2 84% < 90%)", "Severe Tachycardia (142 bpm)"],
+    "is_emergency": true,
+    "is_urgent": true,
+    "latency_ms": 1.45
+  }
+  ```
+
+---
+
+## 4. Core Architecture
 
 ### Clinical Safety & Red-Flag Engine (`app/services/safety_engine.py`)
 Intercepts 10 life-threatening conditions with **100% sensitivity** (0 false negatives in clinical benchmarks):
@@ -74,7 +111,7 @@ Generates 384-dimensional normalized dense vectors matching Supabase `pgvector` 
 
 ---
 
-## 4. End-to-End Testing & Benchmarks
+## 5. End-to-End Testing & Benchmarks
 
 Run the complete test suite:
 ```powershell
@@ -83,9 +120,9 @@ Run the complete test suite:
 
 Tests include:
 - `tests/test_e2e_server.py`: Real live socket Uvicorn E2E tests over TCP.
-- `tests/benchmark_safety.py`: 30-scenario clinical sensitivity/specificity benchmark.
+- `tests/benchmark_safety.py`: 50-scenario clinical sensitivity/specificity benchmark covering all 35 emergency conditions.
 - `tests/test_cli.py`: Automated CLI integration test across all subcommands.
 - `tests/test_vision.py`: Image classification and burn scale tests.
-- `tests/test_inference.py`: In-process FastAPI client tests.
+- `tests/test_inference.py`: In-process FastAPI client tests (including `/v1/ml/triage/vitals`).
 - `tests/test_safety.py`: Condition-specific regex unit tests.
 - `tests/test_train.py`: Training pipeline & LoRA config tests.
