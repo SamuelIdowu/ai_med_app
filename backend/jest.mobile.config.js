@@ -23,6 +23,10 @@ module.exports = {
   moduleNameMapper: {
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/mobile/src/__mocks__/fileMock.ts',
     '^expo-linear-gradient$': '<rootDir>/mobile/src/__mocks__/expo-linear-gradient.ts',
+    '^expo-speech$': '<rootDir>/mobile/src/__mocks__/expo-speech.ts',
+    '^@expo/vector-icons$': '<rootDir>/mobile/src/__mocks__/expo-vector-icons.ts',
+    '^@expo/vector-icons/(.*)$': '<rootDir>/mobile/src/__mocks__/expo-vector-icons.ts',
+    '^react-native-svg$': '<rootDir>/mobile/src/__mocks__/react-native-svg.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/mobile/src/__mocks__/asyncStorage.ts',
     '^expo-secure-store$': '<rootDir>/mobile/src/__mocks__/expo-secure-store.ts',
     '^expo-file-system$': '<rootDir>/mobile/src/__mocks__/expo-file-system.ts',
