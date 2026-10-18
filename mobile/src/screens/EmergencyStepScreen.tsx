@@ -8,7 +8,9 @@ import {
   Modal,
   Platform,
   SafeAreaView,
+  Image,
 } from 'react-native';
+import { getIllustration } from '../assets/illustrations';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -57,6 +59,7 @@ export const EmergencyStepScreen: React.FC = () => {
   const steps = category.steps || [];
   const currentStep = steps[currentStepIndex] || {};
   const totalSteps = steps.length;
+  const isCprProtocol = category.id === 'cpr' || /cpr|cardiopulmonary/i.test(category.title || '');
 
   const rawTitle = category.title || 'First Aid';
   const headerTitle = rawTitle.toLowerCase().endsWith('aid')
@@ -131,11 +134,19 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Medical Illustration Hero Card (Replaces Video) */}
             <View style={styles.illustrationHeroCard}>
               <View style={styles.heroIconBadge}>
-                <MaterialCommunityIcons
-                  name={(category.icon as any) || 'medical-bag'}
-                  size={44}
-                  color="#0F1115"
-                />
+                {isCprProtocol && getIllustration('cprGuide') ? (
+                  <Image
+                    source={getIllustration('cprGuide')!}
+                    style={styles.heroCprImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={(category.icon as any) || 'medical-bag'}
+                    size={44}
+                    color="#0F1115"
+                  />
+                )}
               </View>
 
               <Text style={styles.heroProtocolName}>{category.title}</Text>
@@ -460,11 +471,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
+  },
+  heroCprImage: {
+    width: 76,
+    height: 76,
   },
   heroProtocolName: {
     fontSize: 22,

@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
+  Image,
 } from 'react-native';
+import { getIllustration } from '../assets/illustrations';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
@@ -252,6 +254,13 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
         </TouchableOpacity>
 
         <View style={styles.headerTitleGroup}>
+          {getIllustration('emergencyBeacon') && (
+            <Image
+              source={getIllustration('emergencyBeacon')!}
+              style={styles.headerBeaconImage}
+              resizeMode="contain"
+            />
+          )}
           <Text style={styles.headerTitle}>Live Clinical Triage</Text>
           <View style={styles.statusIndicatorRow}>
             <View
@@ -678,6 +687,11 @@ const styles = StyleSheet.create({
   headerTitleGroup: {
     flex: 1,
     marginHorizontal: 12,
+  },
+  headerBeaconImage: {
+    width: 36,
+    height: 36,
+    marginBottom: 2,
   },
   headerTitle: {
     fontSize: 16,

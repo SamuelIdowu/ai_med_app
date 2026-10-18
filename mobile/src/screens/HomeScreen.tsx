@@ -735,7 +735,15 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <MaterialCommunityIcons name="robot" size={24} color="#FFFFFF" />
+                {getIllustration('heartVitals') ? (
+                  <Image
+                    source={getIllustration('heartVitals')!}
+                    style={{ width: 28, height: 28 }}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <MaterialCommunityIcons name="robot" size={24} color="#FFFFFF" />
+                )}
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>AI Emergency Triage</Text>
@@ -1431,6 +1439,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     ...theme.spatial.shadows3d.accentGlow,
   },
   aiTriageTextCol: {

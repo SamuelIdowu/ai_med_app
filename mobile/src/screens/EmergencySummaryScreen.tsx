@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Image } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { EncounterService } from '../services/encounterService';
 import { offlineStorage } from '../services/offlineStorage';
 import { Encounter } from '../services/types';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 
 const BG_LIGHT = theme.colors.canvas.background;
 const CARD_LIGHT = theme.colors.canvas.surface;
@@ -97,7 +98,15 @@ export const EmergencySummaryScreen = () => {
                 {/* Hero Section */}
                 <View style={styles.heroSection}>
                     <View style={styles.heroIconContainer}>
-                        <MaterialCommunityIcons name="check-circle" size={48} color={SUCCESS_COLOR} />
+                        {getIllustration('achievementBadge') ? (
+                            <Image
+                                source={getIllustration('achievementBadge')!}
+                                style={styles.heroBadgeImage}
+                                resizeMode="contain"
+                            />
+                        ) : (
+                            <MaterialCommunityIcons name="check-circle" size={48} color={SUCCESS_COLOR} />
+                        )}
                     </View>
                     <Text style={styles.heroTitle}>Well Done</Text>
                     <Text style={styles.heroSubtitle}>You've successfully completed the first aid steps.</Text>
@@ -228,6 +237,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
+        overflow: 'hidden',
+    },
+    heroBadgeImage: {
+        width: 80,
+        height: 80,
     },
     heroTitle: {
         fontSize: 32,
