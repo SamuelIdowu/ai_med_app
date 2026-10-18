@@ -28,6 +28,5 @@ __pycache__/
 venv/
 .pytest_cache/
 
-docs/
-
 .playwright-mcp
+.kilo
