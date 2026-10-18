@@ -316,6 +316,8 @@ const styles = StyleSheet.create({
     recordCapsuleImage: {
         width: 52,
         height: 52,
+        borderRadius: 14,
+        backgroundColor: '#0F1115',
     },
     pageTitle: {
         flex: 1,

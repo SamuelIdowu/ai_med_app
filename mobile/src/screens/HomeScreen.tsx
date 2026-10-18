@@ -738,8 +738,8 @@ export const HomeScreen: React.FC = () => {
                 {getIllustration('heartVitals') ? (
                   <Image
                     source={getIllustration('heartVitals')!}
-                    style={{ width: 28, height: 28 }}
-                    resizeMode="contain"
+                    style={{ width: 28, height: 28, borderRadius: 14 }}
+                    resizeMode="cover"
                   />
                 ) : (
                   <MaterialCommunityIcons name="robot" size={24} color="#FFFFFF" />

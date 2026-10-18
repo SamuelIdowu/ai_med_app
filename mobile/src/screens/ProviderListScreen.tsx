@@ -548,6 +548,8 @@ const styles = StyleSheet.create({
   emptyLocatorImage: {
     width: 160,
     height: 160,
+    borderRadius: 24,
+    backgroundColor: '#0F1115',
     marginBottom: 8,
   },
   emptyTitle: {

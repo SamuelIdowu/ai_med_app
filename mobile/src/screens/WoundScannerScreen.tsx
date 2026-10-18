@@ -206,21 +206,25 @@ export const WoundScannerScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* 3D Scanner Illustration Banner */}
+        {getIllustration('visionScanner') ? (
+          <View style={styles.illustrationBanner}>
+            <Image
+              source={getIllustration('visionScanner')!}
+              style={styles.illustrationBannerImage}
+              resizeMode="cover"
+            />
+          </View>
+        ) : null}
+
         {/* Reticle / Image Preview Frame */}
         <View style={styles.reticleContainer}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
           ) : (
             <View style={styles.cameraPlaceholder}>
-              {getIllustration('visionScanner') ? (
-                <Image
-                  source={getIllustration('visionScanner')!}
-                  style={styles.scannerIllustration}
-                  resizeMode="contain"
-                />
-              ) : (
-                <MaterialCommunityIcons name="camera-plus" size={44} color="#6B7280" />
-              )}
+              <MaterialCommunityIcons name="camera-plus" size={44} color="#6B7280" />
+              <Text style={styles.placeholderPrompt}>Take a photo or pick from library</Text>
             </View>
           )}
 
@@ -411,14 +415,22 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  illustrationBanner: {
+    width: '100%',
+    height: 200,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#0F1115',
+    marginBottom: 16,
+  },
+  illustrationBannerImage: {
+    width: '100%',
+    height: '100%',
+  },
   cameraPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.7,
-  },
-  scannerIllustration: {
-    width: 140,
-    height: 140,
   },
   placeholderPrompt: {
     color: '#9CA3AF',

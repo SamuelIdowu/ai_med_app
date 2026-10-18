@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderWidth: 1,
         borderColor: theme.spatial.glassmorphism.card.borderColor,
+        overflow: 'hidden',
         ...theme.spatial.shadows3d.level3,
     },
     iconText: {

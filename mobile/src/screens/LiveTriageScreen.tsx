@@ -245,44 +245,46 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Header bar */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+        {getIllustration('emergencyBeacon') && (
+          <Image
+            source={getIllustration('emergencyBeacon')!}
+            style={styles.headerBackgroundImage}
+            resizeMode="cover"
+          />
+        )}
+        <View style={styles.headerOverlay}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text.primary} />
+          </TouchableOpacity>
 
-        <View style={styles.headerTitleGroup}>
-          {getIllustration('emergencyBeacon') && (
-            <Image
-              source={getIllustration('emergencyBeacon')!}
-              style={styles.headerBeaconImage}
-              resizeMode="contain"
-            />
-          )}
-          <Text style={styles.headerTitle}>Live Clinical Triage</Text>
-          <View style={styles.statusIndicatorRow}>
-            <View
-              style={[
-                styles.statusDot,
-                isOfflineFallback ? styles.statusDotOffline : styles.statusDotOnline,
-              ]}
-            />
-            <Text style={styles.statusLabel}>
-              {isOfflineFallback ? 'Offline Protocol Active' : 'Real-Time SSE Stream'}
-            </Text>
+          <View style={styles.headerTitleGroup}>
+            <Text style={styles.headerTitle}>Live Clinical Triage</Text>
+            <View style={styles.statusIndicatorRow}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isOfflineFallback ? styles.statusDotOffline : styles.statusDotOnline,
+                ]}
+              />
+              <Text style={styles.statusLabel}>
+                {isOfflineFallback ? 'Offline Protocol Active' : 'Real-Time SSE Stream'}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          onPress={() => Linking.openURL('tel:911')}
-          style={styles.sosButton}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="phone" size={16} color="#FFFFFF" />
-          <Text style={styles.sosText}>911</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('tel:911')}
+            style={styles.sosButton}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="phone" size={16} color="#FFFFFF" />
+            <Text style={styles.sosText}>911</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Mode Switcher Tabs */}
@@ -673,6 +675,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.canvas.border,
     backgroundColor: theme.colors.canvas.surface,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  headerBackgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    opacity: 0.18,
+  },
+  headerOverlay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   backButton: {
     width: 38,
@@ -687,11 +705,6 @@ const styles = StyleSheet.create({
   headerTitleGroup: {
     flex: 1,
     marginHorizontal: 12,
-  },
-  headerBeaconImage: {
-    width: 36,
-    height: 36,
-    marginBottom: 2,
   },
   headerTitle: {
     fontSize: 16,
