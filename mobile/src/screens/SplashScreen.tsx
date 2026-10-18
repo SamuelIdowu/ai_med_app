@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StorageService } from '../services/storage';
 import { supabase } from '../services/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 
 const { width } = Dimensions.get('window');
 
@@ -65,7 +66,15 @@ export const SplashScreen = () => {
                 ]}
             >
                 <View style={styles.iconContainer}>
-                    <Text style={styles.iconText}>+</Text>
+                    {getIllustration('splashEmblem') ? (
+                        <Image
+                            source={getIllustration('splashEmblem')!}
+                            style={styles.emblemImage}
+                            resizeMode="contain"
+                        />
+                    ) : (
+                        <Text style={styles.iconText}>+</Text>
+                    )}
                 </View>
 
                 <Text style={styles.logoText}>Laso<Text style={styles.logoAccent}>+</Text></Text>
@@ -108,6 +117,11 @@ const styles = StyleSheet.create({
         fontSize: 54,
         color: theme.colors.palette.coralCoast,
         fontWeight: 'bold',
+    },
+    emblemImage: {
+        width: 88,
+        height: 88,
+        borderRadius: 24,
     },
     logoText: {
         fontSize: 42,
