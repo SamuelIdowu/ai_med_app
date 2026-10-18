@@ -28,6 +28,7 @@ import { FloatingChatInput, AttachedMedia } from '../components/chat/FloatingCha
 import { VoiceWaveformModal } from '../components/chat/VoiceWaveformModal';
 import { MediaAttachmentModal, MediaCaptureAction } from '../components/chat/MediaAttachmentModal';
 import { MedicalCard } from '../components/ui/MedicalCard';
+import { OrganicFluidSphere } from '../components/ui/OrganicFluidSphere';
 import { VoiceService } from '../services/voiceService';
 import { theme } from '../theme';
 
@@ -473,14 +474,11 @@ export const AIChatScreen: React.FC = () => {
           {/* Welcome Orb Greeting if empty */}
           {messages.length === 0 && (
             <View style={styles.welcomeSection}>
-              <View style={styles.orbShadow}>
-                <LinearGradient
-                  colors={[theme.colors.palette.coralCoast, theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal]}
-                  start={{ x: 0.1, y: 0.1 }}
-                  end={{ x: 0.9, y: 0.9 }}
-                  style={styles.orb}
-                />
-              </View>
+              <OrganicFluidSphere
+                state={loading ? 'thinking' : 'idle'}
+                size={120}
+                style={{ marginBottom: 12 }}
+              />
 
               <Text style={styles.welcomeTitle}>Hey there!</Text>
               <Text style={styles.welcomeSubtitle}>

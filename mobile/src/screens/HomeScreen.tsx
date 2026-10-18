@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  Image,
   Platform,
   StatusBar as RNStatusBar,
   TouchableWithoutFeedback,
@@ -18,6 +19,7 @@ import { BottomTabBar } from '../components/BottomTabBar';
 import { AnalyticsService } from '../services/analyticsService';
 import { theme } from '../theme';
 import firstAidData from '../content/first-aid-content.json';
+import { getIllustration } from '../assets/illustrations';
 
 // Types for Emergency Protocols
 export interface EmergencyProtocol {
@@ -391,12 +393,20 @@ export const HomeScreen: React.FC = () => {
               <Text style={styles.heroTitle}>Act Fast!</Text>
             </View>
 
-            {/* Medical Illustration Placeholder in Hero */}
+            {/* 3D First-Aid Kit Illustration in Hero */}
             <View style={styles.blankImagePlaceholder}>
-              <View style={styles.placeholderInner}>
-                <MaterialCommunityIcons name="medical-bag" size={28} color="#FFFFFF" />
-                <Text style={styles.placeholderLabel}>Emergency</Text>
-              </View>
+              {getIllustration('firstAidKit') ? (
+                <Image
+                  source={getIllustration('firstAidKit')!}
+                  style={{ width: 120, height: 120 }}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.placeholderInner}>
+                  <MaterialCommunityIcons name="medical-bag" size={28} color="#FFFFFF" />
+                  <Text style={styles.placeholderLabel}>Emergency</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>

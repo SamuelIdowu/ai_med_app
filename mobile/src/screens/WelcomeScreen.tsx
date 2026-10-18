@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  Image,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { TactileButton } from '../components/ui/TactileButton';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 
 export const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -32,14 +34,22 @@ export const WelcomeScreen: React.FC = () => {
           <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
         </View>
 
-        {/* Hero Illustration Card from full_sketch.webp & ref5.webp */}
+        {/* Hero Illustration Card — 3D welcomeShield illustration */}
         <MedicalCard style={styles.heroCard}>
           <View style={styles.illustrationCircle}>
-            <MaterialCommunityIcons
-              name="shield-plus-outline"
-              size={64}
-              color={theme.colors.primary.main}
-            />
+            {getIllustration('welcomeShield') ? (
+              <Image
+                source={getIllustration('welcomeShield')!}
+                style={styles.illustrationImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <MaterialCommunityIcons
+                name="shield-plus-outline"
+                size={64}
+                color={theme.colors.primary.main}
+              />
+            )}
           </View>
 
           <Text style={styles.cardTitle}>Quick Instructions</Text>
@@ -131,13 +141,18 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   illustrationCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: theme.colors.primary.light,
+    width: 160,
+    height: 160,
+    borderRadius: 24,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    overflow: 'hidden',
+  },
+  illustrationImage: {
+    width: 160,
+    height: 160,
   },
   cardTitle: {
     fontSize: 20,
