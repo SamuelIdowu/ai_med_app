@@ -61,7 +61,7 @@ async function main() {
   // Setup test authentication token
   console.log('[2/5] Initializing test session and auth credentials...');
   const supabaseAdmin = getSupabaseAdmin();
-  const testEmail = `loadtest-${Date.now()}@healthpulse-bench.local`;
+  const testEmail = `loadtest-${Date.now()}@laso-bench.local`;
   const testPassword = 'BenchPassword123!';
 
   const { data: userRecord, error: userError } = await supabaseAdmin.auth.admin.createUser({
@@ -175,7 +175,7 @@ async function main() {
   const maxMs = duration.max ? duration.max.toFixed(2) + ' ms' : 'N/A';
 
   const markdownReport = `# Load Testing & Concurrency Capacity Report
-**Application:** AI First Aid App / HealthPulse Backend
+**Application:** Laso Backend
 **Date of Run:** ${new Date().toISOString()}
 **Test Harness:** k6 v2.2.0 (Windows/AMD64)
 

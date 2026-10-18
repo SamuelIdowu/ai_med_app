@@ -12,7 +12,7 @@ class MLConfig(BaseModel):
     DATASET_PATH: str = os.getenv("DATASET_PATH", str(BASE_DIR / "data" / "triage_dataset.jsonl"))
     BENCHMARK_PATH: str = os.getenv("BENCHMARK_PATH", str(BASE_DIR / "data" / "benchmarks" / "emergency_scenarios.json"))
     CHECKPOINT_DIR: str = os.getenv("CHECKPOINT_DIR", str(BASE_DIR / "artifacts" / "checkpoints"))
-    MODEL_NAME: str = os.getenv("MODEL_NAME", "ai-med-triage-v1")
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "laso-triage-v1")
     EMBEDDING_DIM: int = 384
 
 settings = MLConfig()

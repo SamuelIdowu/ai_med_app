@@ -1,5 +1,5 @@
 {
-  "name": "mobile",
+  "name": "laso-mobile",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "build:apk": "eas build -p android --profile preview",
     "build:apk:prod": "eas build -p android --profile production-apk",
-    "build:appbundle": "eas build -p android --profile production"
+    "build:appbundle": "eas build -p android --profile production",
+    "test": "cd ../backend && npm run test:mobile"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

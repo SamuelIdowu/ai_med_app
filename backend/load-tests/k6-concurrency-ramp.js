@@ -48,7 +48,7 @@ export default function () {
   if (!healthOk) errorRate.add(1);
 
   // Scenario 2: Auth check probe
-  const emailProbe = `concurrent-user-${__VU}-${__ITER}@healthpulse-benchmark.local`;
+  const emailProbe = `concurrent-user-${__VU}-${__ITER}@laso-benchmark.local`;
   const resAuth = http.post(
     `${BASE_URL}/api/v1/auth/check`,
     JSON.stringify({ email: emailProbe }),

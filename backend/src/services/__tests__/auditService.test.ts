@@ -26,7 +26,7 @@ describe('Audit Logging Service', () => {
       resourceType: 'ENCOUNTER',
       resourceId: 'enc-456',
       ipAddress: '127.0.0.1',
-      userAgent: 'HealthPulseMobile/1.0',
+      userAgent: 'LasoMobile/1.0',
       metadata: { severity: 'critical' },
     });
 
@@ -38,7 +38,7 @@ describe('Audit Logging Service', () => {
         resource_type: 'ENCOUNTER',
         resource_id: 'enc-456',
         ip_address: '127.0.0.1',
-        user_agent: 'HealthPulseMobile/1.0',
+        user_agent: 'LasoMobile/1.0',
         metadata: { severity: 'critical' },
       })
     );

@@ -20,7 +20,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
 
   beforeAll(async () => {
     supabase = getSupabaseAdmin();
-    testUserEmail = `e2e-patient-${Date.now()}@healthpulse-test.local`;
+    testUserEmail = `e2e-patient-${Date.now()}@laso-test.local`;
 
     // 1. Create a dedicated test user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -105,7 +105,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
       const res = await request(app).get('/health');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('healthy');
-      expect(res.body.service).toBe('ai-med-app-backend');
+      expect(res.body.service).toBe('laso-backend');
       expect(res.body.timestamp).toBeDefined();
     });
   });
@@ -126,7 +126,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
     it('POST /api/v1/auth/check confirms non-existence of unused email', async () => {
       const res = await request(app)
         .post('/api/v1/auth/check')
-        .send({ email: `nonexistent-${Date.now()}@healthpulse-test.local` });
+        .send({ email: `nonexistent-${Date.now()}@laso-test.local` });
 
       expect(res.status).toBe(200);
       expect(res.body.exists).toBe(false);

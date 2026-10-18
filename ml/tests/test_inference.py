@@ -10,7 +10,7 @@ def test_health_endpoint():
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "ok"
-    assert data["service"] == "ai-med-ml"
+    assert data["service"] == "laso-ml"
 
     res_v1 = client.get("/v1/ml/health")
     assert res_v1.status_code == 200

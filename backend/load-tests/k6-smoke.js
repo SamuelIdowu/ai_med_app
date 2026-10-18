@@ -27,7 +27,7 @@ export default function () {
   });
 
   // 2. Auth check endpoint
-  const authPayload = JSON.stringify({ email: 'smoke-test@healthpulse.test' });
+  const authPayload = JSON.stringify({ email: 'smoke-test@laso.test' });
   const authRes = http.post(`${BASE_URL}/api/v1/auth/check`, authPayload, {
     headers: { 'Content-Type': 'application/json' },
   });

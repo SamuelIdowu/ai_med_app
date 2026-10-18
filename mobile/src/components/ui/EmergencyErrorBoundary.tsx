@@ -66,7 +66,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
               onPress={this.handleReset}
               activeOpacity={0.8}
             >
-              <MaterialCommunityIcons name="refresh" size={20} color={theme.colors.canvas.text} />
+              <MaterialCommunityIcons name="refresh" size={20} color={theme.colors.text.primary} />
               <Text style={styles.resetButtonText}>Resume First Aid Session</Text>
             </TouchableOpacity>
           </View>

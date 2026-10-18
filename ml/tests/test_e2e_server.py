@@ -49,7 +49,7 @@ def test_live_server_health(live_server_url):
         assert res.status_code == 200
         data = res.json()
         assert data["status"] == "ok"
-        assert data["service"] == "ai-med-ml"
+        assert data["service"] == "laso-ml"
         assert data["version"] == "1.3.0"
 
 def test_live_server_triage_stream_e2e(live_server_url):

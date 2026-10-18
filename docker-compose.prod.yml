@@ -1,21 +1,21 @@
 networks:
-  healthpulse-network:
+  laso-network:
     driver: bridge
 
 services:
   redis:
     image: redis:7-alpine
-    container_name: healthpulse-redis
+    container_name: laso-redis
     restart: unless-stopped
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-healthpulse_prod_secret}", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-laso_prod_secret}", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
     expose:
       - "6379"
     volumes:
       - redis_data:/data
     networks:
-      - healthpulse-network
+      - laso-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-healthpulse_prod_secret}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-laso_prod_secret}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -24,14 +24,14 @@ services:
     build:
       context: ./ml
       dockerfile: Dockerfile
-    container_name: healthpulse-ml
+    container_name: laso-ml
     restart: unless-stopped
     expose:
       - "8000"
     environment:
       - PYTHONUNBUFFERED=1
     networks:
-      - healthpulse-network
+      - laso-network
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
       interval: 15s
@@ -42,7 +42,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: healthpulse-backend
+    container_name: laso-backend
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -50,13 +50,13 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - ML_SERVICE_URL=http://ml-engine:8000
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-healthpulse_prod_secret}@redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-laso_prod_secret}@redis:6379
       - SUPABASE_URL=${SUPABASE_URL:-${EXPO_PUBLIC_SUPABASE_URL}}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - EXPO_PUBLIC_SUPABASE_ANON_KEY=${EXPO_PUBLIC_SUPABASE_ANON_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     networks:
-      - healthpulse-network
+      - laso-network
     depends_on:
       redis:
         condition: service_healthy

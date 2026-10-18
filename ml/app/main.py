@@ -57,7 +57,7 @@ class EmbedRequest(BaseModel):
 def health() -> Dict[str, Any]:
     return {
         "status": "ok",
-        "service": "ai-med-ml",
+        "service": "laso-ml",
         "version": "1.3.0",
         "safety_strictness": settings.SAFETY_STRICTNESS,
         "embedding_dim": settings.EMBEDDING_DIM,

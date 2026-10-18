@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Chat, ChatsStorage } from '../types/chatTypes';
 
-const STORAGE_KEY = '@ai_med_app:chats';
+const STORAGE_KEY = '@laso:chats';
 
 /**
  * Load all chats from AsyncStorage

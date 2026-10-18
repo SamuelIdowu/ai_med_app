@@ -51,7 +51,7 @@ export const SettingsScreen = () => {
 
             // 2. Write to file
             const FS = FileSystem as any;
-            const fileUri = (FS.documentDirectory || '') + 'ai_med_app_export.json';
+            const fileUri = (FS.documentDirectory || '') + 'laso_export.json';
             await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(exportData, null, 2));
 
             // 3. Share
