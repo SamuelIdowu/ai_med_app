@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+import { supabase } from './supabase';
 import { EncounterService } from './encounterService';
 import { TimeSegment } from '../components/charts/TimeSegmentControl';
 
@@ -102,25 +103,30 @@ export const VitalsService = {
     }
   },
   getVitalsTelemetry: async (segment: TimeSegment = 'Hourly'): Promise<VitalsTelemetry> => {
-    // 1. Attempt to fetch live dynamic analytics telemetry from the backend API
-    try {
-      const response = await api.get('/analytics/vitals', {
-        params: { segment },
-      });
-      if (response.data && response.data.heartRatePoints) {
-        const telemetry: VitalsTelemetry = {
-          ...response.data,
-          segment,
-        };
-        // Cache the live payload for offline continuity
-        await AsyncStorage.setItem(
-          `${STORAGE_KEY_VITALS_CACHE}_${segment}`,
-          JSON.stringify(telemetry)
-        );
-        return telemetry;
+    // 1. Attempt to fetch live dynamic analytics telemetry from the backend API (authenticated users only)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      try {
+        const response = await api.get('/analytics/vitals', {
+          params: { segment },
+        });
+        if (response.data && response.data.heartRatePoints) {
+          const telemetry: VitalsTelemetry = {
+            ...response.data,
+            segment,
+          };
+          // Cache the live payload for offline continuity
+          await AsyncStorage.setItem(
+            `${STORAGE_KEY_VITALS_CACHE}_${segment}`,
+            JSON.stringify(telemetry)
+          );
+          return telemetry;
+        }
+      } catch (apiErr) {
+        console.log(`[VitalsService] Backend unavailable (${apiErr}), falling back to local storage.`);
       }
-    } catch (apiErr) {
-      console.log(`[VitalsService] Backend unavailable (${apiErr}), falling back to local storage.`);
+    } else {
+      console.log('[VitalsService] No session — skipping backend fetch (guest mode).');
     }
 
     // 2. Check local cached payload if offline

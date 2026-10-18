@@ -1,8 +1,14 @@
 import { Provider } from './types';
 import { api } from './api';
+import { supabase } from './supabase';
 
 export const ProviderService = {
     getProviders: async (): Promise<Provider[]> => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+            console.log('[ProviderService] No session — returning empty providers (guest mode).');
+            return [];
+        }
         try {
             console.log('Fetching providers from:', api.defaults.baseURL + '/providers');
             const timeoutPromise = new Promise<never>((_, reject) =>
@@ -22,6 +28,10 @@ export const ProviderService = {
     },
 
     searchProviders: async (query: string): Promise<Provider[]> => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+            return [];
+        }
         try {
             const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('Request timed out')), 5000)
@@ -45,6 +55,10 @@ export const ProviderService = {
     },
 
     getProviderById: async (id: string): Promise<Provider | undefined> => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+            return undefined;
+        }
         try {
             const response = await api.get(`/providers/${id}`);
             return response.data;

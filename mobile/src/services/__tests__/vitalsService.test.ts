@@ -2,11 +2,22 @@ import { VitalsService, VitalsTelemetry } from '../vitalsService';
 import { api } from '../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncounterService } from '../encounterService';
+import { supabase } from '../supabase';
 
 jest.mock('../api', () => ({
   api: {
     get: jest.fn(),
     post: jest.fn(),
+  },
+}));
+
+jest.mock('../supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn(async () => ({
+        data: { session: null },
+      })),
+    },
   },
 }));
 
@@ -39,6 +50,9 @@ describe('Mobile Vitals Service', () => {
   });
 
   it('fetches vitals telemetry from backend API and caches response in AsyncStorage', async () => {
+    (supabase.auth.getSession as jest.Mock).mockResolvedValueOnce({
+      data: { session: { access_token: 'test-token' } },
+    });
     const mockApiResponse = {
       currentHeartRate: 74,
       heartRateStatus: 'Normal resting range (±74)',

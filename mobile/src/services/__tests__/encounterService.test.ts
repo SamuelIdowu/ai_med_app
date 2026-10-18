@@ -72,6 +72,9 @@ describe('Mobile Encounter Service', () => {
 
   describe('getEncounters', () => {
     it('fetches remote encounters when online', async () => {
+      (supabase.auth.getSession as jest.Mock).mockResolvedValueOnce({
+        data: { session: { access_token: 'test-token' } },
+      });
       const mockRemote = [
         { id: 'enc-1', category: 'Cut', notes: 'Minor laceration' },
         { id: 'enc-2', category: 'Burn', notes: 'Thermal burn' },

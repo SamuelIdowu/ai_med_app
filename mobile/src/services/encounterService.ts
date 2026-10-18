@@ -110,6 +110,13 @@ export const EncounterService = {
     },
 
     getEncounters: async () => {
+        // Check for an active session; guests read local storage directly
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+            console.log('[EncounterService] No session \u2014 returning local encounters (guest mode).');
+            const json = await AsyncStorage.getItem(LOCAL_ENCOUNTERS_KEY);
+            return json != null ? JSON.parse(json) : [];
+        }
         try {
             const response = await api.get('/encounters');
             return response.data;

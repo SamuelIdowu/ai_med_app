@@ -39,7 +39,7 @@ const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'Unknown'
 
 export const MedicalProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isEditingModal, setIsEditingModal] = useState(false);
 
@@ -251,6 +251,19 @@ export const MedicalProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Guest mode banner */}
+      {isGuest && (
+        <TouchableOpacity
+          style={styles.guestBanner}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('Signup')}
+        >
+          <MaterialCommunityIcons name="account-arrow-up-outline" size={16} color="#0F1115" />
+          <Text style={styles.guestBannerText}>
+            You’re in guest mode — <Text style={{ fontWeight: '700' }}>create an account</Text> to save your profile.
+          </Text>
+        </TouchableOpacity>
+      )}
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={styles.contentPadding}
@@ -1577,5 +1590,24 @@ const styles = StyleSheet.create({
   },
   removeChipIcon: {
     padding: 2,
+  },
+  guestBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#FEF9C3',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FDE047',
+  },
+  guestBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#713F12',
+    lineHeight: 18,
   },
 });

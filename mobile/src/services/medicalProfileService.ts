@@ -1,6 +1,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+import { supabase } from './supabase';
 
 export interface EmergencyContact {
     name: string;
@@ -33,7 +34,9 @@ const STORAGE_KEY = '@medical_profile';
 export const MedicalProfileService = {
     getProfile: async (): Promise<MedicalProfile | null> => {
         try {
-            // Attempt to fetch latest from backend
+            // Only attempt backend fetch when an authenticated session exists
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
             try {
                 const response = await api.get('/profile');
                 if (response.data) {
@@ -77,6 +80,9 @@ export const MedicalProfileService = {
                     endpoint: '/profile',
                 });
             }
+            } else {
+                console.log('[MedicalProfileService] No session — skipping backend fetch (guest mode).');
+            }
 
             // Fallback to local storage
             const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
@@ -119,11 +125,16 @@ export const MedicalProfileService = {
                 photo_url: profile.photoUrl
             };
 
-            // Sync to Backend
-            try {
-                await api.post('/profile', apiPayload);
-            } catch (apiError) {
-                console.error('Failed to sync profile', apiError);
+            // Sync to Backend (authenticated users only)
+            const { data: { session: saveSession } } = await supabase.auth.getSession();
+            if (saveSession?.access_token) {
+                try {
+                    await api.post('/profile', apiPayload);
+                } catch (apiError) {
+                    console.error('Failed to sync profile to backend', apiError);
+                }
+            } else {
+                console.log('[MedicalProfileService] No session \u2014 profile saved locally only (guest mode).');
             }
         } catch (e) {
             console.error('Failed to save profile', e);
