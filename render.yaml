@@ -1,0 +1,54 @@
+# Render Blueprint Specification for Laso Cloud Infrastructure (Free Tier)
+# Learn more: https://render.com/docs/blueprint-spec
+
+version: "1"
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Laso Node.js / Express Backend (Gateway, SSE streaming, Auth, DB bridge)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: laso-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false # Set via Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Set via Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false # Set via Render dashboard
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: laso-ml
+          property: host
+
+  # ---------------------------------------------------------------------------
+  # 2. Laso Python FastAPI ML Subsystem (Triage, Safety, Vitals & Wound Vision)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: laso-ml
+    runtime: docker
+    rootDir: ml
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: SAFETY_STRICTNESS
+        value: "high"
