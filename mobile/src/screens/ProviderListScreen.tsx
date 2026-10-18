@@ -13,7 +13,9 @@ import {
   Linking,
   Alert,
   Dimensions,
+  Image,
 } from 'react-native';
+import { getIllustration } from '../assets/illustrations';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { Marker, Callout } from '../components/Map';
@@ -241,7 +243,15 @@ export const ProviderListScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="hospital-building" size={48} color="#9CA3AF" />
+              {getIllustration('hospitalLocator') ? (
+                <Image
+                  source={getIllustration('hospitalLocator')!}
+                  style={styles.emptyLocatorImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <MaterialCommunityIcons name="hospital-building" size={48} color="#9CA3AF" />
+              )}
               <Text style={styles.emptyTitle}>No Providers Found</Text>
               <Text style={styles.emptySubtitle}>Try adjusting your search query or filters.</Text>
             </View>
@@ -534,6 +544,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 48,
+  },
+  emptyLocatorImage: {
+    width: 160,
+    height: 160,
+    marginBottom: 8,
   },
   emptyTitle: {
     fontSize: 17,

@@ -13,6 +13,7 @@ import { AnalyticsService } from '../services/analyticsService';
 import { ShareOptionsModal } from '../components/ShareOptionsModal';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 
 type ReportPreviewScreenRouteProp = RouteProp<RootStackParamList, 'ReportPreview'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -106,7 +107,16 @@ export const ReportPreviewScreen = () => {
             </View>
 
             <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
-                <Text style={styles.pageTitle}>Emergency Report</Text>
+                <View style={styles.pageTitleRow}>
+                    {getIllustration('recordCapsule') && (
+                        <Image
+                            source={getIllustration('recordCapsule')!}
+                            style={styles.recordCapsuleImage}
+                            resizeMode="contain"
+                        />
+                    )}
+                    <Text style={styles.pageTitle}>Emergency Report</Text>
+                </View>
 
                 {/* Patient Card */}
                 <View style={styles.card}>
@@ -296,12 +306,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 100,
     },
+    pageTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 16,
+        marginTop: 8,
+    },
+    recordCapsuleImage: {
+        width: 52,
+        height: 52,
+    },
     pageTitle: {
+        flex: 1,
         fontSize: 32,
         fontWeight: 'bold',
         color: theme.colors.text.primary,
-        marginBottom: 16,
-        marginTop: 8,
     },
     card: {
         backgroundColor: theme.colors.canvas.surface,

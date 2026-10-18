@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 import { CameraReticle } from '../components/ui/CameraReticle';
 import { EmergencyBanner } from '../components/ui/EmergencyBanner';
 import { api } from '../services/api';
@@ -211,7 +212,15 @@ export const WoundScannerScreen: React.FC = () => {
             <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
           ) : (
             <View style={styles.cameraPlaceholder}>
-              <MaterialCommunityIcons name="camera-plus" size={44} color="#6B7280" />
+              {getIllustration('visionScanner') ? (
+                <Image
+                  source={getIllustration('visionScanner')!}
+                  style={styles.scannerIllustration}
+                  resizeMode="contain"
+                />
+              ) : (
+                <MaterialCommunityIcons name="camera-plus" size={44} color="#6B7280" />
+              )}
             </View>
           )}
 
@@ -406,6 +415,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.7,
+  },
+  scannerIllustration: {
+    width: 140,
+    height: 140,
   },
   placeholderPrompt: {
     color: '#9CA3AF',
