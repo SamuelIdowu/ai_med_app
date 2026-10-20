@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Image,
+  ImageBackground,
   Platform,
   StatusBar as RNStatusBar,
   TouchableWithoutFeedback,
@@ -334,7 +335,12 @@ export const HomeScreen: React.FC = () => {
         {/* ================================================================= */}
         {/* 1. HERO BANNER: Deep Onyx with iAid Logo + Stay Safe Act Fast     */}
         {/* ================================================================= */}
-        <View style={styles.heroContainer}>
+        <ImageBackground
+          source={getIllustration('firstAidKit')!}
+          style={styles.heroContainer}
+          imageStyle={styles.heroBackgroundImage}
+          resizeMode="cover"
+        >
           {/* Top Bar inside Hero */}
           <View style={styles.heroHeaderRow}>
             {/* Logo: Laso + Shield Icon */}
@@ -386,30 +392,30 @@ export const HomeScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Hero Title & Placeholder Illustration Slot */}
+          {/* Hero Title & 3D Heart Biometric Orb */}
           <View style={styles.heroBodyRow}>
             <View style={styles.heroTextCol}>
               <Text style={styles.heroTitle}>Stay Safe</Text>
               <Text style={styles.heroTitle}>Act Fast!</Text>
             </View>
 
-            {/* 3D First-Aid Kit Illustration in Hero */}
+            {/* 3D Heart Biometric Orb Illustration in Hero */}
             <View style={styles.blankImagePlaceholder}>
-              {getIllustration('firstAidKit') ? (
+              {getIllustration('heartVitals') ? (
                 <Image
-                  source={getIllustration('firstAidKit')!}
-                  style={{ width: 120, height: 120 }}
+                  source={getIllustration('heartVitals')!}
+                  style={{ width: 96, height: 96 }}
                   resizeMode="contain"
                 />
               ) : (
                 <View style={styles.placeholderInner}>
-                  <MaterialCommunityIcons name="medical-bag" size={28} color="#FFFFFF" />
-                  <Text style={styles.placeholderLabel}>Emergency</Text>
+                  <MaterialCommunityIcons name="heart-pulse" size={28} color="#FFFFFF" />
+                  <Text style={styles.placeholderLabel}>Vitals</Text>
                 </View>
               )}
             </View>
           </View>
-        </View>
+        </ImageBackground>
 
         {/* ================================================================= */}
         {/* 2. BODY CONTENT - CONTROLS, SEARCH, FILTERS & MINIMAL GRID        */}
@@ -958,7 +964,13 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    overflow: 'hidden',
     ...theme.spatial.shadows3d.floating3d,
+  },
+  heroBackgroundImage: {
+    opacity: 0.18,
   },
   heroHeaderRow: {
     flexDirection: 'row',

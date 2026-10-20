@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../services/api';
 import { ImageService, ProcessedImage } from '../services/imageService';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 
 interface StructuredAnalysis {
     severity: 'minor' | 'moderate' | 'serious' | 'critical';
@@ -498,7 +499,15 @@ export const AIAnalysisScreen = () => {
                                 onPress={pickImage}
                             >
                                 <View style={styles.uploadIconCircle}>
-                                    <MaterialCommunityIcons name="camera-plus" size={40} color={PRIMARY_COLOR} />
+                                    {getIllustration('diagnosticMolecule') ? (
+                                        <Image
+                                            source={getIllustration('diagnosticMolecule')!}
+                                            style={styles.diagnosticMoleculeImage}
+                                            resizeMode="contain"
+                                        />
+                                    ) : (
+                                        <MaterialCommunityIcons name="camera-plus" size={40} color={PRIMARY_COLOR} />
+                                    )}
                                 </View>
                                 <Text style={styles.uploadTitle}>No Image Selected</Text>
                                 <Text style={styles.uploadSubtitle}>Tap to capture or upload</Text>
@@ -703,6 +712,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 14,
+    },
+    diagnosticMoleculeImage: {
+        width: 68,
+        height: 68,
+        borderRadius: 34,
     },
     uploadTitle: {
         fontSize: 17,

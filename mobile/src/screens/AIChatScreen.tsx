@@ -31,6 +31,7 @@ import { MedicalCard } from '../components/ui/MedicalCard';
 import { OrganicFluidSphere } from '../components/ui/OrganicFluidSphere';
 import { VoiceService } from '../services/voiceService';
 import { theme } from '../theme';
+import { getIllustration } from '../assets/illustrations';
 
 const QUICK_SUGGESTIONS = [
   { label: 'CPR Steps', icon: 'heart-pulse', prompt: 'Walk me through CPR step by step.' },
@@ -503,16 +504,24 @@ export const AIChatScreen: React.FC = () => {
               >
                 {!isUser && (
                   <View style={styles.modelAvatarCircle}>
-                    <LinearGradient
-                      colors={['#0F1115', '#262A33']}
-                      style={styles.avatarGradient}
-                    >
-                      <MaterialCommunityIcons
-                        name="creation"
-                        size={14}
-                        color="#FFFFFF"
+                    {getIllustration('neuralOrb') ? (
+                      <Image
+                        source={getIllustration('neuralOrb')!}
+                        style={styles.modelAvatarImage}
+                        resizeMode="cover"
                       />
-                    </LinearGradient>
+                    ) : (
+                      <LinearGradient
+                        colors={['#0F1115', '#262A33']}
+                        style={styles.avatarGradient}
+                      >
+                        <MaterialCommunityIcons
+                          name="creation"
+                          size={14}
+                          color="#FFFFFF"
+                        />
+                      </LinearGradient>
+                    )}
                   </View>
                 )}
 
@@ -768,6 +777,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modelAvatarImage: {
+    width: '100%',
+    height: '100%',
   },
   bubble: {
     maxWidth: '82%',

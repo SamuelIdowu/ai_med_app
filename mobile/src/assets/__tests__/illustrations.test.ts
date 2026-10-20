@@ -14,10 +14,18 @@ describe('3D Illustrations Registry', () => {
     expect(ILLUSTRATIONS.hospitalLocator).toBeDefined();
   });
 
-  it('provides safe fallbacks for pending illustrations', () => {
-    expect(getIllustration('neuralOrb')).toBeNull();
-    expect(getIllustration('diagnosticMolecule')).toBeNull();
-    expect(getIllustration('splashEmblem')).not.toBeNull();
+  it('resolves every illustration to a concrete asset source', () => {
+    const keys: IllustrationKey[] = Object.keys(ILLUSTRATIONS) as IllustrationKey[];
+    expect(keys.length).toBe(12);
+    keys.forEach((key) => {
+      expect(ILLUSTRATIONS[key].source).not.toBeNull();
+      expect(getIllustration(key)).not.toBeNull();
+    });
+  });
+
+  it('resolves the second-generation assets', () => {
+    expect(getIllustration('neuralOrb')).not.toBeNull();
+    expect(getIllustration('diagnosticMolecule')).not.toBeNull();
   });
 
   it('provides metadata including title, screen target, and description', () => {

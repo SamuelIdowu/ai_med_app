@@ -87,8 +87,8 @@ export const ILLUSTRATIONS: Record<IllustrationKey, IllustrationDefinition> = {
     key: 'neuralOrb',
     screen: 'AIChatScreen',
     title: 'Neural AI Core',
-    description: 'Procedural/rendered living animated fluid sphere',
-    source: null, // Rendered dynamically via OrganicFluidSphere component
+    description: 'Translucent glowing sphere representing the living AI core',
+    source: require('../../assets/illustrations/Translucent_sphere_with_glowing_._2K_20261017145504.jpg'),
     mode: 'ai',
   },
   visionScanner: {
@@ -104,7 +104,7 @@ export const ILLUSTRATIONS: Record<IllustrationKey, IllustrationDefinition> = {
     screen: 'AIAnalysisScreen',
     title: 'Diagnostic Molecule & Data Core',
     description: '3D molecular lattice structure with floating pulse lines',
-    source: null, // Pending second generation batch
+    source: require('../../assets/illustrations/Molecular_lattice_structure_2K_20261017145517.jpg'),
     mode: 'ai',
   },
   recordCapsule: {
