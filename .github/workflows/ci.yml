@@ -44,7 +44,10 @@ jobs:
       - name: Verify TypeScript Compilation
         run: npx tsc --noEmit
 
-      - name: Run Backend Jest Test Suite (67 tests, 10 suites)
+      - name: Lint Backend
+        run: npm run lint --if-present
+
+      - name: Run Backend Jest Test Suite
         run: npm test
 
   # -------------------------------------------------------------
@@ -71,7 +74,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install . pytest httpx pytest-anyio
 
-      - name: Run ML Pytest Suite & Clinical Safety Benchmark (32 tests)
+      - name: Run ML Pytest Suite & Clinical Safety Benchmark
         run: pytest tests -v
 
   # -------------------------------------------------------------
@@ -95,15 +98,19 @@ jobs:
         working-directory: mobile
         run: npm ci
 
-      - name: Verify Mobile TypeScript Compilation (27+ Screens)
+      - name: Verify Mobile TypeScript Compilation
         working-directory: mobile
         run: npx tsc --noEmit
+
+      - name: Lint Mobile
+        working-directory: mobile
+        run: npm run lint --if-present
 
       - name: Install Backend Dependencies for Mobile Runner
         working-directory: backend
         run: npm ci
 
-      - name: Run Mobile Integration Test Suite (23 tests, 4 suites)
+      - name: Run Mobile Integration Test Suite
         working-directory: backend
         run: npm run test:mobile
 
