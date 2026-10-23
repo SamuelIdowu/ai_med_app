@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 -- RLS: Protect audit log integrity
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Service role manages audit logs" ON public.audit_logs;
 CREATE POLICY "Service role manages audit logs"
     ON public.audit_logs
     FOR ALL
