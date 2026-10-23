@@ -8,6 +8,18 @@ const sanitizePdfText = (text: string | null | undefined): string => {
     return text.replace(/[^\x20-\x7E\xA0-\xFF]/g, ' ').trim();
 };
 
+export const resolvePatientName = (profile: any): string => {
+    if (!profile) return 'N/A';
+
+    const user = Array.isArray(profile.users) ? profile.users[0] : profile.users;
+    const legacyName = [profile.first_name, profile.last_name]
+        .filter((part) => typeof part === 'string' && part.trim())
+        .join(' ');
+    const rawName = user?.name || profile.full_name || profile.name || legacyName;
+
+    return sanitizePdfText(rawName) || 'N/A';
+};
+
 export const generateReport = async (userId: string, encounterId: string, token: string) => {
     const [profile, encounter] = await Promise.all([
         getProfile(userId, token),
@@ -15,7 +27,9 @@ export const generateReport = async (userId: string, encounterId: string, token:
     ]);
 
     if (!encounter) {
-        console.error(`Encounter not found for ID: ${encounterId} and User: ${userId}`);
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Encounter not found for report generation');
+        }
         const notFoundError: any = new Error('Encounter not found');
         notFoundError.statusCode = 404;
         throw notFoundError;
@@ -37,7 +51,7 @@ export const generateReport = async (userId: string, encounterId: string, token:
     page.drawText('Patient Profile', { x: 50, y, size: 16, font: boldFont });
     y -= 20;
     if (profile) {
-        const patientName = sanitizePdfText(`${profile.first_name || 'N/A'} ${profile.last_name || ''}`);
+        const patientName = resolvePatientName(profile);
         page.drawText(`Name: ${patientName}`, { x: 50, y, size: 12, font });
         y -= 20;
         page.drawText(`Blood Type: ${sanitizePdfText(profile.blood_type || 'N/A')}`, { x: 50, y, size: 12, font });

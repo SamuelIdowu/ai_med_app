@@ -28,7 +28,9 @@ export const chat = async (req: Request, res: Response) => {
         const response = await GeminiService.chat(message, history, userId, accessToken);
         res.json({ response });
     } catch (error) {
-        console.error('Chat Controller Error:', error);
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Chat Controller Error');
+        }
 
         if (error instanceof AIServiceError) {
             res.status(error.statusCode).json({
@@ -89,7 +91,9 @@ export const analyze = async (req: Request, res: Response) => {
 
         res.json(result);
     } catch (error) {
-        console.error('Analyze Controller Error:', error);
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Analyze Controller Error');
+        }
 
         if (error instanceof AIServiceError) {
             res.status(error.statusCode).json({
@@ -113,9 +117,11 @@ export const triageVitals = async (req: Request, res: Response) => {
         const result = await defaultMLClient.evaluateVitalsTriage(vitals);
         res.json(result);
     } catch (error: any) {
-        console.error('Triage Vitals Controller Error:', error);
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Triage Vitals Controller Error');
+        }
         res.status(error.response?.status || 500).json({
-            error: error.message || 'Failed to evaluate vitals triage',
+            error: 'Failed to evaluate vitals triage',
             code: 'ML_VITALS_EVAL_ERROR',
             userMessage: 'Unable to evaluate vitals at this moment. If in doubt, seek immediate emergency care.'
         });

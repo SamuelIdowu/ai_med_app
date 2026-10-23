@@ -25,8 +25,10 @@ router.get('/', async (req, res) => {
         });
         res.json(profile);
     } catch (error: any) {
-        console.error('GET /api/v1/profile error:', error);
-        res.status(500).json({ error: error.message });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('GET /api/v1/profile error');
+        }
+        res.status(500).json({ error: 'Failed to load profile' });
     }
 });
 
@@ -44,8 +46,10 @@ router.post('/', async (req, res) => {
         });
         res.json(profile);
     } catch (error: any) {
-        console.error('POST /api/v1/profile error:', error);
-        res.status(500).json({ error: error.message });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('POST /api/v1/profile error');
+        }
+        res.status(500).json({ error: 'Failed to update profile' });
     }
 });
 

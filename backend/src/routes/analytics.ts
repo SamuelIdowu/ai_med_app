@@ -120,11 +120,15 @@ router.get('/vitals', async (req, res) => {
       labBars,
       labBadge,
       encounterCount: encounters?.length || 0,
+      dataSource: 'synthetic',
+      isSynthetic: true,
     });
-  } catch (error: any) {
-    console.error('Analytics Vitals error:', error);
-    res.status(500).json({ error: error.message });
-  }
+    } catch (error: any) {
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Analytics Vitals error');
+        }
+        res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
 });
 
 export default router;

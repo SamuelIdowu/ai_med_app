@@ -47,8 +47,10 @@ router.post('/check', authCheckLimiter, async (req, res) => {
 
         return res.json({ exists: false });
     } catch (e: any) {
-        console.error('Unexpected error checking user:', e);
-        res.status(500).json({ error: e.message || 'Error checking user' });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Unexpected error checking user');
+        }
+        res.status(500).json({ error: 'Unable to check user availability' });
     }
 });
 

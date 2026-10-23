@@ -9,13 +9,10 @@ router.use(authenticateUser);
 
 router.post('/:id/generate', async (req, res) => {
     try {
-        console.log(`Report Generation: Request received for encounter ${req.params.id} by user ${req.user.id}`);
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
-            // Should be caught by middleware, but safe to keep
-            console.log('Report Generation: Token check failed in handler');
             res.status(401).json({ error: 'Token missing' });
             return;
         }
@@ -36,8 +33,15 @@ router.post('/:id/generate', async (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename=report-${req.params.id}.pdf`);
         res.send(Buffer.from(pdfBytes));
     } catch (error: any) {
-        console.error('Report generation error:', error);
-        res.status(error.statusCode || 500).json({ error: error.message });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Report generation failed');
+        }
+        const statusCode = error.statusCode || error.status || 500;
+        if (statusCode === 404) {
+            res.status(404).json({ error: 'Encounter not found' });
+            return;
+        }
+        res.status(500).json({ error: 'Failed to generate report' });
     }
 });
 
@@ -68,14 +72,19 @@ router.get('/:id', async (req, res) => {
             return;
         }
 
-        // Return 501 for unpersisted reports as direct streaming via POST or ?format=pdf is supported
         res.status(501).json({
             message: 'Stored reports not yet implemented. Use POST /api/v1/reports/:id/generate to download directly.',
-            encounter_id: encounterId,
         });
     } catch (error: any) {
-        console.error('Report fetch error:', error);
-        res.status(error.statusCode || 500).json({ error: error.message });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Report fetch failed');
+        }
+        const statusCode = error.statusCode || error.status || 500;
+        if (statusCode === 404) {
+            res.status(404).json({ error: 'Encounter not found' });
+            return;
+        }
+        res.status(500).json({ error: 'Failed to fetch report' });
     }
 });
 

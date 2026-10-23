@@ -50,8 +50,10 @@ export const create = async (req: Request, res: Response): Promise<void> => {
     });
     res.status(201).json(encounter);
   } catch (error: any) {
-    console.error('Error in encounterController.create:', error);
-    res.status(500).json({ error: error.message || 'Failed to create encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.create');
+    }
+    res.status(500).json({ error: 'Failed to create encounter' });
   }
 };
 
@@ -83,8 +85,10 @@ export const getById = async (req: Request, res: Response): Promise<void> => {
 
     res.json(encounter);
   } catch (error: any) {
-    console.error('Error in encounterController.getById:', error);
-    res.status(500).json({ error: error.message || 'Failed to retrieve encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.getById');
+    }
+    res.status(500).json({ error: 'Failed to retrieve encounter' });
   }
 };
 
@@ -109,8 +113,10 @@ export const list = async (req: Request, res: Response): Promise<void> => {
     });
     res.json(encounters);
   } catch (error: any) {
-    console.error('Error in encounterController.list:', error);
-    res.status(500).json({ error: error.message || 'Failed to list encounters' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.list');
+    }
+    res.status(500).json({ error: 'Failed to list encounters' });
   }
 };
 
@@ -159,8 +165,10 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
     });
     res.json(updated);
   } catch (error: any) {
-    console.error('Error in encounterController.updateStatus:', error);
-    res.status(500).json({ error: error.message || 'Failed to update encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.updateStatus');
+    }
+    res.status(500).json({ error: 'Failed to update encounter' });
   }
 };
 
@@ -186,7 +194,9 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
     });
     res.status(204).send();
   } catch (error: any) {
-    console.error('Error in encounterController.remove:', error);
-    res.status(500).json({ error: error.message || 'Failed to delete encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.remove');
+    }
+    res.status(500).json({ error: 'Failed to delete encounter' });
   }
 };

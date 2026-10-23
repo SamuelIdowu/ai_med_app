@@ -14,16 +14,28 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-        console.log('Auth Middleware: Authorization header is missing');
-        res.status(401).json({ error: 'Authorization header is missing' });
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('Auth Middleware: Authorization header is missing');
+        }
+        res.status(401).json({
+            error: 'Authorization header is missing',
+            code: 'AUTH_MISSING',
+            userMessage: 'Please sign in to continue.',
+        });
         return;
     }
 
     const token = authHeader.split(' ')[1];
 
     if (!token) {
-        console.log('Auth Middleware: Token is missing from header');
-        res.status(401).json({ error: 'Token is missing' });
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('Auth Middleware: Token is missing from header');
+        }
+        res.status(401).json({
+            error: 'Token is missing',
+            code: 'AUTH_MISSING',
+            userMessage: 'Please sign in to continue.',
+        });
         return;
     }
 
@@ -31,16 +43,28 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (error || !user) {
-            console.error('Auth Middleware: Invalid or expired token', error);
-            res.status(401).json({ error: 'Invalid or expired token', detailed: error?.message });
+            if (process.env.NODE_ENV !== 'test') {
+                console.warn('Auth Middleware: Invalid or expired token', error?.code ?? 'unknown');
+            }
+                res.status(401).json({
+                    error: 'Invalid or expired token',
+                    code: 'AUTH_INVALID',
+                    userMessage: 'Your session has expired. Please sign in again.',
+                });
             return;
         }
 
         req.user = user;
         next();
     } catch (err) {
-        console.error('Unexpected auth error:', err);
-        res.status(500).json({ error: 'Authentication service failed' });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Unexpected auth error:', err);
+        }
+        res.status(500).json({
+            error: 'Authentication service failed',
+            code: 'AUTH_UNAVAILABLE',
+            userMessage: 'Authentication is temporarily unavailable. Please try again.',
+        });
         return;
     }
 };

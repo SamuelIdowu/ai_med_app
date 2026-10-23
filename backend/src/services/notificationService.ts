@@ -1,22 +1,14 @@
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-import path from 'path';
+import { getSupabaseAdmin } from '../db/client';
 
-// Load env vars
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const expo = new Expo();
 
 export const registerToken = async (userId: string, token: string) => {
     if (!Expo.isExpoPushToken(token)) {
-        throw new Error(`Push token ${token} is not a valid Expo push token`);
+        throw new Error('Push token is not a valid Expo push token');
     }
 
+    const supabase = getSupabaseAdmin();
     const { error } = await supabase
         .from('users')
         .update({ push_token: token })
@@ -27,6 +19,7 @@ export const registerToken = async (userId: string, token: string) => {
 };
 
 export const getUserNotifications = async (userId: string) => {
+    const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -38,11 +31,12 @@ export const getUserNotifications = async (userId: string) => {
 };
 
 export const markAsRead = async (notificationId: string, userId: string) => {
+    const supabase = getSupabaseAdmin();
     const { error } = await supabase
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId)
-        .eq('user_id', userId); // Ensure ownership
+        .eq('user_id', userId);
 
     if (error) throw error;
     return { success: true };
@@ -55,19 +49,24 @@ export const sendNotification = async (
     type: 'info' | 'alert' | 'success' = 'info',
     data: any = {}
 ) => {
-    // 1. Get user's push token
+    const supabase = getSupabaseAdmin();
+
     const { data: userData, error: userError } = await supabase
         .from('users')
         .select('push_token')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-    if (userError || !userData?.push_token) {
-        console.warn(`No push token found for user ${userId}`);
-        // Still save to DB history even if no push token
+    if (userError) {
+        throw userError;
     }
 
-    // 2. Save notification to DB history
+    if (!userData?.push_token) {
+        if (process.env.NODE_ENV !== 'test') {
+            console.warn('No push token found for user');
+        }
+    }
+
     const { error: dbError } = await supabase
         .from('notifications')
         .insert({
@@ -75,30 +74,33 @@ export const sendNotification = async (
             title,
             message,
             type,
-            read: false
+            read: false,
+            data,
         });
 
     if (dbError) {
-        console.error('Error saving notification to DB:', dbError);
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Error saving notification to DB');
+        }
     }
 
-    // 3. Send via Expo if token exists
     if (userData?.push_token) {
-        const messages: ExpoPushMessage[] = [{
-            to: userData.push_token,
-            sound: 'default',
-            title,
-            body: message,
-            data: { ...data, type },
-        }];
-
         try {
+            const messages: ExpoPushMessage[] = [{
+                to: userData.push_token,
+                sound: 'default',
+                title,
+                body: message,
+                data: { ...data, type },
+            }];
             const chunks = expo.chunkPushNotifications(messages);
             for (const chunk of chunks) {
                 await expo.sendPushNotificationsAsync(chunk);
             }
         } catch (error) {
-            console.error('Error sending push notification:', error);
+            if (process.env.NODE_ENV !== 'test') {
+                console.error('Error sending push notification');
+            }
         }
     }
 

@@ -35,7 +35,10 @@ router.get('/', async (req, res) => {
         res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
         res.json(results);
     } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Failed to fetch providers');
+        }
+        res.status(500).json({ error: 'Failed to fetch providers' });
     }
 });
 
@@ -63,7 +66,10 @@ router.get('/:id', async (req, res) => {
         res.setHeader('X-Cache-Status', 'MISS');
         res.json(provider);
     } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        if (process.env.NODE_ENV !== 'test') {
+            console.error('Failed to fetch provider');
+        }
+        res.status(500).json({ error: 'Failed to fetch provider' });
     }
 });
 

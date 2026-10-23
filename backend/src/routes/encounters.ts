@@ -40,7 +40,10 @@ router.post('/:id/photos', async (req, res) => {
     const uploadData = await getUploadUrl(req.user.id, fileName);
     res.json(uploadData);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Failed to get upload URL');
+    }
+    res.status(500).json({ error: 'Failed to generate upload URL' });
   }
 });
 
