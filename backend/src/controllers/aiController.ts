@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { GeminiService } from '../services/geminiService';
 import { defaultMLClient } from '../services/mlClient';
+import {
+    analyzePhoto,
+    photoAnalysisModes,
+    PhotoAnalysisMode,
+} from '../services/photoAnalysisService';
 import { AIServiceError } from '../types/errors';
 
 export const chat = async (req: Request, res: Response) => {
@@ -43,7 +48,7 @@ export const chat = async (req: Request, res: Response) => {
 
 export const analyze = async (req: Request, res: Response) => {
     try {
-        const { image } = req.body;
+        const { image, mode = 'auto', fileName } = req.body;
 
         if (!image) {
             res.status(400).json({
@@ -54,72 +59,35 @@ export const analyze = async (req: Request, res: Response) => {
             return;
         }
 
-        // Import imageProcessingService
-        const { ImageProcessingService } = await import('../services/imageProcessingService');
-
-        // Convert base64 to buffer
-        const imageBuffer = ImageProcessingService.base64ToBuffer(image);
-
-        // Validate image
-        const validation = await ImageProcessingService.validateImage(imageBuffer);
-        if (!validation.isValid) {
+        if (!photoAnalysisModes.includes(mode as PhotoAnalysisMode)) {
             res.status(400).json({
-                error: 'Invalid image',
-                code: 'INVALID_IMAGE',
-                userMessage: validation.errors.join(', ')
+                error: 'Invalid analysis mode',
+                code: 'INVALID_ANALYSIS_MODE',
+                userMessage: 'Choose Auto, Wound CV, or General AI analysis.'
             });
             return;
         }
 
-        // Process and optimize image
-        const processedImage = await ImageProcessingService.processImage(imageBuffer);
-
-
-        // Convert processed image back to base64 for Gemini
-        const processedBase64 = ImageProcessingService.bufferToBase64(processedImage.buffer, processedImage.mimeType);
-
-        // Analyze with Gemini
-        const analysis = await GeminiService.analyzeImage(processedBase64, processedImage.mimeType);
-
-        // Build clean readable text from structured or raw analysis
-        const structuredAnalysis = typeof analysis === 'object' ? analysis : null;
-        let readableText: string;
-
-        if (structuredAnalysis) {
-            const parts: string[] = [];
-            parts.push(`Severity: ${structuredAnalysis.severity?.toUpperCase() ?? 'UNKNOWN'}`);
-            parts.push(`Injury: ${structuredAnalysis.injuryType ?? 'General Assessment'}`);
-            if (structuredAnalysis.confidence != null) {
-                parts.push(`Confidence: ${structuredAnalysis.confidence}%`);
-            }
-            if (structuredAnalysis.symptoms?.length) {
-                parts.push(`\nSymptoms:\n${structuredAnalysis.symptoms.map((s: string) => `• ${s}`).join('\n')}`);
-            }
-            if (structuredAnalysis.recommendations?.length) {
-                parts.push(`\nFirst Aid Steps:\n${structuredAnalysis.recommendations.map((r: string, i: number) => `${i + 1}. ${r}`).join('\n')}`);
-            }
-            if (structuredAnalysis.warnings?.length) {
-                parts.push(`\nWarnings:\n${structuredAnalysis.warnings.map((w: string) => `⚠ ${w}`).join('\n')}`);
-            }
-            if (structuredAnalysis.emergencyFlag) {
-                parts.unshift('🚨 EMERGENCY — Call 911 immediately.');
-            }
-            readableText = parts.join('\n');
-        } else {
-            readableText = typeof analysis === 'string' ? analysis : 'Analysis complete.';
+        const userId = (req as any).user?.id;
+        if (!userId) {
+            res.status(401).json({
+                error: 'User must be authenticated',
+                code: 'UNAUTHENTICATED',
+                userMessage: 'Please sign in to analyze a photo.'
+            });
+            return;
         }
 
-        // Return structured response
-        res.json({
-            analysis: readableText,
-            structuredAnalysis,
-            imageMetadata: {
-                width: processedImage.width,
-                height: processedImage.height,
-                size: processedImage.size,
-                mimeType: processedImage.mimeType
-            }
+        const accessToken = req.headers.authorization?.split(' ')[1];
+        const result = await analyzePhoto({
+            image,
+            mode: mode as PhotoAnalysisMode,
+            fileName,
+            userId,
+            accessToken,
         });
+
+        res.json(result);
     } catch (error) {
         console.error('Analyze Controller Error:', error);
 
