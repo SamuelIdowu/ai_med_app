@@ -34,6 +34,8 @@ export interface VitalsTelemetry {
   labBars: BarDataPoint[];
   labBadge: string;
   encounterCount: number;
+  dataSource?: 'backend' | 'cache' | 'synthetic';
+  isSynthetic?: boolean;
 }
 
 export interface VitalsTriageInput {
@@ -224,6 +226,8 @@ export const VitalsService = {
       labBars,
       labBadge,
       encounterCount,
+      dataSource: 'synthetic',
+      isSynthetic: true,
     };
   },
 };

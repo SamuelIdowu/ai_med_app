@@ -2,16 +2,19 @@
 // Supabase Database Service & Admin Client Singleton
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-import path from 'path';
 import fetch from 'node-fetch';
+import '../config/env';
 
-// Load from root .env and local
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-dotenv.config();
+let adminClient: SupabaseClient | null = null;
+
+function getSupabaseUrl(): string | undefined {
+  return process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
+}
 
 export function getSupabaseAdmin(): SupabaseClient {
-  const url = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
+  if (adminClient) return adminClient;
+
+  const url = getSupabaseUrl();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceKey) {
@@ -19,7 +22,7 @@ export function getSupabaseAdmin(): SupabaseClient {
   }
 
   // Always supply the service role key explicitly in headers to prevent session pollution
-  return createClient(url, serviceKey, {
+  adminClient = createClient(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -32,10 +35,12 @@ export function getSupabaseAdmin(): SupabaseClient {
       fetch: fetch as any,
     },
   });
+
+  return adminClient;
 }
 
 export function createAuthenticatedClient(accessToken: string): SupabaseClient {
-  const url = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const url = getSupabaseUrl();
   const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
@@ -55,3 +60,13 @@ export function createAuthenticatedClient(accessToken: string): SupabaseClient {
     },
   });
 }
+
+// Backwards-compatible singleton used by auth/analytics routes. Resolved lazily
+// so importing this module does not require credentials to be present.
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, property) {
+    const client = getSupabaseAdmin();
+    const value = (client as any)[property];
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+});

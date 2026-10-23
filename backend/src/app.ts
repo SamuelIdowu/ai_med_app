@@ -1,12 +1,7 @@
+import './config/env';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load from root .env and local
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-dotenv.config();
 
 import profileRoutes from './routes/profile';
 import encounterRoutes from './routes/encounters';
@@ -84,7 +79,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     const message = (statusCode === 500 && isProduction)
         ? 'Internal server error'
         : (err.message || 'Something went wrong!');
-    res.status(statusCode).json({ error: message });
+    res.status(statusCode).json({
+        error: message,
+        ...(err.code ? { code: err.code } : {}),
+        ...(err.userMessage ? { userMessage: err.userMessage } : {}),
+    });
 });
 
 export default app;

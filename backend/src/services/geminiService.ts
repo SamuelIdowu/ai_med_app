@@ -106,7 +106,7 @@ export const GeminiService = {
                     accessToken || ''
                 );
 
-                console.log('[GeminiService] Function result:', functionResponse);
+                console.log('[GeminiService] Function result received for:', functionCall.name);
 
                 // Send function result back to AI
                 result = await chat.sendMessage([{

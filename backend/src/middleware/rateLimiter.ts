@@ -1,5 +1,29 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
+const rateLimitKey = (req: { ip?: string }) => ipKeyGenerator(req.ip ?? 'unknown');
+
+// Stricter limiter for unauthenticated (guest) AI chat access.
+// Applied after optional auth so signed-in users only hit aiRateLimiter.
+export const guestAiRateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    message: {
+        error: 'Too many guest requests',
+        code: 'RATE_LIMIT_EXCEEDED',
+        userMessage: 'Guest AI is limited to 5 requests per minute. Please wait a moment or sign in.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => rateLimitKey(req),
+    handler: (req, res) => {
+        res.status(429).json({
+            error: 'Too many guest requests',
+            code: 'RATE_LIMIT_EXCEEDED',
+            userMessage: 'Guest AI is limited to 5 requests per minute. Please wait a moment or sign in.',
+        });
+    },
+});
+
 // Rate limiter for AI endpoints
 export const aiRateLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute window

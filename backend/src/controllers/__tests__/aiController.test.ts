@@ -1,12 +1,93 @@
 import { Request, Response } from 'express';
-import { triageVitals } from '../aiController';
+import { analyze, triageVitals } from '../aiController';
 import { defaultMLClient } from '../../services/mlClient';
+import * as photoAnalysisService from '../../services/photoAnalysisService';
 
 jest.mock('../../services/mlClient', () => ({
   defaultMLClient: {
     evaluateVitalsTriage: jest.fn(),
   },
 }));
+
+jest.mock('../../services/photoAnalysisService', () => ({
+  analyzePhoto: jest.fn(),
+  photoAnalysisModes: ['auto', 'wound', 'general'],
+}));
+
+const mockedPhotoAnalysisService =
+  photoAnalysisService as jest.Mocked<typeof photoAnalysisService>;
+
+describe('AIController - analyze', () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  let jsonMock: jest.Mock;
+  let statusMock: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jsonMock = jest.fn();
+    statusMock = jest.fn().mockReturnValue({ json: jsonMock });
+    req = {
+      body: {
+        image: 'data:image/jpeg;base64,dGVzdA==',
+        mode: 'auto',
+        fileName: 'wound.jpg',
+      },
+      headers: { authorization: 'Bearer access-token' },
+      user: { id: 'user-1' },
+    } as any;
+    res = {
+      json: jsonMock,
+      status: statusMock,
+    };
+  });
+
+  it('delegates photo analysis with the authenticated user and access token', async () => {
+    const result = {
+      encounterId: 'encounter-1',
+      mode: 'wound',
+      analysis: 'Assessment',
+      structuredAnalysis: {},
+      imageMetadata: {},
+    };
+    mockedPhotoAnalysisService.analyzePhoto.mockResolvedValueOnce(result as any);
+
+    await analyze(req as Request, res as Response);
+
+    expect(mockedPhotoAnalysisService.analyzePhoto).toHaveBeenCalledWith({
+      image: req.body.image,
+      mode: 'auto',
+      fileName: 'wound.jpg',
+      userId: 'user-1',
+      accessToken: 'access-token',
+    });
+    expect(jsonMock).toHaveBeenCalledWith(result);
+  });
+
+  it('rejects an invalid analysis mode before calling the service', async () => {
+    req.body.mode = 'xray';
+
+    await analyze(req as Request, res as Response);
+
+    expect(statusMock).toHaveBeenCalledWith(400);
+    expect(mockedPhotoAnalysisService.analyzePhoto).not.toHaveBeenCalled();
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'INVALID_ANALYSIS_MODE' })
+    );
+  });
+
+  it('rejects requests without an image', async () => {
+    req.body.image = undefined;
+
+    await analyze(req as Request, res as Response);
+
+    expect(statusMock).toHaveBeenCalledWith(400);
+    expect(mockedPhotoAnalysisService.analyzePhoto).not.toHaveBeenCalled();
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'MISSING_IMAGE' })
+    );
+  });
+});
 
 describe('AIController - triageVitals', () => {
   let req: Partial<Request>;

@@ -1,10 +1,15 @@
 import sharp from 'sharp';
-import { fileTypeFromBuffer } from 'file-type';
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const MAX_DIMENSION = 4096;
 const COMPRESSION_QUALITY = 80;
 const THUMBNAIL_SIZE = 200;
+const ALLOWED_FORMATS: Record<string, string> = {
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    gif: 'image/gif',
+};
 
 export interface ImageValidationResult {
     isValid: boolean;
@@ -36,23 +41,17 @@ export async function validateImage(buffer: Buffer): Promise<ImageValidationResu
         return { isValid: false, errors };
     }
 
-    // Detect file type
-    const fileType = await fileTypeFromBuffer(buffer);
-    if (!fileType) {
-        errors.push('Unable to determine file type');
-        return { isValid: false, errors };
-    }
-
-    // Verify it's an image
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedMimeTypes.includes(fileType.mime)) {
-        errors.push(`Unsupported file type: ${fileType.mime}. Allowed types: ${allowedMimeTypes.join(', ')}`);
-        return { isValid: false, errors };
-    }
-
     try {
-        // Get image metadata using sharp
+        // Detect format and dimensions using the image decoder
         const metadata = await sharp(buffer).metadata();
+        const mimeType = metadata.format ? ALLOWED_FORMATS[metadata.format] : undefined;
+
+        if (!mimeType) {
+            errors.push(
+                `Unsupported file type${metadata.format ? `: ${metadata.format}` : ''}. Allowed types: ${Object.values(ALLOWED_FORMATS).join(', ')}`
+            );
+            return { isValid: false, errors };
+        }
 
         // Check dimensions
         if (metadata.width && metadata.height) {
@@ -70,7 +69,7 @@ export async function validateImage(buffer: Buffer): Promise<ImageValidationResu
 
         return {
             isValid: true,
-            mimeType: fileType.mime,
+            mimeType,
             width: metadata.width,
             height: metadata.height,
             size: buffer.length,

@@ -29,17 +29,65 @@ export const api = axios.create({
     maxContentLength: Infinity,
 });
 
+const isDev = typeof __DEV__ !== 'undefined' && __DEV__;
+
 // Add a request interceptor to attach the JWT token
 api.interceptors.request.use(async (config) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
         config.headers.Authorization = `Bearer ${session.access_token}`;
-        console.log('[API] Attaching token to request:', config.url);
-    } else {
+        if (isDev) {
+            console.log('[API] Attaching token to request:', config.url);
+        }
+    } else if (isDev) {
         console.warn('[API] No session or token found for request:', config.url);
     }
-    console.log('[API Request]', config.method?.toUpperCase(), config.url);
+    if (isDev) {
+        console.log('[API Request]', config.method?.toUpperCase(), config.url);
+    }
     return config;
 }, (error) => {
     return Promise.reject(error);
 });
+
+// Coalesce concurrent refresh attempts so a burst of 401s only refreshes once.
+let refreshPromise: Promise<string | null> | null = null;
+
+function refreshAccessToken(): Promise<string | null> {
+    if (!refreshPromise) {
+        refreshPromise = (async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return null;
+                const { data, error } = await supabase.auth.refreshSession();
+                if (error) return null;
+                return data.session?.access_token ?? null;
+            } catch {
+                return null;
+            }
+        })().finally(() => {
+            refreshPromise = null;
+        });
+    }
+    return refreshPromise;
+}
+
+// Retry a request once after refreshing an expired Supabase session.
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const original = error?.config;
+        if (error?.response?.status === 401 && original && !original.__isAuthRetry) {
+            original.__isAuthRetry = true;
+            const token = await refreshAccessToken();
+            if (token) {
+                original.headers = {
+                    ...(original.headers || {}),
+                    Authorization: `Bearer ${token}`,
+                };
+                return api(original);
+            }
+        }
+        return Promise.reject(error);
+    }
+);
