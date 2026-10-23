@@ -349,7 +349,15 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
       };
       setMLClient(mockMLClient as any);
 
-      const sampleImageBuffer = Buffer.from('TEST_E2E_WOUND_IMAGE_PAYLOAD');
+      const sharp = require('sharp');
+      const sampleImageBuffer = await sharp({
+        create: {
+          width: 100,
+          height: 100,
+          channels: 3,
+          background: { r: 150, g: 80, b: 80 }
+        }
+      }).jpeg().toBuffer();
       const res = await request(app)
         .post(`/api/v1/encounters/${createdEncounterId}/wound`)
         .set('Authorization', `Bearer ${testUserToken}`)
@@ -523,13 +531,13 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
   // Feature 10: AI First Aid Validation & Rate Limiting
   // -------------------------------------------------------------
   describe('Feature 10: AI First Aid Validation & Rate Limiting Flow', () => {
-    it('POST /api/v1/ai/chat rejects unauthenticated requests', async () => {
+    it('POST /api/v1/ai/chat allows guests but validates the message payload', async () => {
       const res = await request(app)
         .post('/api/v1/ai/chat')
         .send({});
 
-      expect(res.status).toBe(401);
-      expect(res.body.error).toBeDefined();
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('MISSING_MESSAGE');
     });
 
     it('POST /api/v1/ai/chat rejects request missing message payload', async () => {

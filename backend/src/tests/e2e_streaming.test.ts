@@ -112,7 +112,15 @@ describe('Full Gateway E2E Validation (Live Integration Fixture)', () => {
     };
     setMLClient(liveMLFixture as any);
 
-    const testImageBytes = Buffer.from('TEST-IMAGE-BINARY-DATA');
+    const sharp = require('sharp');
+    const testImageBytes = await sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: { r: 200, g: 100, b: 100 }
+      }
+    }).jpeg().toBuffer();
     const res = await request(app)
       .post(`/api/encounters/${liveEncounterId}/wound`)
       .send({
