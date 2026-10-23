@@ -10,9 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
-  Image,
 } from 'react-native';
-import { getIllustration } from '../assets/illustrations';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
@@ -47,7 +45,16 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
-  const encounterId = props.encounterId || route.params?.encounterId || `enc-live-${Date.now()}`;
+  const initialEncounterId = props.encounterId || route.params?.encounterId || null;
+  const isBackendEncounterId = (id: string | null): id is string =>
+    typeof id === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+
+  const [activeEncounterId, setActiveEncounterId] = useState<string | null>(
+    isBackendEncounterId(initialEncounterId) ? initialEncounterId : null
+  );
+  const activeEncounterIdRef = useRef<string | null>(isBackendEncounterId(initialEncounterId) ? initialEncounterId : null);
+  const localEncounterIdRef = useRef<string>(`enc-live-${Date.now()}`);
+
   const apiBaseUrl =
     props.apiBaseUrl ||
     route.params?.apiBaseUrl ||
@@ -114,12 +121,44 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const authToken = session?.access_token;
+      const chiefComplaint = textToSend.trim() || `Symptoms: ${selectedSymptoms.join(', ')}`;
+
+      let streamEncounterId = activeEncounterIdRef.current || activeEncounterId;
+
+      if (!isBackendEncounterId(streamEncounterId)) {
+        if (!session?.access_token) {
+          await triggerOfflineFallback(textToSend);
+          setLoading(false);
+          return;
+        }
+        try {
+          const created = await EncounterService.createEncounter(
+            'Symptom Triage',
+            chiefComplaint,
+            [],
+            undefined
+          );
+          streamEncounterId = created.backendEncounter?.id || null;
+          if (isBackendEncounterId(streamEncounterId)) {
+            setActiveEncounterId(streamEncounterId);
+            activeEncounterIdRef.current = streamEncounterId;
+          }
+        } catch (createErr) {
+          console.warn('Failed to create encounter for triage, using offline fallback:', createErr);
+        }
+      }
+
+      if (!isBackendEncounterId(streamEncounterId)) {
+        await triggerOfflineFallback(textToSend);
+        setLoading(false);
+        return;
+      }
 
       let receivedAny = false;
 
       await streamTriage({
-        encounterId,
-        query: textToSend.trim() || `Symptoms: ${selectedSymptoms.join(', ')}`,
+        encounterId: streamEncounterId,
+        query: chiefComplaint,
         symptoms: selectedSymptoms,
         apiBaseUrl,
         authToken,
@@ -155,8 +194,12 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     setOfflineGuides(matches);
 
     // Save offline encounter to outbox queue
+    const backendEncounterId = activeEncounterIdRef.current || activeEncounterId;
+    const queueEncounterId = isBackendEncounterId(backendEncounterId)
+      ? backendEncounterId
+      : localEncounterIdRef.current;
     await offlineStorage.queueOfflineEncounter({
-      id: encounterId,
+      id: queueEncounterId,
       chiefComplaint: searchQuery || 'Symptom triage',
       symptoms: selectedSymptoms,
       severity: isCritical ? 'critical' : 'moderate',
@@ -245,13 +288,6 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Header bar */}
       <View style={styles.header}>
-        {getIllustration('emergencyBeacon') && (
-          <Image
-            source={getIllustration('emergencyBeacon')!}
-            style={styles.headerBackgroundImage}
-            resizeMode="cover"
-          />
-        )}
         <View style={styles.headerOverlay}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -260,6 +296,16 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           >
             <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text.primary} />
           </TouchableOpacity>
+
+          {/* Constrained 40px slot — a vector icon reads better than the
+              full illustration here, matching the compact header treatment. */}
+          <View style={styles.headerBeacon}>
+            <MaterialCommunityIcons
+              name="bell-ring-outline"
+              size={22}
+              color={theme.colors.status.danger}
+            />
+          </View>
 
           <View style={styles.headerTitleGroup}>
             <Text style={styles.headerTitle}>Live Clinical Triage</Text>
@@ -680,17 +726,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  headerBackgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-    opacity: 0.18,
-  },
   headerOverlay: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+  },
+  headerBeacon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.status.emergency.surface,
   },
   backButton: {
     width: 38,
