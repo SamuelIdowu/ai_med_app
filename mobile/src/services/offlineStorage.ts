@@ -1,65 +1,110 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
-import crypto from 'crypto';
+import { cbc, gcm } from '@noble/ciphers/aes.js';
+import { bytesToHex, bytesToUtf8, hexToBytes, utf8ToBytes } from '@noble/ciphers/utils.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import firstAidContent from '../content/first-aid-content.json';
 
-const ENCRYPTION_PREFIX = 'enc:v1:';
-const MASTER_KEY_STORAGE_ALIAS = 'healthpulse_phi_vault_key';
-let cachedEncryptionKey: string | null = null;
+const ENCRYPTION_PREFIX_V2 = 'enc:v2:';
+const ENCRYPTION_PREFIX_V1 = 'enc:v1:';
+const MASTER_KEY_STORAGE_ALIAS = 'laso_phi_vault_key';
+const LEGACY_MASTER_KEY_STORAGE_ALIAS = 'healthpulse_phi_vault_key';
+const KEY_LENGTH = 32;
+const NONCE_LENGTH = 12;
+let cachedEncryptionKey: Uint8Array | null = null;
 
-async function getOrCreateEncryptionKey(): Promise<string> {
-  if (cachedEncryptionKey) return cachedEncryptionKey;
-  try {
-    if (Platform.OS !== 'web' && SecureStore && typeof SecureStore.getItemAsync === 'function') {
-      let key = await SecureStore.getItemAsync(MASTER_KEY_STORAGE_ALIAS);
-      if (!key) {
-        key = crypto.randomBytes(32).toString('hex');
-        await SecureStore.setItemAsync(MASTER_KEY_STORAGE_ALIAS, key);
+async function readStoredKey(alias: string): Promise<string | null> {
+  if (Platform.OS !== 'web') {
+    try {
+      if (SecureStore && typeof SecureStore.getItemAsync === 'function') {
+        const secureValue = await SecureStore.getItemAsync(alias);
+        if (secureValue) return secureValue;
       }
-      cachedEncryptionKey = key;
-      return key;
+    } catch {
+      // Fall through to AsyncStorage if the native keystore is unavailable.
     }
-  } catch {
-    // Fallback if secure store fails or in tests
   }
-  if (!cachedEncryptionKey) {
-    cachedEncryptionKey = 'healthpulse_secure_offline_default_key_32bytes!';
-  }
-  return cachedEncryptionKey;
+  return AsyncStorage.getItem(alias);
 }
 
-function encryptPayload(plaintext: string, keyHex: string): string {
-  try {
-    const key = crypto.createHash('sha256').update(keyHex).digest();
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    let encrypted = cipher.update(plaintext, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return `${ENCRYPTION_PREFIX}${iv.toString('hex')}:${encrypted}`;
-  } catch {
-    return plaintext;
+async function writeStoredKey(alias: string, value: string): Promise<void> {
+  if (Platform.OS !== 'web') {
+    try {
+      if (SecureStore && typeof SecureStore.setItemAsync === 'function') {
+        await SecureStore.setItemAsync(alias, value);
+        return;
+      }
+    } catch {
+      // Fall through to AsyncStorage if the native keystore is unavailable.
+    }
   }
+  await AsyncStorage.setItem(alias, value);
 }
 
-function decryptPayload(ciphertext: string, keyHex: string): string {
-  if (!ciphertext || !ciphertext.startsWith(ENCRYPTION_PREFIX)) {
-    // Plaintext / legacy data backwards compatibility
-    return ciphertext;
+async function getOrCreateEncryptionKey(): Promise<Uint8Array> {
+  if (cachedEncryptionKey) return cachedEncryptionKey;
+
+  let storedKey = await readStoredKey(MASTER_KEY_STORAGE_ALIAS);
+  let migratedLegacyKey = false;
+
+  if (!storedKey) {
+    storedKey = await readStoredKey(LEGACY_MASTER_KEY_STORAGE_ALIAS);
+    migratedLegacyKey = Boolean(storedKey);
   }
-  try {
-    const key = crypto.createHash('sha256').update(keyHex).digest();
-    const parts = ciphertext.slice(ENCRYPTION_PREFIX.length).split(':');
-    if (parts.length !== 2) return ciphertext;
-    const iv = Buffer.from(parts[0], 'hex');
-    const encryptedData = parts[1];
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch {
-    return ciphertext;
+
+  if (storedKey) {
+    const key = hexToBytes(storedKey);
+    if (key.length !== KEY_LENGTH) {
+      throw new Error('Offline vault key has an invalid length');
+    }
+    if (migratedLegacyKey) {
+      await writeStoredKey(MASTER_KEY_STORAGE_ALIAS, storedKey);
+    }
+    cachedEncryptionKey = key;
+    return key;
   }
+
+  const key = Crypto.getRandomBytes(KEY_LENGTH);
+  await writeStoredKey(MASTER_KEY_STORAGE_ALIAS, bytesToHex(key));
+  cachedEncryptionKey = key;
+  return key;
+}
+
+function encryptPayload(plaintext: string, key: Uint8Array): string {
+  const nonce = Crypto.getRandomBytes(NONCE_LENGTH);
+  const ciphertext = gcm(key, nonce).encrypt(utf8ToBytes(plaintext));
+  return `${ENCRYPTION_PREFIX_V2}${bytesToHex(nonce)}:${bytesToHex(ciphertext)}`;
+}
+
+function decryptV2Payload(payload: string, key: Uint8Array): string {
+  const parts = payload.slice(ENCRYPTION_PREFIX_V2.length).split(':');
+  if (parts.length !== 2) throw new Error('Malformed offline vault payload');
+  const nonce = hexToBytes(parts[0]);
+  const ciphertext = hexToBytes(parts[1]);
+  return bytesToUtf8(gcm(key, nonce).decrypt(ciphertext));
+}
+
+function decryptV1Payload(payload: string, key: Uint8Array): string {
+  const parts = payload.slice(ENCRYPTION_PREFIX_V1.length).split(':');
+  if (parts.length !== 2) throw new Error('Malformed legacy offline vault payload');
+  const legacyKey = sha256(utf8ToBytes(bytesToHex(key)));
+  const iv = hexToBytes(parts[0]);
+  const ciphertext = hexToBytes(parts[1]);
+  return bytesToUtf8(cbc(legacyKey, iv).decrypt(ciphertext));
+}
+
+function decryptPayload(payload: string, key: Uint8Array): string {
+  if (!payload) return payload;
+  if (payload.startsWith(ENCRYPTION_PREFIX_V2)) {
+    return decryptV2Payload(payload, key);
+  }
+  if (payload.startsWith(ENCRYPTION_PREFIX_V1)) {
+    return decryptV1Payload(payload, key);
+  }
+  // Pre-encryption rows may still contain plaintext JSON.
+  return payload;
 }
 
 export interface OfflineGuide {

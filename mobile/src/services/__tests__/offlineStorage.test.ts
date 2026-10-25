@@ -1,4 +1,5 @@
-import { OfflineStorage, OfflineGuide, OfflineEncounter } from '../offlineStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OfflineStorage, OfflineEncounter } from '../offlineStorage';
 
 jest.mock('@react-native-async-storage/async-storage', () => {
   let store: Record<string, string> = {};
@@ -82,6 +83,10 @@ describe('Offline Storage Service', () => {
     await storage.queueOfflineEncounter(mockEncounter);
     const pending = await storage.getPendingEncounters();
     expect(pending.some((e) => e.id === 'enc-offline-1')).toBe(true);
+
+    const persisted = await AsyncStorage.getItem('@offline_encounters_queue');
+    expect(persisted).toMatch(/^enc:v2:/);
+    expect(persisted).not.toContain('Severe head trauma');
 
     // Test sync execution
     const syncCallback = jest.fn().mockImplementation(async (enc: OfflineEncounter) => {
