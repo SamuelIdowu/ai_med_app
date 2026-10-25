@@ -1,15 +1,16 @@
+import { Icon } from '../Icon';
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { MedicalCard } from './MedicalCard';
+import type { IconName } from '../../icons';
 
 export interface StatCardProps {
   title: string;
   value: string | number;
   unit?: string;
   subtitle?: string;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon?: IconName;
   iconColor?: string;
   statusBadge?: string;
   statusType?: 'success' | 'warning' | 'emergency' | 'info';
@@ -69,7 +70,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         <Text style={styles.titleText}>{title}</Text>
         {icon && (
           <View style={styles.iconCircle}>
-            <MaterialCommunityIcons name={icon} size={18} color={iconColor} />
+            <Icon name={icon} size={18} color={iconColor} />
           </View>
         )}
       </View>

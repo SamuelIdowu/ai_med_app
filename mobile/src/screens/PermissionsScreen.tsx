@@ -1,8 +1,8 @@
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../theme';
 
 export const PermissionsScreen = () => {
@@ -27,7 +27,7 @@ export const PermissionsScreen = () => {
                     onPress={() => navigation.navigate('Welcome')}
                     style={styles.iconButton}
                 >
-                    <MaterialCommunityIcons name="chevron-left" size={32} color={theme.colors.text.primary} />
+                    <Icon name="caretLeft" size={32} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Consent & Permissions</Text>
                 <View style={styles.iconButton} />
@@ -37,7 +37,7 @@ export const PermissionsScreen = () => {
                 {/* Header Text */}
                 <View style={styles.heroSection}>
                     <View style={styles.heroIconContainer}>
-                        <MaterialIcons name="health-and-safety" size={40} color={theme.colors.primary.main} />
+                        <Icon name="shieldCheck" size={40} color={theme.colors.primary.main} />
                     </View>
                     <Text style={styles.heroTitle}>Your Privacy Matters</Text>
                     <Text style={styles.heroSubtitle}>

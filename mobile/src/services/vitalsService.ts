@@ -151,7 +151,7 @@ export const VitalsService = {
     }
 
     const now = new Date();
-    let heartRatePoints: VitalsDataPoint[] = [];
+    let heartRatePoints: VitalsDataPoint[];
 
     if (segment === 'Hourly') {
       const hours = [8, 10, 12, 14, 16];

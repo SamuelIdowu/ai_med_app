@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
@@ -10,7 +11,6 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RhythmWaveform } from '../charts/RhythmWaveform';
 import { VoiceService } from '../../services/voiceService';
@@ -94,6 +94,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
       VoiceService.stop();
       stopRecognition();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Speech Recognition (Web Speech API for Chrome / Edge / Web & Mobile Web)
@@ -192,7 +193,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
             onPress={handleClose}
             style={styles.closeCircle}
           >
-            <MaterialCommunityIcons name="close" size={20} color="#0F172A" />
+            <Icon name="close" size={20} color="#0F172A" />
           </TouchableOpacity>
 
           <View style={styles.statusPill}>
@@ -248,7 +249,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
               onPress={handleClose}
               style={styles.controlCircle}
             >
-              <MaterialCommunityIcons name="close" size={22} color="#0F172A" />
+              <Icon name="close" size={22} color="#0F172A" />
             </TouchableOpacity>
 
             {/* Send Transcribed Speech Button */}
@@ -260,8 +261,8 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
                 transcript.trim().length > 0 && styles.activeActionCircle,
               ]}
             >
-              <MaterialCommunityIcons
-                name={transcript.trim().length > 0 ? 'arrow-up' : 'microphone'}
+              <Icon
+                name={transcript.trim().length > 0 ? 'arrowUp' : 'microphone'}
                 size={26}
                 color="#FFFFFF"
               />

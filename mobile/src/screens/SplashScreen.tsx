@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StorageService } from '../services/storage';
 import { supabase } from '../services/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
-import { getIllustration } from '../assets/illustrations';
+import { Illustration } from '../components/Illustration';
 
 const { width } = Dimensions.get('window');
 
@@ -33,7 +33,7 @@ export const SplashScreen = () => {
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [fadeAnim, scaleAnim, slideAnim]);
 
     const handleReset = async () => {
         try {
@@ -66,18 +66,14 @@ export const SplashScreen = () => {
                 ]}
             >
                 <View style={styles.iconContainer}>
-                    {getIllustration('splashEmblem') ? (
-                        <Image
-                            source={getIllustration('splashEmblem')!}
-                            style={styles.emblemImage}
-                            resizeMode="contain"
-                        />
-                    ) : (
-                        <Text style={styles.iconText}>+</Text>
-                    )}
+                    <Illustration
+                        name="splashEmblem"
+                        width={72}
+                        height={72}
+                        accessibilityLabel="Laso+ medical emblem"
+                        fallback={<Text style={styles.iconText}>+</Text>}
+                    />
                 </View>
-
-                <Text style={styles.logoText}>Laso<Text style={styles.logoAccent}>+</Text></Text>
                 <Text style={styles.tagline}>Fast. Offline. Reliable.</Text>
             </Animated.View>
 
@@ -104,25 +100,14 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 88,
         height: 88,
-        backgroundColor: theme.spatial.glassmorphism.card.backgroundColor,
-        borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
-        borderWidth: 1,
-        borderColor: theme.spatial.glassmorphism.card.borderColor,
-        overflow: 'hidden',
-        ...theme.spatial.shadows3d.level3,
     },
     iconText: {
         fontSize: 54,
         color: theme.colors.palette.coralCoast,
         fontWeight: 'bold',
-    },
-    emblemImage: {
-        width: 88,
-        height: 88,
-        borderRadius: 24,
     },
     logoText: {
         fontSize: 42,

@@ -1,7 +1,7 @@
+import { Icon } from '../components/Icon';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { ActivityIndicator, RefreshControl } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -31,7 +31,7 @@ export const NotificationsScreen = () => {
     const { session } = useAuth(); // Assuming useAuth is exported from AuthContext
     const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:3000/api/v1';
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = React.useCallback(async () => {
         if (!session?.access_token) return;
         try {
             const response = await fetch(`${backendUrl}/notifications`, {
@@ -46,17 +46,17 @@ export const NotificationsScreen = () => {
         } catch (error) {
             console.error('Error fetching notifications:', error);
         }
-    };
+    }, [session, backendUrl]);
 
     React.useEffect(() => {
         fetchNotifications();
-    }, [session]);
+    }, [fetchNotifications]);
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
         await fetchNotifications();
         setRefreshing(false);
-    }, [session]);
+    }, [fetchNotifications]);
 
     const handleMarkAsRead = async (id: string, read: boolean) => {
         if (read || !session?.access_token) return;
@@ -79,7 +79,7 @@ export const NotificationsScreen = () => {
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-                <MaterialCommunityIcons name="bell-off-outline" size={48} color={TEXT_SECONDARY} />
+                <Icon name="bellSlash" size={48} color={TEXT_SECONDARY} />
             </View>
             <Text style={styles.emptyTitle}>No available notifications</Text>
             <Text style={styles.emptySubtitle}>You're all caught up! Check back later for updates.</Text>
@@ -92,8 +92,8 @@ export const NotificationsScreen = () => {
             onPress={() => handleMarkAsRead(item.id, item.read)}
         >
             <View style={[styles.iconContainer, { backgroundColor: item.type === 'alert' ? 'rgba(239, 68, 68, 0.12)' : theme.colors.primary.light }]}>
-                <MaterialCommunityIcons
-                    name={item.type === 'alert' ? 'alert-circle-outline' : 'information-outline'}
+                <Icon
+                    name={item.type === 'alert' ? 'warningCircle' : 'info'}
                     size={24}
                     color={item.type === 'alert' ? theme.colors.status.danger : theme.colors.primary.main}
                 />
@@ -115,7 +115,7 @@ export const NotificationsScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color={TEXT_LIGHT} />
+                    <Icon name="arrowLeft" size={24} color={TEXT_LIGHT} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Notifications</Text>
                 <View style={{ width: 40 }} />

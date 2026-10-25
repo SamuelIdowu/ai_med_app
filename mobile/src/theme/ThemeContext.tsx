@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useState, useMemo, ReactNode } from 'react';
 import {
   ThemePreset,
   THEME_PRESETS,
@@ -118,16 +118,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const [preset, setPreset] = useState<ThemePreset>(initialPreset);
   const [isDark, setIsDark] = useState<boolean>(initialPreset === 'midnightDark');
 
-  const handleSetPreset = (newPreset: ThemePreset) => {
+  const handleSetPreset = useCallback((newPreset: ThemePreset) => {
     setPreset(newPreset);
     if (newPreset === 'midnightDark') {
       setIsDark(true);
     } else if (isDark) {
       setIsDark(false);
     }
-  };
+  }, [isDark]);
 
-  const handleToggleDark = () => {
+  const handleToggleDark = useCallback(() => {
     setIsDark(prev => {
       const next = !prev;
       if (next) {
@@ -137,7 +137,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       }
       return next;
     });
-  };
+  }, []);
 
   const currentTheme = useMemo(() => buildTheme(preset, isDark), [preset, isDark]);
 
@@ -149,7 +149,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       isDark,
       toggleDark: handleToggleDark,
     }),
-    [currentTheme, preset, isDark]
+    [currentTheme, preset, isDark, handleSetPreset, handleToggleDark]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

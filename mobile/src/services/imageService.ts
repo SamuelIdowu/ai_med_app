@@ -68,8 +68,8 @@ export async function validateImageQuality(uri: string): Promise<ImageQualityRes
 
         // Get image dimensions (we'll need to load the image to check dimensions)
         // For now, we estimate based on file size
-        let estimatedWidth = 1920;
-        let estimatedHeight = 1080;
+        const estimatedWidth = 1920;
+        const estimatedHeight = 1080;
 
         // Check if file is suspiciously small (might be corrupted or very low quality)
         if (fileSize < 50000) { // Less than 50KB

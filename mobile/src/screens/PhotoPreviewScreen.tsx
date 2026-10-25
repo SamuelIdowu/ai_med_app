@@ -1,10 +1,10 @@
 
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PhotoAnalysisMode } from '../types/photoAnalysis';
 import { theme } from '../theme';
 
 const BG_LIGHT = theme.colors.canvas.background;
@@ -18,14 +18,18 @@ export const PhotoPreviewScreen = () => {
     const route = useRoute<any>();
     const { photoUri } = route.params || {};
     const [consent, setConsent] = useState(true);
+    const [mode, setMode] = useState<PhotoAnalysisMode>('auto');
 
     const handleSave = () => {
+        if (!photoUri) {
+            Alert.alert('No Photo', 'Please retake the photo before continuing.');
+            return;
+        }
         if (!consent) {
             Alert.alert("Consent Required", "Please provide consent to proceed with clinical photo analysis.");
             return;
         }
-        console.log("Photo confirmed:", photoUri);
-        navigation.navigate('AIAnalysis');
+        navigation.navigate('AIAnalysis', { photoUri, mode });
     };
 
     return (
@@ -37,7 +41,7 @@ export const PhotoPreviewScreen = () => {
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
-                        <MaterialIcons name="arrow-back-ios" size={24} color={TEXT_DARK} />
+                        <Icon name="caretLeft" size={24} color={TEXT_DARK} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Review Photo</Text>
                     <View style={styles.placeholder} />
@@ -55,13 +59,41 @@ export const PhotoPreviewScreen = () => {
                         )}
                     </View>
 
+                    <View style={styles.modeSection}>
+                        <Text style={styles.modeLabel}>Analysis mode</Text>
+                        <View style={styles.modeRow}>
+                            {([
+                                { id: 'auto', label: 'Auto' },
+                                { id: 'wound', label: 'Wound CV' },
+                                { id: 'general', label: 'General AI' },
+                            ] as Array<{ id: PhotoAnalysisMode; label: string }>).map((option) => {
+                                const selected = mode === option.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        style={[styles.modeChip, selected && styles.modeChipSelected]}
+                                        onPress={() => setMode(option.id)}
+                                        activeOpacity={0.75}
+                                    >
+                                        <Text style={[styles.modeChipText, selected && styles.modeChipTextSelected]}>
+                                            {option.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                        <Text style={styles.captureTips}>
+                            Use bright, even light. Keep the entire injury in frame and hold the phone steady.
+                        </Text>
+                    </View>
+
                     {/* Consent Section */}
                     <View style={styles.consentContainer}>
                         <View style={styles.consentLeft}>
                             <View style={styles.shieldIconContainer}>
-                                <MaterialIcons name="admin-panel-settings" size={24} color={TEXT_DARK} />
+                                <Icon name="gear" size={24} color={TEXT_DARK} />
                             </View>
-                            <Text style={styles.consentText}>I consent to include this image in my emergency report.</Text>
+                            <Text style={styles.consentText}>I consent to secure AI analysis of this image and saving the result to my history.</Text>
                         </View>
                         <Switch
                             trackColor={{ false: "#cbd5e1", true: PRIMARY_COLOR }}
@@ -76,7 +108,7 @@ export const PhotoPreviewScreen = () => {
                 {/* Footer Buttons */}
                 <View style={styles.footer}>
                     <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                        <Text style={styles.saveButtonText}>Save Photo</Text>
+                        <Text style={styles.saveButtonText}>Analyze Photo</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.retakeButton} onPress={() => navigation.goBack()}>
@@ -136,6 +168,46 @@ const styles = StyleSheet.create({
     previewImage: {
         width: '100%',
         height: '100%',
+    },
+    modeSection: {
+        marginBottom: 8,
+    },
+    modeLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: TEXT_SECONDARY,
+        marginBottom: 8,
+    },
+    modeRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    modeChip: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        borderRadius: 12,
+        paddingVertical: 10,
+        alignItems: 'center',
+        backgroundColor: SURFACE_COLOR,
+    },
+    modeChipSelected: {
+        backgroundColor: '#0F1115',
+        borderColor: '#0F1115',
+    },
+    modeChipText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: TEXT_DARK,
+    },
+    modeChipTextSelected: {
+        color: '#fff',
+    },
+    captureTips: {
+        fontSize: 12,
+        lineHeight: 18,
+        color: TEXT_SECONDARY,
+        marginTop: 8,
     },
     consentContainer: {
         flexDirection: 'row',

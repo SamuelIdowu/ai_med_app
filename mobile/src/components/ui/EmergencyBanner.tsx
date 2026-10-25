@@ -1,6 +1,6 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 
 interface EmergencyBannerProps {
@@ -36,8 +36,8 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({
     <View style={styles.banner}>
       <View style={styles.textColumn}>
         <View style={styles.titleRow}>
-          <MaterialCommunityIcons
-            name="alert-octagon"
+          <Icon
+            name="warningOctagon"
             size={20}
             color={theme.colors.status.emergency.primary}
           />
@@ -52,7 +52,7 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({
           onPress={handleCallEmergency}
           style={styles.callButton}
         >
-          <MaterialCommunityIcons name="phone" size={16} color="#FFFFFF" />
+          <Icon name="phone" size={16} color="#FFFFFF" />
           <Text style={styles.callButtonText}>Call {emergencyNumber}</Text>
         </TouchableOpacity>
 

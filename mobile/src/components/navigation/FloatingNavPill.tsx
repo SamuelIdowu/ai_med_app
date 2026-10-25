@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,11 +10,11 @@ import {
   Modal,
   Text,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import type { IconName } from '../../icons';
 
-export type NavTabId = 'Home' | 'Analytics' | 'AIChat' | 'Articles';
+export type NavTabId = 'Home' | 'Analytics' | 'AIChat' | 'Articles' | 'Profile';
 
 interface FloatingNavPillProps {
   activeRoute: NavTabId;
@@ -23,16 +24,17 @@ interface FloatingNavPillProps {
 
 interface TabConfig {
   id: NavTabId;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: IconName;
   accessibilityLabel: string;
 }
 
-// 4 main destinations from arch.webp: Home, Analytics, AI chatbot, Articles
+// Left pair, center AI Chat action, right pair. Active icon "notches" in place.
 const TABS: TabConfig[] = [
-  { id: 'Home', icon: 'home-variant', accessibilityLabel: 'Home' },
-  { id: 'Analytics', icon: 'clock-time-four-outline', accessibilityLabel: 'Analytics' },
-  { id: 'AIChat', icon: 'robot-outline', accessibilityLabel: 'AI Chatbot' },
-  { id: 'Articles', icon: 'file-document-outline', accessibilityLabel: 'Articles' },
+  { id: 'Home', icon: 'house', accessibilityLabel: 'Home' },
+  { id: 'Analytics', icon: 'history', accessibilityLabel: 'Analytics' },
+  { id: 'AIChat', icon: 'robot', accessibilityLabel: 'AI Chat' },
+  { id: 'Articles', icon: 'fileText', accessibilityLabel: 'Articles' },
+  { id: 'Profile', icon: 'userCircle', accessibilityLabel: 'Profile' },
 ];
 
 export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
@@ -69,32 +71,36 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
         style={[styles.outerContainer, { bottom: bottomMargin }]}
       >
         <View style={styles.navRow}>
-          {/* Main Dark Capsule containing the 4 primary tabs (from ref 4 - 8) */}
+          {/* Main Dark Capsule containing 4 tabs with center notch */}
           <View style={styles.pillContainer}>
-            {TABS.map((tab) => {
-              const isActive = activeRoute === tab.id;
-              return (
-                <TouchableOpacity
-                  key={tab.id}
-                  activeOpacity={0.8}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: isActive }}
-                  accessibilityLabel={tab.accessibilityLabel}
-                  onPress={() => onNavigate(tab.id)}
-                  style={[styles.tabButton, isActive && styles.activeTabButton]}
-                >
-                  <MaterialCommunityIcons
-                    name={tab.icon}
-                    size={26}
-                    color={
-                      isActive
-                        ? theme.colors.navPill.activeIcon
-                        : theme.colors.navPill.inactiveIcon
-                    }
-                  />
-                </TouchableOpacity>
-              );
-            })}
+            <View style={styles.pillBackground} />
+            <View style={styles.pillInner}>
+              {TABS.map((tab) => {
+                const isActive = activeRoute === tab.id;
+                return (
+                  <TouchableOpacity
+                    key={tab.id}
+                    activeOpacity={0.8}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={tab.accessibilityLabel}
+                    onPress={() => onNavigate(tab.id)}
+                    style={styles.tabButton}
+                  >
+                    <Icon
+                      name={tab.icon}
+                      size={24}
+                      color={
+                        isActive
+                          ? theme.colors.navPill.activeIcon
+                          : theme.colors.navPill.inactiveIcon
+                      }
+                    />
+                    {isActive ? <View style={styles.notchIndicator} /> : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           {/* Dedicated Circular Red Emergency Button on the far right (from ref7.webp) */}
@@ -106,7 +112,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
             style={styles.emergencyOuterRing}
           >
             <View style={styles.emergencyInnerCircle}>
-              <MaterialCommunityIcons name="phone" size={26} color="#FFFFFF" />
+              <Icon name="phone" size={26} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
         </View>
@@ -122,8 +128,8 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <MaterialCommunityIcons
-                name="phone-alert"
+              <Icon
+                name="emergencyCall"
                 size={32}
                 color="#0F1115"
               />
@@ -151,7 +157,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
                   handleCallEmergency();
                 }}
               >
-                <MaterialCommunityIcons name="phone" size={18} color="#FFFFFF" />
+                <Icon name="phone" size={18} color="#FFFFFF" />
                 <Text style={styles.modalCallText}>Call 911</Text>
               </TouchableOpacity>
             </View>
@@ -172,42 +178,64 @@ const styles = StyleSheet.create({
   },
   navRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
+    alignItems: 'flex-end',
+    gap: 8,
   },
   pillContainer: {
-    flexDirection: 'row',
+    width: 308,
+    height: 64,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+  },
+  pillBackground: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     backgroundColor: theme.colors.navPill.background,
-    borderRadius: theme.spatial.radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: 32,
     borderWidth: 1.5,
     borderColor: theme.colors.navPill.border,
     ...theme.spatial.shadows3d.floating3d,
-    gap: 14,
+  },
+  pillInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 64,
+    paddingHorizontal: 6,
+    gap: 2,
   },
   tabButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  notchIndicator: {
+    position: 'absolute',
+    bottom: -6,
+    width: 18,
+    height: 6,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: theme.colors.navPill.activeIndicator,
   },
   activeTabButton: {
     backgroundColor: theme.colors.navPill.activeIndicator,
   },
   // Tactile 3D Medical Red Emergency Button with radiant glow
   emergencyOuterRing: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: theme.colors.status.emergency.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 3,
     ...theme.spatial.shadows3d.emergencyGlow,
   },
   emergencyInnerCircle: {

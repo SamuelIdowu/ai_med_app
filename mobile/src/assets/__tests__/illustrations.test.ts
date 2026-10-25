@@ -1,7 +1,7 @@
 import { ILLUSTRATIONS, getIllustration, IllustrationKey } from '../illustrations';
 
 describe('3D Illustrations Registry', () => {
-  it('exports all 10 primary illustration assets and definitions', () => {
+  it('exports all 12 illustration assets and definitions', () => {
     expect(ILLUSTRATIONS.splashEmblem).toBeDefined();
     expect(ILLUSTRATIONS.welcomeShield).toBeDefined();
     expect(ILLUSTRATIONS.heartVitals).toBeDefined();

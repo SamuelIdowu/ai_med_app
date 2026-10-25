@@ -1,3 +1,5 @@
+import { PhotoAnalysisMode } from '../types/photoAnalysis';
+
 export type RootStackParamList = {
     Splash: undefined;
     Welcome: undefined;
@@ -10,8 +12,7 @@ export type RootStackParamList = {
     EmergencySteps: undefined;
     EmergencySummary: { encounterId: string };
     MedicalProfile: undefined;
-    PhotoInstructions: undefined;
-    Camera: { stepId?: string }; // Assuming camera might take params
+    Camera: { stepId?: string };
     PhotoPreview: { photoUri: string; stepId?: string };
     ReportPreview: { encounterId: string };
     ProviderList: undefined;
@@ -21,8 +22,7 @@ export type RootStackParamList = {
     AITools: undefined;
     Notifications: undefined;
     FirstAidList: undefined;
-    WoundScanner: { encounterId?: string } | undefined;
     LiveTriage: { encounterId?: string; apiBaseUrl?: string; initialQuery?: string } | undefined;
     AIChat: undefined;
-    AIAnalysis: undefined;
+    AIAnalysis: { photoUri?: string; mode?: PhotoAnalysisMode } | undefined;
 };

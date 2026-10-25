@@ -5,17 +5,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  Image,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { TactileButton } from '../components/ui/TactileButton';
 import { theme } from '../theme';
-import { getIllustration } from '../assets/illustrations';
+import { Illustration } from '../components/Illustration';
+import { LasoMark } from '../components/brand/LasoMark';
 
 export const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -26,30 +25,21 @@ export const WelcomeScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       <View style={styles.content}>
-        {/* Top Logo from sketch.webp & full_sketch.webp */}
+        {/* Top Logo */}
         <View style={styles.topLogoRow}>
-          <View style={styles.logoBadge}>
-            <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
-          </View>
-          <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
+          <LasoMark variant="compact" tone="brand" size={26} />
         </View>
 
         {/* Hero Illustration Card — 3D welcomeShield illustration */}
         <MedicalCard style={styles.heroCard}>
           <View style={styles.illustrationCircle}>
-            {getIllustration('welcomeShield') ? (
-              <Image
-                source={getIllustration('welcomeShield')!}
-                style={styles.illustrationImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <MaterialCommunityIcons
-                name="shield-plus-outline"
-                size={64}
-                color={theme.colors.primary.main}
-              />
-            )}
+            <Illustration
+              name="welcomeShield"
+              width={140}
+              height={140}
+              accessibilityLabel="Clinical stethoscope and AI shield"
+              fallback={null}
+            />
           </View>
 
           <Text style={styles.cardTitle}>Quick Instructions</Text>
@@ -148,11 +138,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
-    overflow: 'hidden',
-  },
-  illustrationImage: {
-    width: 160,
-    height: 160,
   },
   cardTitle: {
     fontSize: 20,

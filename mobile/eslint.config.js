@@ -27,13 +27,13 @@ module.exports = tseslint.config(
       },
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-require-imports': 'off',
       'no-console': 'off',
       'no-undef': 'off',
-      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 );

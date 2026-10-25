@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { Icon } from '../components/Icon';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -11,9 +11,8 @@ import { MedicalProfileService, MedicalProfile } from '../services/medicalProfil
 import { reportService } from '../services/reportService';
 import { AnalyticsService } from '../services/analyticsService';
 import { ShareOptionsModal } from '../components/ShareOptionsModal';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../theme';
-import { getIllustration } from '../assets/illustrations';
+import { Illustration } from '../components/Illustration';
 
 type ReportPreviewScreenRouteProp = RouteProp<RootStackParamList, 'ReportPreview'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -28,11 +27,7 @@ export const ReportPreviewScreen = () => {
     const [loading, setLoading] = useState(true);
     const [shareModalVisible, setShareModalVisible] = useState(false);
 
-    useEffect(() => {
-        loadData();
-    }, [encounterId]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             const encounters = await EncounterService.getEncounters();
             const found = encounters.find((e: Encounter) => e.id === encounterId);
@@ -45,7 +40,11 @@ export const ReportPreviewScreen = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [encounterId]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleSharePress = () => {
         setShareModalVisible(true);
@@ -100,7 +99,7 @@ export const ReportPreviewScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back-ios" size={20} color={theme.colors.text.primary} />
+                    <Icon name="caretLeft" size={20} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Preview Report</Text>
                 <View style={{ width: 44 }} />
@@ -108,13 +107,12 @@ export const ReportPreviewScreen = () => {
 
             <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
                 <View style={styles.pageTitleRow}>
-                    {getIllustration('recordCapsule') && (
-                        <Image
-                            source={getIllustration('recordCapsule')!}
-                            style={styles.recordCapsuleImage}
-                            resizeMode="contain"
-                        />
-                    )}
+                    <Illustration
+                        name="recordCapsule"
+                        width={52}
+                        height={52}
+                        accessibilityLabel="Certified medical record capsule"
+                    />
                     <Text style={styles.pageTitle}>Emergency Report</Text>
                 </View>
 
@@ -128,7 +126,7 @@ export const ReportPreviewScreen = () => {
                             />
                         ) : (
                             <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                                <MaterialCommunityIcons name="account" size={28} color="#737373" />
+                                <Icon name="user" size={28} color="#737373" />
                             </View>
                         )}
                         <View style={styles.patientDetails}>
@@ -164,7 +162,7 @@ export const ReportPreviewScreen = () => {
                     <View style={styles.card}>
                         <View style={styles.vitalsHeaderRow}>
                             <View style={styles.vitalsTitleGroup}>
-                                <MaterialCommunityIcons name="heart-pulse" size={20} color="#E53734" />
+                                <Icon name="cpr" size={20} color="#E53734" />
                                 <Text style={styles.vitalsCardTitle}>Vitals & ML Triage</Text>
                             </View>
                             <View style={[
@@ -216,7 +214,7 @@ export const ReportPreviewScreen = () => {
                                 <Text style={styles.vitalsRiskTitle}>Clinical Risk Drivers & Red Flags:</Text>
                                 {encounter.vitals.risk_drivers.map((driver: string, idx: number) => (
                                     <View key={idx} style={styles.riskRow}>
-                                        <MaterialIcons name="warning-amber" size={16} color="#DC2626" />
+                                        <Icon name="warning" size={16} color="#DC2626" />
                                         <Text style={styles.riskText}>{driver}</Text>
                                     </View>
                                 ))}
@@ -250,7 +248,7 @@ export const ReportPreviewScreen = () => {
             {/* Sticky Share Button */}
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.shareButton} onPress={handleSharePress}>
-                    <MaterialIcons name="share" size={20} color="#FFFFFF" />
+                    <Icon name="share" size={20} color="#FFFFFF" />
                     <Text style={styles.shareButtonText}>Share Report</Text>
                 </TouchableOpacity>
             </View>
@@ -312,12 +310,6 @@ const styles = StyleSheet.create({
         gap: 12,
         marginBottom: 16,
         marginTop: 8,
-    },
-    recordCapsuleImage: {
-        width: 52,
-        height: 52,
-        borderRadius: 14,
-        backgroundColor: '#0F1115',
     },
     pageTitle: {
         flex: 1,

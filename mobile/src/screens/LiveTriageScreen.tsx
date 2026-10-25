@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -12,7 +13,6 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
@@ -294,14 +294,14 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
             style={styles.backButton}
             activeOpacity={0.7}
           >
-            <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text.primary} />
+            <Icon name="arrowLeft" size={22} color={theme.colors.text.primary} />
           </TouchableOpacity>
 
           {/* Constrained 40px slot — a vector icon reads better than the
               full illustration here, matching the compact header treatment. */}
           <View style={styles.headerBeacon}>
-            <MaterialCommunityIcons
-              name="bell-ring-outline"
+            <Icon
+              name="bell"
               size={22}
               color={theme.colors.status.danger}
             />
@@ -327,7 +327,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
             style={styles.sosButton}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="phone" size={16} color="#FFFFFF" />
+            <Icon name="phone" size={16} color="#FFFFFF" />
             <Text style={styles.sosText}>911</Text>
           </TouchableOpacity>
         </View>
@@ -340,8 +340,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           onPress={() => setTriageMode('symptoms')}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons
-            name="chat-processing-outline"
+          <Icon
+            name="chatCircle"
             size={16}
             color={triageMode === 'symptoms' ? '#FFFFFF' : theme.colors.text.secondary}
           />
@@ -357,8 +357,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           onPress={() => setTriageMode('vitals')}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons
-            name="heart-pulse"
+          <Icon
+            name="cpr"
             size={16}
             color={triageMode === 'vitals' ? '#FFFFFF' : theme.colors.text.secondary}
           />
@@ -409,7 +409,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
               <View style={styles.streamCard}>
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.cardHeaderLeft}>
-                    <MaterialCommunityIcons
+                    <Icon
                       name="stethoscope"
                       size={18}
                       color={theme.colors.primary.main}
@@ -512,8 +512,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   onPress={() => setBleeding(!bleeding)}
                   activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons
-                    name="water-alert"
+                  <Icon
+                    name="bleeding"
                     size={16}
                     color={bleeding ? '#FFFFFF' : '#EF4444'}
                   />
@@ -527,8 +527,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   onPress={() => setAltered(!altered)}
                   activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons
-                    name="head-alert-outline"
+                  <Icon
+                    name="brain"
                     size={16}
                     color={altered ? '#FFFFFF' : '#F59E0B'}
                   />
@@ -548,7 +548,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="lightning-bolt" size={18} color="#FFFFFF" />
+                    <Icon name="lightning" size={18} color="#FFFFFF" />
                     <Text style={styles.evaluateVitalsButtonText}>Score Vitals via Classical ML</Text>
                   </>
                 )}
@@ -622,7 +622,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                       <Text style={styles.riskDriversHeader}>Clinical Risk Drivers & Thresholds</Text>
                       {vitalsResult.risk_drivers.map((driver, idx) => (
                         <View key={idx} style={styles.riskDriverRow}>
-                          <MaterialCommunityIcons name="alert-circle" size={14} color="#EF4444" />
+                          <Icon name="warningCircle" size={14} color="#EF4444" />
                           <Text style={styles.riskDriverText}>{driver}</Text>
                         </View>
                       ))}
@@ -634,7 +634,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     onPress={handleSaveAndPreviewReport}
                     activeOpacity={0.8}
                   >
-                    <MaterialCommunityIcons name="file-document-edit-outline" size={18} color="#FFFFFF" />
+                    <Icon name="fileText" size={18} color="#FFFFFF" />
                     <Text style={styles.saveReportButtonText}>Save & Preview Medical Report</Text>
                   </TouchableOpacity>
                 </View>
@@ -664,7 +664,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
               {loading ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <MaterialCommunityIcons name="arrow-up" size={20} color="#FFFFFF" />
+                <Icon name="arrowUp" size={20} color="#FFFFFF" />
               )}
             </TouchableOpacity>
           </View>

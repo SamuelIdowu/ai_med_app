@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import {
   View,
@@ -13,7 +14,6 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { TactileButton } from '../components/ui/TactileButton';
@@ -63,7 +63,7 @@ export const LoginScreen: React.FC = () => {
           {/* Logo Laso+ */}
           <View style={styles.logoRow}>
             <View style={styles.logoBadge}>
-              <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+              <Icon name="plus" size={16} color="#FFFFFF" />
             </View>
             <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
           </View>
@@ -80,7 +80,7 @@ export const LoginScreen: React.FC = () => {
             onPress={handleGoogleLogin}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="google" size={20} color={theme.colors.text.primary} />
+            <Icon name="googleLogo" size={20} color={theme.colors.text.primary} />
             <Text style={styles.socialButtonText}>Sign in with Google</Text>
           </TouchableOpacity>
 
@@ -122,8 +122,8 @@ export const LoginScreen: React.FC = () => {
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeIcon}
                 >
-                  <MaterialCommunityIcons
-                    name={showPassword ? 'eye-off' : 'eye'}
+                  <Icon
+                    name={showPassword ? 'eyeSlash' : 'eye'}
                     size={20}
                     color={theme.colors.text.muted}
                   />

@@ -1,13 +1,14 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
+import type { IconName } from '../../icons';
 
 interface SymptomChipProps {
   label: string;
   selected: boolean;
   onToggle: () => void;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon?: IconName;
   style?: ViewStyle;
 }
 
@@ -29,7 +30,7 @@ export const SymptomChip: React.FC<SymptomChipProps> = ({
       ]}
     >
       {icon && (
-        <MaterialCommunityIcons
+        <Icon
           name={icon}
           size={16}
           color={

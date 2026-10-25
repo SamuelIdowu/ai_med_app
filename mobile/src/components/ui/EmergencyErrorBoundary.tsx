@@ -1,6 +1,6 @@
+import { Icon } from '../Icon';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, Linking, TouchableOpacity, SafeAreaView } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 
 interface Props {
@@ -43,7 +43,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
             <View style={styles.iconContainer}>
-              <MaterialCommunityIcons name="alert-decagram" size={64} color={theme.colors.status.emergency.primary} />
+              <Icon name="warningOctagon" size={64} color={theme.colors.status.emergency.primary} />
             </View>
 
             <Text style={styles.title}>System Interruption</Text>
@@ -57,7 +57,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
               onPress={this.handleEmergencyCall}
               activeOpacity={0.85}
             >
-              <MaterialCommunityIcons name="phone" size={24} color="#FFFFFF" />
+              <Icon name="phone" size={24} color="#FFFFFF" />
               <Text style={styles.emergencyButtonText}>Call Emergency (911)</Text>
             </TouchableOpacity>
 
@@ -66,7 +66,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
               onPress={this.handleReset}
               activeOpacity={0.8}
             >
-              <MaterialCommunityIcons name="refresh" size={20} color={theme.colors.text.primary} />
+              <Icon name="arrowClockwise" size={20} color={theme.colors.text.primary} />
               <Text style={styles.resetButtonText}>Resume First Aid Session</Text>
             </TouchableOpacity>
           </View>

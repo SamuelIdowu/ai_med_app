@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import React from 'react';
 import {
     View,
@@ -8,7 +9,6 @@ import {
     ScrollView,
     Alert,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Chat } from '../types/chatTypes';
 
 const PRIMARY_COLOR = '#0F1115';
@@ -88,13 +88,13 @@ export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>Chat History</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <MaterialCommunityIcons name="close" size={24} color={TEXT_DARK} />
+                            <Icon name="close" size={24} color={TEXT_DARK} />
                         </TouchableOpacity>
                     </View>
 
                     {/* New Chat Button */}
                     <TouchableOpacity style={styles.newChatButton} onPress={onNewChat}>
-                        <MaterialCommunityIcons name="plus" size={20} color="#fff" />
+                        <Icon name="plus" size={20} color="#fff" />
                         <Text style={styles.newChatText}>New Chat</Text>
                     </TouchableOpacity>
 
@@ -102,7 +102,7 @@ export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
                     <ScrollView style={styles.chatList} contentContainerStyle={styles.chatListContent}>
                         {chats.length === 0 ? (
                             <View style={styles.emptyState}>
-                                <MaterialCommunityIcons name="chat-outline" size={48} color={TEXT_SECONDARY} />
+                                <Icon name="chatCircle" size={48} color={TEXT_SECONDARY} />
                                 <Text style={styles.emptyText}>No chats yet</Text>
                                 <Text style={styles.emptySubtext}>Start a new chat to begin</Text>
                             </View>
@@ -142,7 +142,7 @@ export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
                                         style={styles.deleteButton}
                                         onPress={() => handleDelete(chat.id)}
                                     >
-                                        <MaterialCommunityIcons name="trash-can-outline" size={20} color="#ef4444" />
+                                        <Icon name="trash" size={20} color="#ef4444" />
                                     </TouchableOpacity>
                                 </View>
                             ))

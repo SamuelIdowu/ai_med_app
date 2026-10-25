@@ -1,9 +1,8 @@
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, StatusBar, Modal, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { supabase } from '../services/supabase';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -11,12 +10,15 @@ import { shareAsync } from 'expo-sharing';
 import { MedicalProfileService } from '../services/medicalProfileService';
 import { EncounterService } from '../services/encounterService';
 import { StorageService } from '../services/storage';
+import { useAuth } from '../context/AuthContext';
 import { theme } from '../theme';
+import type { IconName } from '../icons';
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
 export const SettingsScreen = () => {
     const navigation = useNavigation<SettingsScreenNavigationProp>();
+    const { isGuest, signOut } = useAuth();
     const [consentModalVisible, setConsentModalVisible] = useState(false);
     const [marketingConsent, setMarketingConsent] = useState(false);
     const [analyticsConsent, setAnalyticsConsent] = useState(true);
@@ -25,8 +27,7 @@ export const SettingsScreen = () => {
 
     const handleLogout = async () => {
         try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+            await signOut();
         } catch (error: any) {
             Alert.alert('Error', error.message);
         }
@@ -86,8 +87,7 @@ export const SettingsScreen = () => {
                             await StorageService.deleteAllPhotos();
 
                             // 2. Sign Out
-                            const { error } = await supabase.auth.signOut();
-                            if (error) throw error;
+                            await signOut();
 
                         } catch (error: any) {
                             Alert.alert('Error', 'Failed to delete some data: ' + error.message);
@@ -107,7 +107,7 @@ export const SettingsScreen = () => {
         color = theme.colors.text.primary,
         showChevron = true
     }: {
-        icon: any,
+        icon: IconName,
         label: string,
         onPress?: () => void,
         color?: string,
@@ -116,11 +116,11 @@ export const SettingsScreen = () => {
         <TouchableOpacity style={styles.optionItem} onPress={onPress}>
             <View style={styles.optionContent}>
                 <View style={[styles.iconContainer, { backgroundColor: color === theme.colors.status.danger ? 'rgba(239, 68, 68, 0.12)' : theme.colors.primary.light }]}>
-                    <MaterialIcons name={icon} size={20} color={color} />
+                    <Icon name={icon} size={20} color={color} />
                 </View>
                 <Text style={[styles.optionLabel, { color }]}>{label}</Text>
             </View>
-            {showChevron && <MaterialIcons name="chevron-right" size={24} color={theme.colors.text.muted} />}
+            {showChevron && <Icon name="caretRight" size={24} color={theme.colors.text.muted} />}
         </TouchableOpacity>
     );
 
@@ -129,7 +129,7 @@ export const SettingsScreen = () => {
             <StatusBar barStyle="dark-content" />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back-ios" size={22} color={theme.colors.text.primary} />
+                    <Icon name="caretLeft" size={22} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Settings & Privacy</Text>
                 <View style={{ width: 40 }} />
@@ -141,20 +141,20 @@ export const SettingsScreen = () => {
                     <Text style={styles.sectionTitle}>ACCOUNT</Text>
                     <View style={styles.sectionContent}>
                         <OptionItem
-                            icon="notifications"
+                            icon="bell"
                             label="Notifications"
                             onPress={() => navigation.navigate('Notifications')}
                         />
                         <View style={styles.separator} />
                         <OptionItem
-                            icon="person"
+                            icon="user"
                             label="Edit Profile"
                             onPress={() => navigation.navigate('MedicalProfile')}
                         />
                         <View style={styles.separator} />
                         <OptionItem
-                            icon="logout"
-                            label="Logout"
+                            icon="signOut"
+                            label={isGuest ? 'Sign In' : 'Logout'}
                             onPress={handleLogout}
                         />
                     </View>
@@ -165,13 +165,13 @@ export const SettingsScreen = () => {
                     <Text style={styles.sectionTitle}>PRIVACY & DATA</Text>
                     <View style={styles.sectionContent}>
                         <OptionItem
-                            icon="verified-user"
+                            icon="shieldCheck"
                             label="Manage Consent"
                             onPress={() => setConsentModalVisible(true)}
                         />
                         <View style={styles.separator} />
                         <OptionItem
-                            icon="policy"
+                            icon="shield"
                             label="Privacy Policy"
                             onPress={() => navigation.navigate('PrivacyPolicy')}
                         />
@@ -183,7 +183,7 @@ export const SettingsScreen = () => {
                         />
                         <View style={styles.separator} />
                         <OptionItem
-                            icon="delete"
+                            icon="trash"
                             label="Delete My Data"
                             onPress={handleDeleteData}
                         />
@@ -219,7 +219,7 @@ export const SettingsScreen = () => {
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>Privacy Choices</Text>
                                 <TouchableOpacity onPress={() => setConsentModalVisible(false)}>
-                                    <MaterialIcons name="close" size={24} color="#666" />
+                                    <Icon name="close" size={24} color="#666" />
                                 </TouchableOpacity>
                             </View>
 

@@ -1,8 +1,8 @@
+import { Icon } from '../components/Icon';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { theme } from '../theme';
 
@@ -14,7 +14,7 @@ export const PrivacyPolicyScreen = () => {
             <StatusBar style="dark" />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back-ios" size={22} color={theme.colors.text.primary} />
+                    <Icon name="caretLeft" size={22} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Privacy Policy</Text>
                 <View style={{ width: 40 }} />

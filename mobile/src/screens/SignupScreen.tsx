@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import {
   View,
@@ -13,11 +14,11 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { TactileButton } from '../components/ui/TactileButton';
 import { theme } from '../theme';
+import { LasoMark } from '../components/brand/LasoMark';
 
 export const SignupScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -84,12 +85,9 @@ export const SignupScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo Laso+ */}
+          {/* Logo */}
           <View style={styles.logoRow}>
-            <View style={styles.logoBadge}>
-              <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
-            </View>
-            <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
+            <LasoMark variant="compact" tone="brand" size={26} />
           </View>
 
           {/* Header */}
@@ -104,7 +102,7 @@ export const SignupScreen: React.FC = () => {
             onPress={handleGoogleSignup}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="google" size={20} color={theme.colors.text.primary} />
+            <Icon name="googleLogo" size={20} color={theme.colors.text.primary} />
             <Text style={styles.socialButtonText}>Sign in with Google</Text>
           </TouchableOpacity>
 
@@ -159,8 +157,8 @@ export const SignupScreen: React.FC = () => {
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeIcon}
                 >
-                  <MaterialCommunityIcons
-                    name={showPassword ? 'eye-off' : 'eye'}
+                  <Icon
+                    name={showPassword ? 'eyeSlash' : 'eye'}
                     size={20}
                     color={theme.colors.text.muted}
                   />

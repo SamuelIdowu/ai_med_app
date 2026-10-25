@@ -146,7 +146,18 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
       haloOpacity2.setValue(0.3);
       specularOffset.setValue(0);
     };
-  }, [active, state, size]);
+  }, [
+    active,
+    state,
+    size,
+    squishX,
+    squishY,
+    haloScale1,
+    haloOpacity1,
+    haloScale2,
+    haloOpacity2,
+    specularOffset,
+  ]);
 
   // Color theme presets according to state
   const haloColor =

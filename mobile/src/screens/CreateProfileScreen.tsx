@@ -1,9 +1,9 @@
 
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Switch, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabase';
@@ -135,7 +135,7 @@ export const CreateProfileScreen = () => {
                     }}
                     style={styles.backButton}
                 >
-                    <MaterialIcons name="arrow-back-ios" size={20} color={TEXT_DARK} />
+                    <Icon name="caretLeft" size={20} color={TEXT_DARK} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Create Profile</Text>
                 <View style={{ width: 40 }} />
@@ -265,7 +265,7 @@ export const CreateProfileScreen = () => {
                         {allergies.map((item, i) => (
                             <TouchableOpacity key={i} onPress={() => removeChip(allergies, setAllergies, i)} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <MaterialIcons name="close" size={14} color={PRIMARY_COLOR} />
+                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -278,7 +278,7 @@ export const CreateProfileScreen = () => {
                             onSubmitEditing={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}
                         />
                         <TouchableOpacity onPress={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}>
-                            <MaterialIcons name="add-circle" size={24} color={PRIMARY_COLOR} />
+                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
                         </TouchableOpacity>
                     </View>
 
@@ -288,7 +288,7 @@ export const CreateProfileScreen = () => {
                         {conditions.map((item, i) => (
                             <TouchableOpacity key={i} onPress={() => removeChip(conditions, setConditions, i)} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <MaterialIcons name="close" size={14} color={PRIMARY_COLOR} />
+                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -301,7 +301,7 @@ export const CreateProfileScreen = () => {
                             onSubmitEditing={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}
                         />
                         <TouchableOpacity onPress={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}>
-                            <MaterialIcons name="add-circle" size={24} color={PRIMARY_COLOR} />
+                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
                         </TouchableOpacity>
                     </View>
 
@@ -311,7 +311,7 @@ export const CreateProfileScreen = () => {
                         {medications.map((item, i) => (
                             <TouchableOpacity key={i} onPress={() => removeChip(medications, setMedications, i)} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <MaterialIcons name="close" size={14} color={PRIMARY_COLOR} />
+                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -324,7 +324,7 @@ export const CreateProfileScreen = () => {
                             onSubmitEditing={() => addChip(medications, setMedications, medicationInput, setMedicationInput)}
                         />
                         <TouchableOpacity onPress={() => addChip(medications, setMedications, medicationInput, setMedicationInput)}>
-                            <MaterialIcons name="add-circle" size={24} color={PRIMARY_COLOR} />
+                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
                         </TouchableOpacity>
                     </View>
                 </View>

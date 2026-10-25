@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -10,7 +11,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { VitalsAreaChart } from '../components/charts/VitalsAreaChart';
@@ -27,7 +27,7 @@ import { theme } from '../theme';
 
 export const HistoryScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const [encounters, setEncounters] = useState<any[]>([]);
   const [vitals, setVitals] = useState<VitalsTelemetry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,14 @@ export const HistoryScreen: React.FC = () => {
   const handleGenerateReport = async (encounterId: string) => {
     try {
       if (!session) {
-        Alert.alert('Sign In Required', 'Sign in to generate official medical PDF reports.');
+        Alert.alert(
+          'Sign In Required',
+          'Sign in to generate official medical PDF reports.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Sign In', onPress: () => { void signOut(); } },
+          ]
+        );
         return;
       }
 
@@ -153,7 +160,14 @@ export const HistoryScreen: React.FC = () => {
             <MedicalCard style={styles.vitalsSummaryCard}>
               <View style={styles.vitalsHeaderRow}>
                 <View>
-                  <Text style={styles.metricSub}>Heart Rate</Text>
+                  <View style={styles.metricSubRow}>
+                    <Text style={styles.metricSub}>Heart Rate</Text>
+                    {vitals?.isSynthetic && (
+                      <View style={styles.demoBadge}>
+                        <Text style={styles.demoBadgeText}>Demo data</Text>
+                      </View>
+                    )}
+                  </View>
                   <View style={styles.metricRow}>
                     <Text style={styles.metricValue}>
                       {vitals?.currentHeartRate ?? '—'}
@@ -161,13 +175,15 @@ export const HistoryScreen: React.FC = () => {
                     <Text style={styles.metricUnit}>BPM</Text>
                   </View>
                   <Text style={styles.metricStatus}>
-                    {vitals?.heartRateStatus || 'Awaiting live biometric reading'}
+                    {vitals?.isSynthetic
+                      ? 'Illustrative data — not a live biometric reading'
+                      : vitals?.heartRateStatus || 'Awaiting live biometric reading'}
                   </Text>
                 </View>
 
                 <View style={styles.heartIconCircle}>
-                  <MaterialCommunityIcons
-                    name="heart-pulse"
+                  <Icon
+                    name="cpr"
                     size={24}
                     color={theme.colors.primary.main}
                   />
@@ -228,7 +244,9 @@ export const HistoryScreen: React.FC = () => {
               <View style={styles.cardHeaderWithBadge}>
                 <Text style={styles.cardSectionTitle}>Hemoglobin (Hgb)</Text>
                 <View style={styles.badgeNorm}>
-                  <Text style={styles.badgeNormText}>{vitals?.labBadge || 'Clinical Norm'}</Text>
+                  <Text style={styles.badgeNormText}>
+                    {vitals?.isSynthetic ? 'Demo values' : vitals?.labBadge || 'Clinical Norm'}
+                  </Text>
                 </View>
               </View>
               <ClinicalBarChart height={160} data={vitals?.labBars} />
@@ -247,8 +265,8 @@ export const HistoryScreen: React.FC = () => {
               />
             ) : encounters.length === 0 ? (
               <MedicalCard style={styles.emptyCard}>
-                <MaterialCommunityIcons
-                  name="clipboard-check-outline"
+                <Icon
+                  name="clipboardText"
                   size={40}
                   color={theme.colors.text.muted}
                 />
@@ -266,8 +284,8 @@ export const HistoryScreen: React.FC = () => {
                 >
                   <View style={styles.encounterRow}>
                     <View style={styles.encIconCircle}>
-                      <MaterialCommunityIcons
-                        name="medical-bag"
+                      <Icon
+                        name="firstAidKit"
                         size={22}
                         color={theme.colors.primary.main}
                       />
@@ -290,14 +308,14 @@ export const HistoryScreen: React.FC = () => {
                       label="View Details"
                       variant="primary"
                       size="sm"
-                      icon="file-document-outline"
+                      icon="fileText"
                       onPress={() => navigation.navigate('ReportPreview', { encounterId: enc.id })}
                     />
                     <TactileButton
                       label="PDF Report"
                       variant="outline"
                       size="sm"
-                      icon="file-pdf-box"
+                      icon="filePdf"
                       onPress={() => handleGenerateReport(enc.id)}
                     />
                   </View>
@@ -378,10 +396,29 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
+  metricSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   metricSub: {
     fontSize: 13,
     fontWeight: '500',
     color: theme.colors.text.secondary,
+  },
+  demoBadge: {
+    backgroundColor: theme.colors.status.warning.surface,
+    borderColor: theme.colors.status.warning.border,
+    borderWidth: 1,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    borderRadius: theme.spatial.radii.pill,
+  },
+  demoBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    color: theme.colors.status.warning.text,
   },
   metricRow: {
     flexDirection: 'row',

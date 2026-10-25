@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import {
   View,
@@ -8,7 +9,6 @@ import {
   Image,
   Text,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../theme';
 
@@ -54,7 +54,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
               <Image source={{ uri: attachedMedia.uri }} style={styles.previewThumbnail} />
             ) : (
               <View style={styles.videoThumbnailPlaceholder}>
-                <MaterialCommunityIcons name="video" size={20} color="#FFFFFF" />
+                <Icon name="videoCamera" size={20} color="#FFFFFF" />
               </View>
             )}
 
@@ -72,7 +72,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <MaterialCommunityIcons name="close-circle" size={20} color="#6B7280" />
+                <Icon name="closeCircle" size={20} color="#6B7280" />
               </TouchableOpacity>
             )}
           </View>
@@ -87,7 +87,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
             onPress={onAttachPress}
             style={styles.attachButton}
           >
-            <MaterialCommunityIcons
+            <Icon
               name="paperclip"
               size={21}
               color={theme.colors.text.secondary}
@@ -113,7 +113,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
             onPress={onMicPress}
             style={styles.micButton}
           >
-            <MaterialCommunityIcons
+            <Icon
               name="microphone"
               size={20}
               color={theme.colors.text.secondary}
@@ -142,8 +142,8 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
             {loading ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <MaterialCommunityIcons
-                name="arrow-up"
+              <Icon
+                name="arrowUp"
                 size={18}
                 color="#FFFFFF"
               />

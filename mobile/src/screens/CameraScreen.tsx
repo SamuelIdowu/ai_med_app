@@ -1,11 +1,10 @@
 
+import { Icon } from '../components/Icon';
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions, FlashMode } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraReticle } from '../components/ui/CameraReticle';
 import { theme } from '../theme';
 
@@ -62,12 +61,12 @@ export const CameraScreen = () => {
                     {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
-                            <MaterialIcons name="close" size={24} color="white" />
+                            <Icon name="close" size={24} color="white" />
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
-                            <MaterialIcons
-                                name={flash === 'on' ? "flash-on" : "flash-off"}
+                            <Icon
+                                name={flash === 'on' ? 'lightning' : 'lightningSlash'}
                                 size={24}
                                 color="white"
                             />

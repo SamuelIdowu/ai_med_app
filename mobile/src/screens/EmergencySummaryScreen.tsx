@@ -1,15 +1,15 @@
 
+import { Icon } from '../components/Icon';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
 import { offlineStorage } from '../services/offlineStorage';
 import { Encounter } from '../services/types';
 import { theme } from '../theme';
-import { getIllustration } from '../assets/illustrations';
+import { Illustration } from '../components/Illustration';
 
 const BG_LIGHT = theme.colors.canvas.background;
 const CARD_LIGHT = theme.colors.canvas.surface;
@@ -55,7 +55,7 @@ export const EmergencySummaryScreen = () => {
             }).catch(() => {});
         });
         return () => { isMounted = false; };
-    }, [encounterId]);
+    }, [encounterId, categoryId]);
 
     const displaySymptoms: string[] =
         (routeSymptoms && routeSymptoms.length > 0)
@@ -98,15 +98,15 @@ export const EmergencySummaryScreen = () => {
                 {/* Hero Section */}
                 <View style={styles.heroSection}>
                     <View style={styles.heroIconContainer}>
-                        {getIllustration('achievementBadge') ? (
-                            <Image
-                                source={getIllustration('achievementBadge')!}
-                                style={styles.heroBadgeImage}
-                                resizeMode="contain"
-                            />
-                        ) : (
-                            <MaterialCommunityIcons name="check-circle" size={48} color={SUCCESS_COLOR} />
-                        )}
+                        <Illustration
+                            name="achievementBadge"
+                            width={96}
+                            height={96}
+                            accessibilityLabel="Completion badge"
+                            fallback={
+                                <Icon name="checkCircle" size={48} color={SUCCESS_COLOR} />
+                            }
+                        />
                     </View>
                     <Text style={styles.heroTitle}>Well Done</Text>
                     <Text style={styles.heroSubtitle}>You've successfully completed the first aid steps.</Text>
@@ -118,7 +118,7 @@ export const EmergencySummaryScreen = () => {
 
                     <View style={styles.cardSection}>
                         <View style={styles.infoRow}>
-                            <MaterialCommunityIcons name="fire" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
+                            <Icon name="burns" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
                             <View>
                                 <Text style={styles.label}>Incident</Text>
                                 <Text style={styles.value}>{category ? category.title : 'Emergency'}</Text>
@@ -126,7 +126,7 @@ export const EmergencySummaryScreen = () => {
                         </View>
 
                         <View style={styles.infoRow}>
-                            <MaterialCommunityIcons name="calendar-month" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
+                            <Icon name="calendar" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
                             <View>
                                 <Text style={styles.label}>Date & Time</Text>
                                 <Text style={styles.value}>
@@ -187,7 +187,7 @@ export const EmergencySummaryScreen = () => {
                     activeOpacity={0.9}
                     disabled={!encounterId}
                 >
-                    <MaterialCommunityIcons name="export-variant" size={20} color="white" style={{ marginRight: 8 }} />
+                    <Icon name="export" size={20} color="white" style={{ marginRight: 8 }} />
                     <Text style={styles.shareButtonText}>Share Report</Text>
                 </TouchableOpacity>
 
@@ -230,18 +230,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     heroIconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 112,
+        height: 112,
+        borderRadius: 56,
         backgroundColor: 'rgba(39, 174, 96, 0.1)', // green/10
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
-        overflow: 'hidden',
-    },
-    heroBadgeImage: {
-        width: 80,
-        height: 80,
     },
     heroTitle: {
         fontSize: 32,
