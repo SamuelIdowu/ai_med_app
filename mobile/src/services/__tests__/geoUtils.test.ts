@@ -1,8 +1,10 @@
 // mobile/src/services/__tests__/geoUtils.test.ts
 
+import * as Location from 'expo-location';
 import {
   calculateDistanceMiles,
   formatDistance,
+  getUserLocationWithStatus,
   sortProvidersByProximity,
   DEFAULT_USER_COORDS,
 } from '../geoUtils';
@@ -68,6 +70,52 @@ describe('Geolocation & Clinic Proximity Utilities', () => {
       expect(formatDistance(1.234)).toBe('1.2 mi away');
       expect(formatDistance(0.5)).toBe('0.5 mi away');
       expect(formatDistance(12.0)).toBe('12.0 mi away');
+    });
+  });
+
+  describe('getUserLocationWithStatus', () => {
+    const requestPermissions = Location.requestForegroundPermissionsAsync as jest.Mock;
+    const getPosition = Location.getCurrentPositionAsync as jest.Mock;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      requestPermissions.mockResolvedValue({ status: 'granted' });
+      getPosition.mockResolvedValue({
+        coords: { latitude: 34.0522, longitude: -118.2437 },
+      });
+    });
+
+    it('returns granted status and real coordinates', async () => {
+      const result = await getUserLocationWithStatus();
+
+      expect(result).toEqual({
+        latitude: 34.0522,
+        longitude: -118.2437,
+        status: 'granted',
+      });
+    });
+
+    it('returns denied status with fallback coordinates when permission is refused', async () => {
+      requestPermissions.mockResolvedValueOnce({ status: 'denied' });
+
+      const result = await getUserLocationWithStatus();
+
+      expect(result.status).toBe('denied');
+      expect(result.latitude).toBe(DEFAULT_USER_COORDS.latitude);
+      expect(result.longitude).toBe(DEFAULT_USER_COORDS.longitude);
+      expect(getPosition).not.toHaveBeenCalled();
+    });
+
+    it('returns unavailable status with fallback coordinates when GPS lookup fails', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      getPosition.mockRejectedValueOnce(new Error('GPS unavailable'));
+
+      const result = await getUserLocationWithStatus();
+
+      expect(result.status).toBe('unavailable');
+      expect(result.latitude).toBe(DEFAULT_USER_COORDS.latitude);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
     });
   });
 

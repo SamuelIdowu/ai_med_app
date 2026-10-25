@@ -1,27 +1,30 @@
 // mobile/src/screens/ProviderDetailScreen.tsx
 // Provider Details Screen with Interactive Map Preview & Navigation
 
-import React, { useEffect, useState } from 'react';
+import { Icon } from '../components/Icon';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
-  Linking,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import MapView, { Marker } from '../components/Map';
+import { ProviderMap } from '../components/Map/ProviderMap';
+import { buildProviderMarkers } from '../components/Map/providerMapUtils';
 import { RootStackParamList } from '../navigation/types';
 import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
-import { getCurrentUserLocation, calculateDistanceMiles, formatDistance } from '../services/geoUtils';
+import {
+  getUserLocationWithStatus,
+  calculateDistanceMiles,
+  formatDistance,
+} from '../services/geoUtils';
+import { callPhone, openDirections } from '../services/mapLinks';
 import { theme } from '../theme';
 
 type ProviderDetailScreenRouteProp = RouteProp<RootStackParamList, 'ProviderDetail'>;
@@ -35,22 +38,27 @@ export const ProviderDetailScreen: React.FC = () => {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [distanceText, setDistanceText] = useState<string>('');
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
+  const [locationGranted, setLocationGranted] = useState(false);
 
-  useEffect(() => {
-    loadProvider();
-  }, [providerId]);
-
-  const loadProvider = async () => {
+  const loadProvider = useCallback(async () => {
     try {
       setLoading(true);
       const data = await ProviderService.getProviderById(providerId);
       setProvider(data || null);
 
-      if (data?.lat && data?.lng) {
-        const userCoords = await getCurrentUserLocation();
+      if (!data) return;
+
+      const location = await getUserLocationWithStatus();
+      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
+      setLocationGranted(location.status === 'granted');
+
+      if (data.lat !== null && data.lat !== undefined && data.lng !== null && data.lng !== undefined) {
         const miles = calculateDistanceMiles(
-          userCoords.latitude,
-          userCoords.longitude,
+          location.latitude,
+          location.longitude,
           data.lat,
           data.lng
         );
@@ -61,38 +69,24 @@ export const ProviderDetailScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [providerId]);
+
+  useEffect(() => {
+    loadProvider();
+  }, [loadProvider]);
+
+  const mapProviders = useMemo(
+    () => (provider ? buildProviderMarkers([provider]) : []),
+    [provider]
+  );
 
   const handleCall = () => {
-    if (provider?.phone) {
-      Linking.openURL(`tel:${provider.phone}`).catch(() => {
-        Alert.alert('Call Failed', 'Unable to open phone dialer on this device.');
-      });
-    } else {
-      Alert.alert('Phone Unavailable', 'No phone number listed for this facility.');
-    }
+    callPhone(provider?.phone);
   };
 
   const handleOpenMaps = () => {
-    if (provider?.lat && provider?.lng) {
-      const latLng = `${provider.lat},${provider.lng}`;
-      const label = encodeURIComponent(provider.name || 'Medical Clinic');
-      const url = Platform.select({
-        ios: `maps:0,0?q=${label}@${latLng}`,
-        android: `geo:0,0?q=${latLng}(${label})`,
-        default: `https://www.google.com/maps/search/?api=1&query=${label}&query=${latLng}`,
-      });
-
-      if (url) {
-        Linking.openURL(url).catch(() => {
-          Alert.alert('Navigation Error', 'Could not open maps application.');
-        });
-      }
-    } else if (provider?.address) {
-      const query = encodeURIComponent(provider.address);
-      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
-    } else {
-      Alert.alert('Location Unavailable', 'No coordinate or address available for this provider.');
+    if (provider) {
+      openDirections(provider);
     }
   };
 
@@ -110,7 +104,7 @@ export const ProviderDetailScreen: React.FC = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+            <Icon name="caretLeft" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Provider Details</Text>
           <View style={{ width: 40 }} />
@@ -134,7 +128,7 @@ export const ProviderDetailScreen: React.FC = () => {
           style={styles.backButton}
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          <Icon name="caretLeft" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {provider.name}
@@ -145,40 +139,34 @@ export const ProviderDetailScreen: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Interactive Map Preview Card */}
         <View style={styles.mapCard}>
-          {provider.lat && provider.lng && Platform.OS !== 'web' ? (
-            <MapView
-              style={styles.mapView}
-              initialRegion={{
-                latitude: provider.lat,
-                longitude: provider.lng,
-                latitudeDelta: 0.015,
-                longitudeDelta: 0.015,
-              }}
-              scrollEnabled={false}
-              zoomEnabled={false}
-              pitchEnabled={false}
-            >
-              <Marker
-                coordinate={{ latitude: provider.lat, longitude: provider.lng }}
-                title={provider.name ?? 'Medical Facility'}
-                description={provider.type || 'Clinic'}
+          {provider.lat !== null && provider.lat !== undefined &&
+          provider.lng !== null && provider.lng !== undefined ? (
+            <>
+              <ProviderMap
+                providers={mapProviders}
+                selectedProviderId={provider.id}
+                userCoordinate={userCoords}
+                showUserLocation={locationGranted}
+                interactive={false}
+                style={styles.mapView}
+              />
+              <TouchableOpacity
+                style={styles.mapDirectionsPill}
+                onPress={handleOpenMaps}
+                activeOpacity={0.85}
+                accessibilityLabel="Open this facility in Maps"
               >
-                <View style={styles.pinBubble}>
-                  <MaterialCommunityIcons
-                    name={provider.type === 'Hospital' ? 'hospital-box' : 'medical-bag'}
-                    size={22}
-                    color="#FFFFFF"
-                  />
-                </View>
-              </Marker>
-            </MapView>
+                <Icon name="navigationArrow" size={15} color="#FFFFFF" />
+                <Text style={styles.mapDirectionsText}>Directions</Text>
+              </TouchableOpacity>
+            </>
           ) : (
             <TouchableOpacity
               style={styles.mapWebFallback}
               onPress={handleOpenMaps}
               activeOpacity={0.8}
             >
-              <MaterialCommunityIcons name="map-marker-radius" size={44} color="#FFFFFF" />
+              <Icon name="mapPin" size={44} color="#FFFFFF" />
               <Text style={styles.mapWebText}>Tap to Open Interactive Map</Text>
               {distanceText ? (
                 <Text style={styles.mapDistanceTag}>{distanceText}</Text>
@@ -196,7 +184,7 @@ export const ProviderDetailScreen: React.FC = () => {
             </View>
             {distanceText ? (
               <View style={styles.distanceBadge}>
-                <Ionicons name="navigate-outline" size={13} color="#9CA3AF" />
+                <Icon name="navigationArrow" size={13} color="#9CA3AF" />
                 <Text style={styles.distanceBadgeText}>{distanceText}</Text>
               </View>
             ) : null}
@@ -209,7 +197,7 @@ export const ProviderDetailScreen: React.FC = () => {
             {/* Address */}
             <TouchableOpacity style={styles.detailItem} onPress={handleOpenMaps}>
               <View style={styles.iconBox}>
-                <Ionicons name="location" size={22} color="#FFFFFF" />
+                <Icon name="mapPin" size={22} color="#FFFFFF" />
               </View>
               <View style={styles.itemContent}>
                 <Text style={styles.itemValue}>{provider.address || 'Address on file'}</Text>
@@ -220,7 +208,7 @@ export const ProviderDetailScreen: React.FC = () => {
             {/* Phone */}
             <TouchableOpacity style={styles.detailItem} onPress={handleCall}>
               <View style={styles.iconBox}>
-                <Ionicons name="call" size={20} color="#FFFFFF" />
+                <Icon name="phoneCall" size={20} color="#FFFFFF" />
               </View>
               <View style={styles.itemContent}>
                 <Text style={styles.itemValue}>{provider.phone || 'Phone not available'}</Text>
@@ -231,7 +219,7 @@ export const ProviderDetailScreen: React.FC = () => {
             {/* Emergency Service status */}
             <View style={styles.detailItem}>
               <View style={styles.iconBox}>
-                <MaterialCommunityIcons name="clock-time-four" size={22} color="#FFFFFF" />
+                <Icon name="clock" size={22} color="#FFFFFF" />
               </View>
               <View style={styles.itemContent}>
                 <Text style={styles.itemValue}>Open 24/7 for Emergencies</Text>
@@ -251,7 +239,7 @@ export const ProviderDetailScreen: React.FC = () => {
           onPress={handleOpenMaps}
           accessibilityLabel="Open clinic directions in Maps"
         >
-          <MaterialCommunityIcons name="navigation" size={20} color="#0F1115" />
+          <Icon name="navigationArrow" size={20} color="#0F1115" />
           <Text style={styles.primaryButtonText}>Open in Maps</Text>
         </TouchableOpacity>
 
@@ -260,7 +248,7 @@ export const ProviderDetailScreen: React.FC = () => {
           onPress={handleCall}
           accessibilityLabel="Call clinic now"
         >
-          <Ionicons name="call" size={18} color="#FFFFFF" />
+          <Icon name="phoneCall" size={18} color="#FFFFFF" />
           <Text style={styles.secondaryButtonText}>Call Now</Text>
         </TouchableOpacity>
       </View>
@@ -342,6 +330,24 @@ const styles = StyleSheet.create({
   mapView: {
     width: '100%',
     height: '100%',
+  },
+  mapDirectionsPill: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: theme.colors.palette.coralCoast,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    ...theme.spatial.shadows3d.level1,
+  },
+  mapDirectionsText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   mapWebFallback: {
     width: '100%',

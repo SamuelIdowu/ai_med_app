@@ -8,7 +8,7 @@ const resolveFontFamily = (style: any): any => {
     return style;
   }
 
-  // Preserve icon fonts (e.g. Ionicons, MaterialCommunityIcons, FontAwesome)
+  // Preserve explicitly configured font families
   if (
     style.fontFamily &&
     style.fontFamily !== 'System' &&
@@ -33,7 +33,7 @@ const resolveFontFamily = (style: any): any => {
   }
 
   const rawWeight = style.fontWeight ? String(style.fontWeight).toLowerCase() : '400';
-  let family: string | undefined = fontFamilies.regular;
+  let family: string | undefined;
 
   if (rawWeight === '800' || rawWeight === '900' || rawWeight === 'heavy' || rawWeight === 'black') {
     family = fontFamilies.extraBold;

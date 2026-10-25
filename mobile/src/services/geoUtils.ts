@@ -10,6 +10,14 @@ export const DEFAULT_USER_COORDS = {
   longitude: -74.0060,
 };
 
+export type LocationPermissionStatus = 'granted' | 'denied' | 'unavailable';
+
+export interface UserLocationResult {
+  latitude: number;
+  longitude: number;
+  status: LocationPermissionStatus;
+}
+
 /**
  * Calculates distance in miles between two coordinate points using the Haversine formula
  */
@@ -43,13 +51,13 @@ export function formatDistance(miles: number): string {
 }
 
 /**
- * Request user location or fallback gracefully
+ * Request user location and report why a fallback was used.
  */
-export async function getCurrentUserLocation(): Promise<{ latitude: number; longitude: number }> {
+export async function getUserLocationWithStatus(): Promise<UserLocationResult> {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      return DEFAULT_USER_COORDS;
+      return { ...DEFAULT_USER_COORDS, status: 'denied' };
     }
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
@@ -57,11 +65,20 @@ export async function getCurrentUserLocation(): Promise<{ latitude: number; long
     return {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
+      status: 'granted',
     };
   } catch (error) {
     console.warn('Could not fetch user GPS coordinates, using fallback:', error);
-    return DEFAULT_USER_COORDS;
+    return { ...DEFAULT_USER_COORDS, status: 'unavailable' };
   }
+}
+
+/**
+ * Request user location or fallback gracefully
+ */
+export async function getCurrentUserLocation(): Promise<{ latitude: number; longitude: number }> {
+  const { latitude, longitude } = await getUserLocationWithStatus();
+  return { latitude, longitude };
 }
 
 /**

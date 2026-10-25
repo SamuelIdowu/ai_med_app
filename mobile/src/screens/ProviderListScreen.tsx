@@ -1,7 +1,8 @@
 // mobile/src/screens/ProviderListScreen.tsx
 // Provider Directory, Nearest Clinic Locator & Interactive Map
 
-import React, { useEffect, useState, useRef } from 'react';
+import { Icon } from '../components/Icon';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,25 +12,27 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
-  Alert,
-  Dimensions,
-  Image,
+  Platform,
 } from 'react-native';
-import { getIllustration } from '../assets/illustrations';
+import { Illustration } from '../components/Illustration';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import MapView, { Marker, Callout } from '../components/Map';
+import { ProviderMap } from '../components/Map/ProviderMap';
+import type { ProviderMapHandle } from '../components/Map/mapTypes';
+import { buildProviderMarkers } from '../components/Map/providerMapUtils';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
 import {
-  getCurrentUserLocation,
+  getUserLocationWithStatus,
   sortProvidersByProximity,
   formatDistance,
   DEFAULT_USER_COORDS,
+  type LocationPermissionStatus,
 } from '../services/geoUtils';
+import { callPhone, openDirections } from '../services/mapLinks';
+import { showAlert } from '../services/alert';
 import { theme } from '../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -40,45 +43,42 @@ type EnrichedProvider = Provider & { distanceMiles: number };
 
 export const ProviderListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<ProviderMapHandle>(null);
 
   const [providers, setProviders] = useState<EnrichedProvider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<EnrichedProvider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [userCoords, setUserCoords] = useState(DEFAULT_USER_COORDS);
+  const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<EnrichedProvider | null>(null);
 
-  useEffect(() => {
-    initScreenData();
-  }, []);
-
-  useEffect(() => {
-    filterData();
-  }, [providers, searchQuery, activeFilter]);
-
-  const initScreenData = async () => {
+  const initScreenData = useCallback(async () => {
     try {
       setLoading(true);
-      const coords = await getCurrentUserLocation();
-      setUserCoords(coords);
+      setLoadError(null);
+
+      const location = await getUserLocationWithStatus();
+      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
+      setLocationStatus(location.status);
 
       const rawData = await ProviderService.getProviders();
-      const sorted = sortProvidersByProximity(rawData, coords);
+      const sorted = sortProvidersByProximity(rawData, location);
       setProviders(sorted);
-      if (sorted.length > 0) {
-        setSelectedProvider(sorted[0]);
-      }
     } catch (error) {
       console.error('Failed to load providers:', error);
+      setLoadError(
+        'Could not load nearby medical facilities. Check your connection and try again.'
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterData = () => {
+  const filterData = useCallback(() => {
     let result = providers;
 
     if (searchQuery.trim()) {
@@ -98,32 +98,104 @@ export const ProviderListScreen: React.FC = () => {
     }
 
     setFilteredProviders(result);
-  };
+  }, [activeFilter, providers, searchQuery]);
+
+  const mapProviders = useMemo(
+    () => buildProviderMarkers(filteredProviders),
+    [filteredProviders]
+  );
+
+  useEffect(() => {
+    initScreenData();
+  }, [initScreenData]);
+
+  useEffect(() => {
+    filterData();
+  }, [filterData]);
+
+  useEffect(() => {
+    setSelectedProvider((current) => {
+      if (current && filteredProviders.some((provider) => provider.id === current.id)) {
+        return current;
+      }
+      return filteredProviders[0] ?? null;
+    });
+  }, [filteredProviders]);
+
+  const refreshLocation = useCallback(async () => {
+    const location = await getUserLocationWithStatus();
+    const coords = { latitude: location.latitude, longitude: location.longitude };
+
+    setUserCoords(coords);
+    setLocationStatus(location.status);
+    setProviders((current) => sortProvidersByProximity(current, coords));
+
+    if (location.status === 'granted') {
+      setTimeout(() => mapRef.current?.focusUser(), 0);
+    }
+  }, []);
+
+  const handleLocationPress = useCallback(() => {
+    if (locationStatus === 'denied' && Platform.OS !== 'web') {
+      Linking.openSettings().catch(() => {
+        refreshLocation();
+      });
+      return;
+    }
+
+    refreshLocation();
+  }, [locationStatus, refreshLocation]);
+
+  const handleSelectProvider = useCallback(
+    (providerId: string) => {
+      const provider = filteredProviders.find((item) => item.id === providerId);
+      if (provider) {
+        setSelectedProvider(provider);
+      }
+    },
+    [filteredProviders]
+  );
+
+  const handleOpenProvider = useCallback(
+    (providerId: string) => {
+      navigation.navigate('ProviderDetail', { providerId });
+    },
+    [navigation]
+  );
 
   const handleCall = (phone?: string | null) => {
-    if (phone) {
-      Linking.openURL(`tel:${phone}`).catch(() => {
-        Alert.alert('Error', 'Unable to initiate call on this device');
-      });
-    } else {
-      Alert.alert('Phone Unavailable', 'No contact phone number listed for this provider.');
-    }
+    callPhone(phone);
   };
 
   const handleCenterOnClosestClinic = () => {
-    if (filteredProviders.length > 0 && mapRef.current) {
-      const closest = filteredProviders[0];
-      setSelectedProvider(closest);
-      mapRef.current.animateToRegion(
-        {
-          latitude: closest.lat ?? userCoords.latitude,
-          longitude: closest.lng ?? userCoords.longitude,
-          latitudeDelta: 0.03,
-          longitudeDelta: 0.03,
-        },
-        600
-      );
+    const closest = filteredProviders.find(
+      (provider) => provider.lat !== null && provider.lng !== null
+    );
+
+    if (!closest) {
+      showAlert('No Mapped Facilities', 'No facilities with map coordinates match your filters.');
+      return;
     }
+
+    setSelectedProvider(closest);
+    mapRef.current?.focusProvider(closest.id);
+  };
+
+  const handleShowAllProviders = () => {
+    mapRef.current?.fitToProviders();
+  };
+
+  const handleRecenterOnUser = () => {
+    if (locationStatus !== 'granted') {
+      refreshLocation();
+      return;
+    }
+
+    mapRef.current?.focusUser();
+  };
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setActiveFilter('All');
   };
 
   const renderItem = ({ item }: { item: EnrichedProvider }) => (
@@ -153,7 +225,7 @@ export const ProviderListScreen: React.FC = () => {
           onPress={() => handleCall(item.phone)}
           accessibilityLabel={`Call ${item.name}`}
         >
-          <Ionicons name="call" size={20} color="#111318" />
+          <Icon name="phoneCall" size={20} color="#111318" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -168,7 +240,7 @@ export const ProviderListScreen: React.FC = () => {
           style={styles.headerBtn}
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color="#111318" />
+          <Icon name="caretLeft" size={24} color="#111318" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Provider Directory</Text>
@@ -178,8 +250,8 @@ export const ProviderListScreen: React.FC = () => {
           onPress={() => setViewMode((prev) => (prev === 'list' ? 'map' : 'list'))}
           accessibilityLabel={viewMode === 'list' ? 'Switch to map view' : 'Close map view'}
         >
-          <MaterialCommunityIcons
-            name={viewMode === 'list' ? 'map-outline' : 'format-list-bulleted'}
+          <Icon
+            name={viewMode === 'list' ? 'map' : 'list'}
             size={22}
             color={viewMode === 'map' ? '#FFFFFF' : '#111318'}
           />
@@ -189,7 +261,7 @@ export const ProviderListScreen: React.FC = () => {
       {/* Search Input */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#6B7280" />
+          <Icon name="search" size={20} color="#6B7280" />
           <TextInput
             style={styles.searchInput}
             placeholder="Search clinics, hospitals, pharmacies..."
@@ -199,7 +271,7 @@ export const ProviderListScreen: React.FC = () => {
           />
           {searchQuery.length > 0 ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+              <Icon name="closeCircle" size={18} color="#9CA3AF" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -230,7 +302,17 @@ export const ProviderListScreen: React.FC = () => {
       </View>
 
       {/* Content Body: List vs Map View */}
-      {loading ? (
+      {loadError ? (
+        <View style={styles.centerContainer}>
+          <Icon name="cloudSlash" size={48} color="#9CA3AF" />
+          <Text style={styles.errorTitle}>Couldn&apos;t load facilities</Text>
+          <Text style={styles.errorSubtitle}>{loadError}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => initScreenData()}>
+            <Icon name="arrowClockwise" size={18} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>Try again</Text>
+          </TouchableOpacity>
+        </View>
+      ) : loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#111318" />
           <Text style={styles.loadingText}>Locating nearby medical providers...</Text>
@@ -243,91 +325,129 @@ export const ProviderListScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              {getIllustration('hospitalLocator') ? (
-                <Image
-                  source={getIllustration('hospitalLocator')!}
-                  style={styles.emptyLocatorImage}
-                  resizeMode="contain"
-                />
-              ) : (
-                <MaterialCommunityIcons name="hospital-building" size={48} color="#9CA3AF" />
-              )}
+              <Illustration
+                name="hospitalLocator"
+                width={160}
+                height={160}
+                accessibilityLabel="Hospital locator"
+                fallback={
+                  <Icon name="hospital" size={48} color="#9CA3AF" />
+                }
+              />
               <Text style={styles.emptyTitle}>No Providers Found</Text>
-              <Text style={styles.emptySubtitle}>Try adjusting your search query or filters.</Text>
+              <Text style={styles.emptySubtitle}>
+                {providers.length === 0
+                  ? 'Sign in to load nearby medical facilities.'
+                  : 'Try adjusting your search query or filters.'}
+              </Text>
+              {providers.length > 0 && (searchQuery || activeFilter !== 'All') ? (
+                <TouchableOpacity style={styles.emptyResetBtn} onPress={handleResetFilters}>
+                  <Text style={styles.emptyResetText}>Clear filters</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           }
         />
       ) : (
         <View style={styles.mapViewport}>
-          <MapView
+          <ProviderMap
             ref={mapRef}
+            providers={mapProviders}
+            selectedProviderId={selectedProvider?.id ?? null}
+            userCoordinate={userCoords}
+            showUserLocation={locationStatus === 'granted'}
+            interactive
+            onSelectProvider={handleSelectProvider}
+            onOpenProvider={handleOpenProvider}
             style={StyleSheet.absoluteFillObject}
-            initialRegion={{
-              latitude: userCoords.latitude,
-              longitude: userCoords.longitude,
-              latitudeDelta: 0.08,
-              longitudeDelta: 0.08,
-            }}
-            showsUserLocation
-            showsMyLocationButton
-          >
-            {filteredProviders.map((item) =>
-              item.lat && item.lng ? (
-                <Marker
-                  key={item.id}
-                  coordinate={{ latitude: item.lat, longitude: item.lng }}
-                  title={item.name || ''}
-                  description={`${item.type || 'Clinic'} • ${formatDistance(item.distanceMiles)}`}
-                  onPress={() => setSelectedProvider(item)}
-                >
-                  <View
-                    style={[
-                      styles.mapMarker,
-                      selectedProvider?.id === item.id && styles.mapMarkerSelected,
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={item.type === 'Hospital' ? 'hospital-box' : 'medical-bag'}
-                      size={20}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                  <Callout
-                    onPress={() =>
-                      navigation.navigate('ProviderDetail', { providerId: item.id })
-                    }
-                  >
-                    <View style={styles.calloutBox}>
-                      <Text style={styles.calloutTitle}>{item.name}</Text>
-                      <Text style={styles.calloutSubtitle}>
-                        {formatDistance(item.distanceMiles)} • Tap for details
-                      </Text>
-                    </View>
-                  </Callout>
-                </Marker>
-              ) : null
-            )}
-          </MapView>
+          />
+
+          {locationStatus && locationStatus !== 'granted' ? (
+            <View style={styles.locationBanner}>
+              <Icon
+                name="mapPin"
+                size={16}
+                color={theme.colors.palette.darkSideMoon}
+              />
+              <Text style={styles.locationBannerText} numberOfLines={2}>
+                Using an approximate location. Enable GPS for accurate distances.
+              </Text>
+              <TouchableOpacity
+                style={styles.locationBannerAction}
+                onPress={handleLocationPress}
+                accessibilityLabel="Update location permission"
+              >
+                <Text style={styles.locationBannerActionText}>
+                  {locationStatus === 'denied' && Platform.OS !== 'web' ? 'Settings' : 'Retry'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {mapProviders.length === 0 ? (
+            <View style={styles.mapEmptyOverlay} pointerEvents="box-none">
+              <View style={styles.mapEmptyCard}>
+                <Icon
+                  name="mapPin"
+                  size={34}
+                  color="#9CA3AF"
+                />
+                <Text style={styles.mapEmptyTitle}>No mapped facilities</Text>
+                <Text style={styles.mapEmptyText}>
+                  {providers.length === 0
+                    ? 'Sign in to load nearby medical facilities.'
+                    : filteredProviders.length === 0
+                      ? 'No facilities match your search or filters.'
+                      : 'The matching facilities do not have map coordinates.'}
+                </Text>
+                {searchQuery || activeFilter !== 'All' ? (
+                  <TouchableOpacity style={styles.emptyResetBtn} onPress={handleResetFilters}>
+                    <Text style={styles.emptyResetText}>Clear filters</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+          ) : null}
 
           {/* Floating Action Buttons over Map */}
           <View style={styles.mapFloatingControls}>
-            <TouchableOpacity
-              style={styles.floatingActionBtn}
-              onPress={handleCenterOnClosestClinic}
-              accessibilityLabel="Locate closest clinic"
-            >
-              <MaterialCommunityIcons name="crosshairs-gps" size={22} color="#111318" />
-              <Text style={styles.floatingActionText}>Nearest Facility</Text>
-            </TouchableOpacity>
+            <View style={styles.mapControlGroup}>
+              <TouchableOpacity
+                style={styles.floatingActionBtn}
+                onPress={handleCenterOnClosestClinic}
+                accessibilityLabel="Locate closest facility"
+              >
+                <Icon name="crosshair" size={18} color="#111318" />
+                <Text style={styles.floatingActionText}>Nearest</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.closeMapPill}
-              onPress={() => setViewMode('list')}
-              accessibilityLabel="Close map view and return to list"
-            >
-              <MaterialCommunityIcons name="close" size={18} color="#FFFFFF" />
-              <Text style={styles.closeMapText}>Close Map</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mapIconBtn}
+                onPress={handleShowAllProviders}
+                accessibilityLabel="Show all facilities on the map"
+              >
+                <Icon name="mapPin" size={20} color="#111318" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.mapControlGroup}>
+              <TouchableOpacity
+                style={styles.mapIconBtn}
+                onPress={handleRecenterOnUser}
+                accessibilityLabel="Center the map on my location"
+              >
+                <Icon name="crosshair" size={20} color="#111318" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.closeMapPill}
+                onPress={() => setViewMode('list')}
+                accessibilityLabel="Close map view and return to list"
+              >
+                <Icon name="close" size={18} color="#FFFFFF" />
+                <Text style={styles.closeMapText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Bottom Selected Provider Highlight Card */}
@@ -339,7 +459,9 @@ export const ProviderListScreen: React.FC = () => {
                     {selectedProvider.name}
                   </Text>
                   <Text style={styles.bottomCardMeta}>
-                    {selectedProvider.type} • {formatDistance(selectedProvider.distanceMiles)}
+                    {[selectedProvider.type, formatDistance(selectedProvider.distanceMiles)]
+                      .filter(Boolean)
+                      .join(' • ')}
                   </Text>
                   {selectedProvider.address ? (
                     <Text style={styles.bottomCardAddress} numberOfLines={1}>
@@ -352,9 +474,17 @@ export const ProviderListScreen: React.FC = () => {
                   <TouchableOpacity
                     style={styles.bottomCallBtn}
                     onPress={() => handleCall(selectedProvider.phone)}
-                    accessibilityLabel="Call clinic"
+                    accessibilityLabel="Call facility"
                   >
-                    <Ionicons name="call" size={18} color="#111318" />
+                    <Icon name="phoneCall" size={18} color="#111318" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.bottomDirectionsBtn}
+                    onPress={() => openDirections(selectedProvider)}
+                    accessibilityLabel="Open directions to facility"
+                  >
+                    <Icon name="navigationArrow" size={18} color="#FFFFFF" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -366,7 +496,7 @@ export const ProviderListScreen: React.FC = () => {
                     }
                   >
                     <Text style={styles.bottomDetailBtnText}>Details</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                    <Icon name="arrowRight" size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -540,17 +670,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.palette.blissfulBlue,
   },
+  errorTitle: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 19,
+    color: theme.colors.palette.blissfulBlue,
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  retryButton: {
+    marginTop: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: theme.colors.palette.coralCoast,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 22,
+  },
+  retryButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 48,
-  },
-  emptyLocatorImage: {
-    width: 160,
-    height: 160,
-    borderRadius: 24,
-    backgroundColor: '#0F1115',
-    marginBottom: 8,
   },
   emptyTitle: {
     fontSize: 17,
@@ -562,37 +715,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.palette.blissfulBlue,
     marginTop: 4,
+    textAlign: 'center',
+  },
+  emptyResetBtn: {
+    marginTop: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: theme.colors.palette.coralCoast,
+  },
+  emptyResetText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   mapViewport: {
     flex: 1,
-  },
-  mapMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: theme.colors.palette.eliteTeal,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapMarkerSelected: {
-    backgroundColor: theme.colors.palette.coralCoast,
-    transform: [{ scale: 1.15 }],
-  },
-  calloutBox: {
-    padding: 8,
-    minWidth: 140,
-  },
-  calloutTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.palette.darkSideMoon,
-  },
-  calloutSubtitle: {
-    fontSize: 11,
-    color: theme.colors.palette.pompeiiAsh,
-    marginTop: 2,
   },
   mapFloatingControls: {
     position: 'absolute',
@@ -601,7 +739,13 @@ const styles = StyleSheet.create({
     right: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     zIndex: 10,
+  },
+  mapControlGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   floatingActionBtn: {
     flexDirection: 'row',
@@ -612,6 +756,79 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     gap: 6,
     ...theme.spatial.shadows3d.level2,
+  },
+  mapIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.spatial.shadows3d.level2,
+  },
+  locationBanner: {
+    position: 'absolute',
+    top: 68,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    zIndex: 9,
+    ...theme.spatial.shadows3d.level2,
+  },
+  locationBannerText: {
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    color: theme.colors.palette.darkSideMoon,
+  },
+  locationBannerAction: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: theme.colors.palette.coralCoast,
+  },
+  locationBannerActionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  mapEmptyOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    zIndex: 5,
+  },
+  mapEmptyCard: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.palette.eliteTeal,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: theme.colors.palette.petroBlue,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    maxWidth: 320,
+    ...theme.spatial.shadows3d.level2,
+  },
+  mapEmptyTitle: {
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  mapEmptyText: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 18,
+    color: theme.colors.palette.blissfulBlue,
+    textAlign: 'center',
   },
   floatingActionText: {
     fontSize: 13,
@@ -681,6 +898,14 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: theme.colors.palette.coralCoast,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomDirectionsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },

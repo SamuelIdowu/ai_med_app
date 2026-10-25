@@ -1,7 +1,7 @@
 // mobile/src/components/Map/index.web.tsx
+import { Icon } from '../Icon';
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export interface Region {
   latitude: number;
@@ -32,7 +32,7 @@ const MapView = forwardRef<MapViewHandle, any>(({ style }, ref) => {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.card}>
-        <MaterialCommunityIcons name="map-marker-radius" size={48} color="#9CA3AF" />
+        <Icon name="mapPin" size={48} color="#9CA3AF" />
         <Text style={styles.title}>Map View Unavailable on Web</Text>
         <Text style={styles.subtitle}>
           Interactive GPS mapping is supported on iOS and Android native apps. On web, please use the facility list or tap a facility for direct Google Maps directions.
