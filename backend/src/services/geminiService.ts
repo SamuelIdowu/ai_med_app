@@ -198,7 +198,7 @@ Analyze the image now:`;
 
             const result = await model.generateContent([prompt, imagePart]);
             const response = await result.response;
-            let text = response.text();
+            const text = response.text();
 
             // Try to parse structured JSON response
             try {

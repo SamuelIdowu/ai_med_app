@@ -1,6 +1,6 @@
 # Database Migrations
 
-All Supabase/PostgreSQL migrations live in `backend/src/db/migrations/` and are applied **in filename order** (000 → 008) via the Supabase SQL editor (or `psql`).
+All Supabase/PostgreSQL migrations live in `backend/src/db/migrations/` and are applied **in filename order** (000 -> 009) via the Supabase SQL editor (or `psql`).
 
 > These migrations were previously split between `backend/src/db/migrations/` and `infra/supabase/`. The two sets cover different objects and were consolidated here in December 2026.
 
@@ -17,7 +17,7 @@ All Supabase/PostgreSQL migrations live in `backend/src/db/migrations/` and are 
 | 006 | `006_profile_photo_fields.sql` | Adds `photo_url`, `gender`, `genotype`, `weight`, `height` to `medical_profiles` |
 | 007 | `007_user_sync_trigger.sql` | `handle_new_user()` trigger + backfill from `auth.users` |
 | 008 | `008_emergency_directives.sql` | Adds `medical_directives` (jsonb) and `emergency_notes` to `medical_profiles` |
-| 009 | `009_reconcile_core_schema.sql` | Reconciles schema drift: adds `encounters` fields (`title`, `severity`, `status`, `symptoms`, `started_at`, `updated_at`), fixes `audit_logs` columns, creates `notifications` table and `users.push_token` |
+| 009 | `009_reconcile_core_schema.sql` | Reconciles schema drift: adds `encounters` fields (`title`, `severity`, `status`, `symptoms`, `started_at`, `updated_at`), fixes `audit_logs` columns, creates/reconciles `notifications` (including `data`) and `users.push_token` |
 
 \* `001` creates a `profiles` table that the application code no longer reads (the app uses `medical_profiles` from `000`). Kept for now because `002` attaches RLS to it; consider dropping both in a future migration once verified against production.
 

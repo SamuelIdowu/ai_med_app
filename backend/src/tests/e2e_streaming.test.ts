@@ -15,7 +15,7 @@ app.post('/api/encounters/:id/wound', handleWoundUpload);
 describe('Full Gateway E2E Validation (Live Integration Fixture)', () => {
   let supabase: any;
   let liveEncounterId: string;
-  let uploadedPaths: string[] = [];
+  const uploadedPaths: string[] = [];
 
   beforeAll(async () => {
     supabase = getSupabaseAdmin();

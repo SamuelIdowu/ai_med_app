@@ -14,6 +14,10 @@ export const registerToken = async (req: Request, res: Response) => {
         await notificationService.registerToken(userId, token);
         res.json({ success: true, message: 'Token registered successfully' });
     } catch (error: any) {
+        if (typeof error?.message === 'string' && error.message.includes('not a valid Expo push token')) {
+            res.status(400).json({ error: error.message });
+            return;
+        }
         if (process.env.NODE_ENV !== 'test') {
             console.error('Failed to register notification token');
         }

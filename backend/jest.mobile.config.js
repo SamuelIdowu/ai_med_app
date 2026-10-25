@@ -12,6 +12,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': [require.resolve('ts-jest'), {
       tsconfig: {
+        target: 'ES2022',
         jsx: 'react',
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
@@ -24,10 +25,9 @@ module.exports = {
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/mobile/src/__mocks__/fileMock.ts',
     '^expo-linear-gradient$': '<rootDir>/mobile/src/__mocks__/expo-linear-gradient.ts',
     '^expo-speech$': '<rootDir>/mobile/src/__mocks__/expo-speech.ts',
-    '^@expo/vector-icons$': '<rootDir>/mobile/src/__mocks__/expo-vector-icons.ts',
-    '^@expo/vector-icons/(.*)$': '<rootDir>/mobile/src/__mocks__/expo-vector-icons.ts',
     '^react-native-svg$': '<rootDir>/mobile/src/__mocks__/react-native-svg.ts',
     '^phosphor-react-native$': '<rootDir>/mobile/src/__mocks__/phosphor-react-native.ts',
+    '^phosphor-react-native/lib/module/icons/(.*)$': '<rootDir>/mobile/src/__mocks__/phosphor-icon.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/mobile/src/__mocks__/asyncStorage.ts',
     '^expo-secure-store$': '<rootDir>/mobile/src/__mocks__/expo-secure-store.ts',
     '^expo-crypto$': '<rootDir>/mobile/src/__mocks__/expo-crypto.ts',

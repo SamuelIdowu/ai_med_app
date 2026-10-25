@@ -371,12 +371,7 @@ export const analyzePhoto = async (
     );
     structuredAnalysis = normalizeGeneralAnalysis(generalAnalysis);
   } else {
-    let mlAvailable = false;
-    try {
-      mlAvailable = await dependencies.checkMLHealth();
-    } catch {
-      mlAvailable = false;
-    }
+    const mlAvailable = await dependencies.checkMLHealth().catch(() => false);
 
     if (!mlAvailable) {
       if (mode === 'wound') {

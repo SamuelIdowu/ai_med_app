@@ -522,7 +522,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ token: 'invalid-non-expo-token' });
 
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(400);
       expect(res.body.error).toContain('not a valid Expo push token');
     });
   });

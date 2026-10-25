@@ -119,6 +119,26 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- An earlier notifications table predates the `data` column and nullable
+-- defaults. CREATE TABLE IF NOT EXISTS will not fix that shape.
+ALTER TABLE public.notifications
+  ADD COLUMN IF NOT EXISTS data JSONB;
+
+UPDATE public.notifications SET data = '{}'::jsonb WHERE data IS NULL;
+UPDATE public.notifications SET type = 'info' WHERE type IS NULL;
+UPDATE public.notifications SET read = false WHERE read IS NULL;
+UPDATE public.notifications SET created_at = NOW() WHERE created_at IS NULL;
+
+ALTER TABLE public.notifications
+  ALTER COLUMN type SET DEFAULT 'info',
+  ALTER COLUMN type SET NOT NULL,
+  ALTER COLUMN read SET DEFAULT false,
+  ALTER COLUMN read SET NOT NULL,
+  ALTER COLUMN data SET DEFAULT '{}'::jsonb,
+  ALTER COLUMN data SET NOT NULL,
+  ALTER COLUMN created_at SET DEFAULT NOW(),
+  ALTER COLUMN created_at SET NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id
   ON public.notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at

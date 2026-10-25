@@ -278,7 +278,9 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
           metadata: { storagePath },
         });
       }
-    } catch {}
+    } catch {
+      // Audit logging is best-effort and must not fail the upload.
+    }
 
     res.status(201).json({
       assessment,
