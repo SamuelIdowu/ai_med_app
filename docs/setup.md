@@ -1,434 +1,148 @@
-🚀 AI First Aid App — Project Setup Guide (MVP)
+# Laso Setup Guide
 
-This guide walks you through setting up the development environment, project structure, dependencies, Supabase + Vercel + Expo integration, and initial configuration for both mobile and backend.
+This guide covers local development for the current monorepo. For the product
+overview and deployment notes, see the repository [README](../README.md).
 
-1 — Prerequisites
-System Requirements
+> Older revisions of this file described a Vercel serverless backend, Clerk,
+> Firebase, and an `infra/supabase/` directory. None of those are used. The
+> backend runs on Express (Render or Docker), auth is Supabase Auth, push
+> delivery uses Expo, and migrations live in `backend/src/db/migrations/`.
 
-Node.js (v18+ recommended)
+## Prerequisites
 
-Yarn or npm
+- Node.js 20+
+- Python 3.12 (ML subsystem)
+- Docker (optional, for the full stack)
+- A Supabase project (Postgres, Auth, Storage)
+- Expo CLI / EAS CLI for mobile builds
 
-Git
+## 1. Environment
 
-VS Code (recommended)
+```powershell
+Copy-Item .env.example .env
+```
 
-Android Studio (for Android emulator) / Xcode (for iOS)
+Fill in the values in `.env`. The key groups are:
 
-Accounts Required
+| Variable | Used by | Purpose |
+|---|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | backend, mobile | Supabase client |
+| `SUPABASE_SERVICE_ROLE_KEY` | backend | Admin DB/storage access; never ship to mobile |
+| `GEMINI_API_KEY` | backend | Gemini chat and vision |
+| `ML_SERVICE_URL` | backend | FastAPI ML endpoint |
+| `REDIS_URL`, `REDIS_PASSWORD` | backend, prod compose | Cache and rate limiting |
+| `ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
+| `CORS_ORIGINS` | ML | ML service origins (`*` for native clients) |
+| `EXPO_PUBLIC_BACKEND_URL` | mobile | API base URL |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mobile | Optional Android Maps key |
 
-GitHub (for repo + CI)
+`docker-compose.prod.yml` rejects an empty `REDIS_PASSWORD`; there is no
+default production password.
 
-Supabase (DB, Storage, Auth)
+## 2. Database
 
-Vercel or Render (backend)
+Apply every file in `backend/src/db/migrations/` in filename order (000 through
+009) using the Supabase SQL editor or `psql`. Migration details and the apply
+order are documented in
+[`backend/src/db/migrations/MIGRATIONS.md`](../backend/src/db/migrations/MIGRATIONS.md).
 
-Expo (mobile builds)
+Optional guideline seed:
 
-Sentry (error logging, optional)
-
-Firebase (push notifications)
-
-2 — Project Structure (Monorepo Recommended)
-ai-first-aid/
-  mobile/          # React Native (Expo)
-    src/
-    assets/
-    app.config.js
-    package.json
-
-  backend/         # Node.js or Vercel serverless API
-    src/
-      routes/
-      controllers/
-      services/
-      middleware/
-    package.json
-
-  infra/
-    supabase/      # SQL migrations, types
-    scripts/
-
-  README.md
-
-3 — Step-by-Step Setup
-🔧 Step 1: Initialize Git & Monorepo
-mkdir ai-first-aid
-cd ai-first-aid
-git init
-
-
-Create directories:
-
-mkdir mobile backend infra
-
-📱 Step 2: Mobile App Setup (React Native + Expo)
-2.1 Create the Expo app
-cd mobile
-npx create-expo-app .
-
-
-Choose blank (TypeScript) template.
-
-Install essential dependencies:
-
-yarn add axios
-yarn add expo-secure-store
-yarn add react-navigation
-yarn add @react-navigation/native-stack
-yarn add react-native-encrypted-storage
-yarn add expo-image-picker
-yarn add expo-file-system
-yarn add expo-sharing
-yarn add expo-camera
-yarn add expo-notifications
-
-
-Install required Expo packages:
-
-npx expo install expo-constants expo-permissions
-
-
-Init TypeScript types if missing:
-
-touch tsconfig.json
-
-2.2 Setup Navigation
-
-Install:
-
-yarn add @react-navigation/native
-yarn add @react-navigation/stack
-
-
-Run app:
-
-npx expo start
-
-🗄 Step 3: Set Up Supabase (DB + Storage + Auth)
-3.1 Create a new Supabase project
-
-Go to https://supabase.com/dashboard
-
-3.2 Enable Auth
-
-Settings → Auth → Turn ON:
-
-Email (required)
-
-Phone (optional)
-
-3.3 Create database schema
-
-In SQL editor, paste your tables:
-
-users
-
-medical_profiles
-
-encounters
-
-photos
-
-reports
-
-providers
-
-audit_logs
-
-(Use the schema from the Technical Architecture doc)
-
-3.4 Create storage buckets
-
-Buckets:
-
-photos (public off, RLS ON)
-
-reports (public off, RLS ON)
-
-Set upload rules to allow only authenticated users.
-
-3.5 Generate API URLs
-
-Settings → API → copy:
-
-SUPABASE_URL
-
-SUPABASE_ANON_KEY
-
-SUPABASE_SERVICE_ROLE_KEY (use carefully, for backend only)
-
-🌐 Step 4: Backend Setup (Node.js or Vercel Functions)
-4.1 Initialize backend
+```powershell
 cd backend
-npm init -y
-npm install express cors axios dotenv
-npm install --save-dev typescript ts-node nodemon @types/express @types/node
-npx tsc --init
+npx ts-node src/db/seeds/seedGuidelines.ts
+```
 
-4.2 Add folder structure
-backend/src/
-  index.ts
-  routes/
-  controllers/
-  services/
-  middleware/
+If the database predates Sprint 2, migration `009_reconcile_core_schema.sql` is
+required before encounter, notification, and report flows work.
 
-4.3 Install Supabase server SDK
-npm install @supabase/supabase-js
+## 3. Install dependencies
 
-4.4 Add storage & report generation dependencies
-npm install pdf-lib
-npm install uuid
+```powershell
+cd backend
+npm ci
 
-4.5 Create a .env file
-SUPABASE_URL=xxx
-SUPABASE_ANON_KEY=xxx
-SUPABASE_SERVICE_ROLE_KEY=xxx
-JWT_SECRET=your_secret_here
+cd ../mobile
+npm ci
 
-4.6 Start the backend
+cd ../ml
+python -m venv .venv
+.venv\Scripts\pip install -e .
+```
+
+## 4. Run the services
+
+Docker (ML + backend, plus Redis in the prod compose file):
+
+```powershell
+docker compose up --build
+docker compose -f docker-compose.prod.yml up --build
+```
+
+Manual:
+
+```powershell
+cd ml
+.venv\Scripts\python cli.py serve --port 8000
+
+cd ../backend
 npm run dev
 
-🔐 Step 5: Environment Variable Setup (Fully Integrated)
+cd ../mobile
+npm start
+```
 
-At root folder create:
+The backend listens on `:3000`, the ML service on `:8000`, and Expo serves the
+mobile client.
 
-.env
+## 5. Tests and checks
 
-
-Add variables:
-
-EXPO_PUBLIC_SUPABASE_URL=xxx
-EXPO_PUBLIC_SUPABASE_ANON_KEY=xxx
-
-BACKEND_URL=https://your-api-url.vercel.app
-
-📤 Step 6: Connect Mobile App to Backend
-
-Add API setup inside mobile/src/services/api.ts:
-
-import axios from 'axios';
-export const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_BACKEND_URL,
-});
-
-
-Add Supabase client inside mobile/src/services/supabase.ts:
-
-import { createClient } from '@supabase/supabase-js';
-
-export const supabase = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-🧱 Step 7: Implement Core Modules
-7.1 First Aid Content (Offline)
-
-Create:
-
-mobile/src/content/first-aid.json
-
-
-Structure:
-
-{
-  "bleeding": [
-    { "step": "Apply pressure", "icon": "pressure.png" },
-    { "step": "Elevate limb", "icon": "lift.png" }
-  ],
-  "burns": [...]
-}
-
-
-Load it locally.
-
-7.2 Medical profile storage
-
-Use Supabase for persistent storage.
-Use Expo SecureStore for local caching.
-
-7.3 Photo Capture & Encryption
-
-Use:
-
-expo-camera for photos
-
-expo-file-system for temp storage
-
-react-native-encrypted-storage for local encrypted files
-
-Upload sequence:
-
-Capture photo
-
-Encrypt
-
-Request signed URL from backend
-
-Upload blob
-
-Notify backend
-
-7.4 Report Generation
-
-Backend will:
-
-Fetch encounter + profile
-
-Fetch photos
-
-Assemble PDF (pdf-lib)
-
-Store encrypted file
-
-Return signed URL
-
-App opens system share sheet
-
-📍 Step 8: Provider Directory (Seed Data)
-
-Add a seed SQL script in infra/supabase/seed_providers.sql
-
-INSERT INTO providers (name, type, address, phone, lat, lng)
-VALUES
-('City Clinic', 'clinic', '123 Main St', '+123456789', 6.5244, 3.3792),
-('General Hospital', 'hospital', '45 Broad Rd', '+123456789', 6.4500, 3.4000);
-
-
-Run via Supabase SQL editor.
-
-🔍 Step 9: Logging, Analytics & Error Monitoring
-
-Install:
-
-# mobile
-npx expo install sentry-expo
-
-# backend
-npm install @sentry/node
-
-
-Initialize in app + backend.
-
-Analytics:
-Install PostHog:
-
-npm install posthog-js
-
-
-Track events:
-
-emergency_flow_start
-
-emergency_flow_complete
-
-photo_taken
-
-report_shared
-
-🧪 Step 10: Testing Setup
-
-Mobile testing:
-
-npm install --save-dev jest @testing-library/react-native
-
-
-Backend testing:
-
-npm install --save-dev jest supertest
-
-
-Write basic tests for:
-
-Profile creation
-
-Encounter creation
-
-Report generation
-
-🚀 Step 11: CI/CD Setup (GitHub + Vercel + Expo)
-11.1 GitHub Actions
-
-Create .github/workflows/deploy.yml
-
-name: Deploy App
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  backend-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: cd backend && npm install && npm run build
-      - uses: vercel/action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-  expo-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: cd mobile && npm install
-      - run: npx expo prebuild
-
-📦 Step 12: Local Development Workflow
-Start backend
+```powershell
 cd backend
-npm run dev
+npm test              # hermetic unit/controller suite
+npm run test:mobile   # mobile integration tests (via backend Jest config)
+npm run test:live     # real Supabase E2E/integration suites
+npm run lint
+npx tsc --noEmit
 
-Start mobile app
-cd mobile
-npx expo start
+cd ../mobile
+npm run lint
+npx tsc --noEmit
 
+cd ../ml
+.venv\Scripts\python -m pytest tests -q
+```
 
-Scan QR code → open on device or emulator.
+`npm test` intentionally excludes the live Supabase suites. `npm run test:live`
+creates real Auth users, encounters, notifications, and storage objects, so run
+it only against a disposable project with all migrations applied.
 
-🧹 Step 13: Maintenance Tips
+## 6. Mobile assets
 
-Keep offline content versioned (e.g., version: 1.0.0).
+The 3D illustration registry (`mobile/src/assets/illustrations.ts`) points at
+the optimized PNGs in `mobile/assets/illustrations/transparent/`.
 
-Use feature flags (in-app remote config) for future emergency types.
+Regenerate them from the source JPEGs:
 
-Set database backups to daily in Supabase.
+```powershell
+python mobile/scripts/process_illustrations.py
+python mobile/scripts/optimize_illustrations.py
+python mobile/scripts/validate_illustrations.py
+```
 
-Rotate API keys quarterly.
+Source JPEGs and optimizer backups are excluded from EAS uploads by
+`mobile/.easignore`. Android Google Maps is configured at build time from
+`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` in `mobile/app.config.js`.
 
-Monitor app with Sentry weekly.
+## 7. CI
 
-✔️ Step 14: Project Ready Checklist
-Mobile
+`.github/workflows/ci.yml` runs on every push and pull request:
 
- First-aid content loads offline
+- backend typecheck, lint, and hermetic Jest suite
+- ML pytest suite
+- mobile typecheck, lint, and integration tests
+- Docker Compose configuration validation
 
- Emergency flow works fully
-
- Photo capture + encryption works
-
- Report sharing functional
-
- Profile save/edit works
-
-Backend
-
- Supabase schema deployed
-
- API endpoints tested
-
- Report generator works
-
- Provider directory seeded
-
-Infrastructure
-
- ENV variables configured
-
- CI/CD running
-
- Sentry & PostHog configured
+The live Supabase E2E job is manual: set the repository variable
+`RUN_LIVE_E2E=true`, provide the Supabase secrets, and trigger the workflow with
+`workflow_dispatch`.

@@ -30,3 +30,6 @@ venv/
 
 .playwright-mcp
 .kilo
+
+# Illustration optimizer backups (regenerable from source JPEGs)
+mobile/assets/illustrations/transparent_full/

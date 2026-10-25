@@ -19,10 +19,16 @@ app = FastAPI(
     version="1.3.0"
 )
 
+cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+if not cors_origins:
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    # Wildcard origins cannot be combined with credentialed requests. Bearer
+    # tokens are sent in the Authorization header, so cookies are unnecessary.
+    allow_credentials="*" not in cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

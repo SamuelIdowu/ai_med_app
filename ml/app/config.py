@@ -14,5 +14,6 @@ class MLConfig(BaseModel):
     CHECKPOINT_DIR: str = os.getenv("CHECKPOINT_DIR", str(BASE_DIR / "artifacts" / "checkpoints"))
     MODEL_NAME: str = os.getenv("MODEL_NAME", "laso-triage-v1")
     EMBEDDING_DIM: int = 384
+    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
 
 settings = MLConfig()

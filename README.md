@@ -58,9 +58,14 @@ Key variables (see `.env.example` for the full list):
 | `GEMINI_API_KEY` | backend | Gemini chat + vision |
 | `ML_SERVICE_URL` | backend | FastAPI ML endpoint |
 | `REDIS_URL`, `REDIS_PASSWORD` | backend | Rate-limit / provider cache (prod) |
+| `ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
+| `CORS_ORIGINS` | ML | ML service origins (`*` for native clients) |
 | `EXPO_PUBLIC_BACKEND_URL` | mobile | API base URL |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mobile | Optional Android Maps key |
 
-Set the same secrets in GitHub Actions (`.github/workflows/ci.yml` reads `secrets.*`; placeholder fallbacks are intentional and will fail loudly).
+Set the same secrets in GitHub Actions (`.github/workflows/ci.yml` reads
+`secrets.*`). The default CI jobs use placeholders and run hermetically; the
+manual live E2E job requires real secrets and a disposable Supabase project.
 
 ### 2. Database
 
@@ -95,18 +100,23 @@ cd mobile; npm ci; npm start       # Expo dev server
 
 ```powershell
 cd backend
-npm test              # backend Jest suite
+npm test              # hermetic backend Jest suite
 npm run test:mobile   # mobile integration tests (run via backend jest config)
-npm run test:e2e      # end-to-end API flows
+npm run test:live     # live Supabase E2E/integration suites (disposable DB)
 npm run test:load     # k6 benchmark runner (requires services up)
 
 cd ml
 pytest tests -v       # ML unit + e2e tests
 ```
 
+`npm test` excludes suites that create real Supabase users, rows, and storage
+objects. Run `npm run test:live` only against a disposable project with all
+migrations applied (including `009_reconcile_core_schema.sql`).
+
 Mobile TypeScript check: `cd mobile; npx tsc --noEmit`.
 
-CI (GitHub Actions) runs all four gates on every push/PR to `main`/`master`.
+CI (GitHub Actions) runs on every push/PR. The live Supabase suite is a manual
+`workflow_dispatch` job enabled with the repository variable `RUN_LIVE_E2E=true`.
 
 ## ML CLI
 
