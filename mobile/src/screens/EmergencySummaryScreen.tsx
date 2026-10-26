@@ -10,6 +10,7 @@ import { offlineStorage } from '../services/offlineStorage';
 import { Encounter } from '../services/types';
 import { theme } from '../theme';
 import { Illustration } from '../components/Illustration';
+import { resolveIconName } from '../icons';
 
 const BG_LIGHT = theme.colors.canvas.background;
 const CARD_LIGHT = theme.colors.canvas.surface;
@@ -118,7 +119,12 @@ export const EmergencySummaryScreen = () => {
 
                     <View style={styles.cardSection}>
                         <View style={styles.infoRow}>
-                            <Icon name="burns" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
+                            <Icon
+                                name={resolveIconName(category?.icon)}
+                                size={24}
+                                color={TEXT_SECONDARY}
+                                style={styles.rowIcon}
+                            />
                             <View>
                                 <Text style={styles.label}>Incident</Text>
                                 <Text style={styles.value}>{category ? category.title : 'Emergency'}</Text>

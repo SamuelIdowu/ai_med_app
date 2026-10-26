@@ -162,7 +162,7 @@ export const ReportPreviewScreen = () => {
                     <View style={styles.card}>
                         <View style={styles.vitalsHeaderRow}>
                             <View style={styles.vitalsTitleGroup}>
-                                <Icon name="cpr" size={20} color="#E53734" />
+                                <Icon name="heartbeat" size={20} color="#E53734" />
                                 <Text style={styles.vitalsCardTitle}>Vitals & ML Triage</Text>
                             </View>
                             <View style={[

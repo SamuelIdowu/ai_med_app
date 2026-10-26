@@ -52,7 +52,14 @@ export const Icon: React.FC<IconComponentProps> = ({
   const resolvedSize = resolveSize(size);
   const resolvedColor = getToneColor(tone, color);
 
-  if (!isIconName(name)) return null;
+  if (!isIconName(name)) {
+    if (__DEV__) {
+      console.warn(
+        `[Icon] Unknown icon name "${String(name)}". Add it to src/icons/phosphor.ts or src/icons/glyphs.tsx.`
+      );
+    }
+    return null;
+  }
 
   const Glyph = getLasoGlyph(name);
   if (Glyph) {
@@ -60,6 +67,7 @@ export const Icon: React.FC<IconComponentProps> = ({
       <View
         style={style}
         testID={testID}
+        accessible={Boolean(accessibilityLabel)}
         accessibilityRole="image"
         accessibilityLabel={accessibilityLabel}
       >

@@ -298,7 +298,7 @@ export const MedicalProfileScreen: React.FC = () => {
             </View>
 
             <View style={styles.bloodTypePill}>
-              <Icon name="bleeding" size={16} color="#0F1115" />
+              <Icon name="drop" size={16} color="#0F1115" />
               <Text style={styles.bloodTypeText}>{profile.bloodType || '—'}</Text>
             </View>
           </View>
@@ -354,7 +354,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="warningOctagon" size={18} color="#0F1115" />
+            <Icon name="allergy" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Severe Allergies</Text>
           </View>
 
@@ -379,7 +379,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="cpr" size={18} color="#0F1115" />
+            <Icon name="heartbeat" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Chronic Medical Conditions</Text>
           </View>
 
