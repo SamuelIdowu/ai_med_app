@@ -40,7 +40,7 @@ export const ProviderDetailScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [distanceText, setDistanceText] = useState<string>('');
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(
-    null
+    null,
   );
   const [locationGranted, setLocationGranted] = useState(false);
 
@@ -53,23 +53,29 @@ export const ProviderDetailScreen: React.FC = () => {
       if (!data) return;
 
       const location = await getUserLocationWithStatus();
-      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
-      setLocationGranted(location.status === 'granted');
-
-      if (
-        data.lat !== null &&
-        data.lat !== undefined &&
-        data.lng !== null &&
-        data.lng !== undefined
-      ) {
-        const miles = calculateDistanceMiles(
-          location.latitude,
-          location.longitude,
-          data.lat,
-          data.lng
-        );
-        setDistanceText(formatDistance(miles));
+      if (location.latitude !== null && location.longitude !== null) {
+        setUserCoords({ latitude: location.latitude, longitude: location.longitude });
+        if (
+          data.lat !== null &&
+          data.lat !== undefined &&
+          data.lng !== null &&
+          data.lng !== undefined
+        ) {
+          const miles = calculateDistanceMiles(
+            location.latitude,
+            location.longitude,
+            data.lat,
+            data.lng,
+          );
+          setDistanceText(formatDistance(miles));
+        } else {
+          setDistanceText('');
+        }
+      } else {
+        setUserCoords(null);
+        setDistanceText('');
       }
+      setLocationGranted(location.status === 'granted');
     } catch (error) {
       console.error('Failed to load provider detail:', error);
     } finally {
@@ -83,7 +89,7 @@ export const ProviderDetailScreen: React.FC = () => {
 
   const mapProviders = useMemo(
     () => (provider ? buildProviderMarkers([provider]) : []),
-    [provider]
+    [provider],
   );
 
   const handleCall = () => {
@@ -148,8 +154,10 @@ export const ProviderDetailScreen: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Interactive Map Preview Card */}
         <View style={styles.mapCard}>
-          {provider.lat !== null && provider.lat !== undefined &&
-          provider.lng !== null && provider.lng !== undefined ? (
+          {provider.lat !== null &&
+          provider.lat !== undefined &&
+          provider.lng !== null &&
+          provider.lng !== undefined ? (
             <>
               <ProviderMap
                 providers={mapProviders}
@@ -165,11 +173,7 @@ export const ProviderDetailScreen: React.FC = () => {
                 activeOpacity={0.85}
                 accessibilityLabel="Open this facility in Maps"
               >
-                <Icon
-                  name="navigationArrow"
-                  size={15}
-                  color={theme.colors.text.inverse}
-                />
+                <Icon name="navigationArrow" size={15} color={theme.colors.text.inverse} />
                 <Text style={styles.mapDirectionsText}>Directions</Text>
               </TouchableOpacity>
             </>
@@ -181,9 +185,7 @@ export const ProviderDetailScreen: React.FC = () => {
             >
               <Icon name="mapPin" size={44} color={theme.colors.primary.hover} />
               <Text style={styles.mapWebText}>Tap to Open Interactive Map</Text>
-              {distanceText ? (
-                <Text style={styles.mapDistanceTag}>{distanceText}</Text>
-              ) : null}
+              {distanceText ? <Text style={styles.mapDistanceTag}>{distanceText}</Text> : null}
             </TouchableOpacity>
           )}
         </View>
@@ -197,11 +199,7 @@ export const ProviderDetailScreen: React.FC = () => {
             </View>
             {distanceText ? (
               <View style={styles.distanceBadge}>
-                <Icon
-                  name="navigationArrow"
-                  size={13}
-                  color={theme.colors.text.muted}
-                />
+                <Icon name="navigationArrow" size={13} color={theme.colors.text.muted} />
                 <Text style={styles.distanceBadgeText}>{distanceText}</Text>
               </View>
             ) : null}

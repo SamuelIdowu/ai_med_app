@@ -28,9 +28,10 @@ import { ProviderService } from '../services/providerService';
 import {
   getUserLocationWithStatus,
   sortProvidersByProximity,
-  formatDistance,
-  DEFAULT_USER_COORDS,
+  formatDistanceLabel,
+  type Coordinates,
   type LocationPermissionStatus,
+  type ProviderWithDistance,
 } from '../services/geoUtils';
 import { callPhone, openDirections } from '../services/mapLinks';
 import { showAlert } from '../services/alert';
@@ -40,7 +41,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FILTERS = ['All', 'Hospital', 'Clinic', 'Pharmacy'];
 
-type EnrichedProvider = Provider & { distanceMiles: number };
+type EnrichedProvider = ProviderWithDistance;
 
 export const ProviderListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -53,7 +54,7 @@ export const ProviderListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [userCoords, setUserCoords] = useState(DEFAULT_USER_COORDS);
+  const [userCoords, setUserCoords] = useState<Coordinates | null>(null);
   const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<EnrichedProvider | null>(null);
 
@@ -63,16 +64,20 @@ export const ProviderListScreen: React.FC = () => {
       setLoadError(null);
 
       const location = await getUserLocationWithStatus();
-      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
+      const coords =
+        location.latitude !== null && location.longitude !== null
+          ? { latitude: location.latitude, longitude: location.longitude }
+          : null;
+      setUserCoords(coords);
       setLocationStatus(location.status);
 
       const rawData = await ProviderService.getProviders();
-      const sorted = sortProvidersByProximity(rawData, location);
+      const sorted = sortProvidersByProximity(rawData, coords);
       setProviders(sorted);
     } catch (error) {
       console.error('Failed to load providers:', error);
       setLoadError(
-        'Could not load nearby medical facilities. Check your connection and try again.'
+        'Could not load nearby medical facilities. Check your connection and try again.',
       );
     } finally {
       setLoading(false);
@@ -88,23 +93,18 @@ export const ProviderListScreen: React.FC = () => {
         (p) =>
           p.name?.toLowerCase().includes(lower) ||
           p.type?.toLowerCase().includes(lower) ||
-          p.address?.toLowerCase().includes(lower)
+          p.address?.toLowerCase().includes(lower),
       );
     }
 
     if (activeFilter !== 'All') {
-      result = result.filter(
-        (p) => p.type?.toLowerCase() === activeFilter.toLowerCase()
-      );
+      result = result.filter((p) => p.type?.toLowerCase() === activeFilter.toLowerCase());
     }
 
     setFilteredProviders(result);
   }, [activeFilter, providers, searchQuery]);
 
-  const mapProviders = useMemo(
-    () => buildProviderMarkers(filteredProviders),
-    [filteredProviders]
-  );
+  const mapProviders = useMemo(() => buildProviderMarkers(filteredProviders), [filteredProviders]);
 
   useEffect(() => {
     initScreenData();
@@ -130,7 +130,10 @@ export const ProviderListScreen: React.FC = () => {
 
   const refreshLocation = useCallback(async () => {
     const location = await getUserLocationWithStatus();
-    const coords = { latitude: location.latitude, longitude: location.longitude };
+    const coords =
+      location.latitude !== null && location.longitude !== null
+        ? { latitude: location.latitude, longitude: location.longitude }
+        : null;
 
     setUserCoords(coords);
     setLocationStatus(location.status);
@@ -159,14 +162,14 @@ export const ProviderListScreen: React.FC = () => {
         setSelectedProvider(provider);
       }
     },
-    [filteredProviders]
+    [filteredProviders],
   );
 
   const handleOpenProvider = useCallback(
     (providerId: string) => {
       navigation.navigate('ProviderDetail', { providerId });
     },
-    [navigation]
+    [navigation],
   );
 
   const handleCall = (phone?: string | null) => {
@@ -175,14 +178,11 @@ export const ProviderListScreen: React.FC = () => {
 
   const handleCenterOnClosestClinic = () => {
     const closest = filteredProviders.find(
-      (provider) => provider.lat !== null && provider.lng !== null
+      (provider) => provider.lat !== null && provider.lng !== null,
     );
 
     if (!closest) {
-      showAlert(
-        'No Mapped Facilities',
-        'No facilities with map coordinates match your filters.'
-      );
+      showAlert('No Mapped Facilities', 'No facilities with map coordinates match your filters.');
       return;
     }
 
@@ -216,7 +216,9 @@ export const ProviderListScreen: React.FC = () => {
       <View style={styles.cardHeader}>
         <View style={styles.cardContent}>
           <Text style={styles.providerName}>{item.name}</Text>
-          <Text style={styles.providerDistance}>{formatDistance(item.distanceMiles)}</Text>
+          <Text style={styles.providerDistance}>
+            {formatDistanceLabel(item.distanceMiles) ?? 'Distance unavailable'}
+          </Text>
           {item.address ? (
             <Text style={styles.providerAddress} numberOfLines={1}>
               {item.address}
@@ -263,11 +265,7 @@ export const ProviderListScreen: React.FC = () => {
           <Icon
             name={viewMode === 'list' ? 'map' : 'list'}
             size={22}
-            color={
-              viewMode === 'map'
-                ? theme.colors.text.inverse
-                : theme.colors.primary.hover
-            }
+            color={viewMode === 'map' ? theme.colors.text.inverse : theme.colors.primary.hover}
           />
         </TouchableOpacity>
       </View>
@@ -344,9 +342,7 @@ export const ProviderListScreen: React.FC = () => {
                 width={160}
                 height={160}
                 accessibilityLabel="Hospital locator"
-                fallback={
-                  <Icon name="hospital" size={48} color={theme.colors.text.muted} />
-                }
+                fallback={<Icon name="hospital" size={48} color={theme.colors.text.muted} />}
               />
               <Text style={styles.emptyTitle}>No Providers Found</Text>
               <Text style={styles.emptySubtitle}>
@@ -378,11 +374,7 @@ export const ProviderListScreen: React.FC = () => {
 
           {locationStatus && locationStatus !== 'granted' ? (
             <View style={styles.locationBanner}>
-              <Icon
-                name="mapPin"
-                size={16}
-                color={theme.colors.primary.hover}
-              />
+              <Icon name="mapPin" size={16} color={theme.colors.primary.hover} />
               <Text style={styles.locationBannerText} numberOfLines={2}>
                 Using an approximate location. Enable GPS for accurate distances.
               </Text>
@@ -401,11 +393,7 @@ export const ProviderListScreen: React.FC = () => {
           {mapProviders.length === 0 ? (
             <View style={styles.mapEmptyOverlay} pointerEvents="box-none">
               <View style={styles.mapEmptyCard}>
-                <Icon
-                  name="mapPin"
-                  size={34}
-                  color={theme.colors.primary.hover}
-                />
+                <Icon name="mapPin" size={34} color={theme.colors.primary.hover} />
                 <Text style={styles.mapEmptyTitle}>No mapped facilities</Text>
                 <Text style={styles.mapEmptyText}>
                   {providers.length === 0
@@ -473,7 +461,7 @@ export const ProviderListScreen: React.FC = () => {
                     {selectedProvider.name}
                   </Text>
                   <Text style={styles.bottomCardMeta}>
-                    {[selectedProvider.type, formatDistance(selectedProvider.distanceMiles)]
+                    {[selectedProvider.type, formatDistanceLabel(selectedProvider.distanceMiles)]
                       .filter(Boolean)
                       .join(' • ')}
                   </Text>
@@ -498,11 +486,7 @@ export const ProviderListScreen: React.FC = () => {
                     onPress={() => openDirections(selectedProvider)}
                     accessibilityLabel="Open directions to facility"
                   >
-                    <Icon
-                      name="navigationArrow"
-                      size={18}
-                      color={theme.colors.primary.hover}
-                    />
+                    <Icon name="navigationArrow" size={18} color={theme.colors.primary.hover} />
                   </TouchableOpacity>
 
                   <TouchableOpacity

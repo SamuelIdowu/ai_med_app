@@ -4,10 +4,12 @@
 import * as Location from 'expo-location';
 import { Provider } from './types';
 
-export const FALLBACK_MAP_CENTER = {
+export const FALLBACK_MAP_CENTER: Coordinates = {
   latitude: 40.7128,
   longitude: -74.006,
 };
+
+export const DEFAULT_USER_COORDS: Coordinates = FALLBACK_MAP_CENTER;
 
 export const LOCATION_TIMEOUT_MS = 10000;
 export const MAX_LAST_KNOWN_AGE_MS = 2 * 60 * 1000;
@@ -79,7 +81,7 @@ export function calculateDistanceMiles(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 3958.8; // Earth radius in miles
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -126,7 +128,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
       (error) => {
         clearTimeout(timer);
         reject(error);
-      }
+      },
     );
   });
 }
@@ -136,7 +138,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
  * device location cannot be determined; no default location is substituted.
  */
 export async function getUserLocationWithStatus(
-  options: UserLocationOptions = {}
+  options: UserLocationOptions = {},
 ): Promise<UserLocationResult> {
   const { requestPermission = true, timeoutMs = LOCATION_TIMEOUT_MS } = options;
 
@@ -159,12 +161,9 @@ export async function getUserLocationWithStatus(
     try {
       const current = await withTimeout(
         Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
-        timeoutMs
+        timeoutMs,
       );
-      const currentCoords = getValidCoordinates(
-        current.coords.latitude,
-        current.coords.longitude
-      );
+      const currentCoords = getValidCoordinates(current.coords.latitude, current.coords.longitude);
 
       if (currentCoords) {
         return {
@@ -236,7 +235,7 @@ export async function getCurrentUserLocation(): Promise<Coordinates | null> {
  */
 export function sortProvidersByProximity(
   providers: Provider[],
-  userCoords: Coordinates | null
+  userCoords: Coordinates | null,
 ): ProviderWithDistance[] {
   const validUserCoords = userCoords
     ? getValidCoordinates(userCoords.latitude, userCoords.longitude)
@@ -251,7 +250,7 @@ export function sortProvidersByProximity(
               validUserCoords.latitude,
               validUserCoords.longitude,
               providerCoords.latitude,
-              providerCoords.longitude
+              providerCoords.longitude,
             )
           : null;
 
