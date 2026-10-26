@@ -6,6 +6,7 @@ module.exports = {
     '<rootDir>/src/tests/e2e_all_features.test.ts',
     '<rootDir>/src/tests/e2e_streaming.test.ts',
     '<rootDir>/src/controllers/__tests__/streamController.test.ts',
+    '<rootDir>/src/db/__tests__/rpcMatch.test.ts',
   ],
   verbose: true,
   forceExit: true,
