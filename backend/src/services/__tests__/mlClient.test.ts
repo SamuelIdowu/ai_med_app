@@ -43,7 +43,10 @@ describe('MLClient Inter-Service Bridge', () => {
     const client = new MLClient('http://127.0.0.1:8000');
     const isHealthy = await client.checkHealth();
     expect(isHealthy).toBe(true);
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://127.0.0.1:8000/v1/ml/health', expect.any(Object));
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/v1/ml/health',
+      expect.any(Object),
+    );
   });
 
   it('handles health check failure gracefully', async () => {
@@ -73,7 +76,7 @@ describe('MLClient Inter-Service Bridge', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       'http://127.0.0.1:8000/v1/ml/triage/stream',
       { query: 'Severe bleeding on arm', symptoms: ['bleeding', 'pain'] },
-      expect.objectContaining({ responseType: 'stream' })
+      expect.objectContaining({ responseType: 'stream' }),
     );
 
     const chunks: string[] = [];
@@ -81,6 +84,32 @@ describe('MLClient Inter-Service Bridge', () => {
       chunks.push(chunk.toString());
     }
     expect(chunks.join('')).toContain('Apply pressure');
+  });
+
+  it('forwards medical profile context to the triage stream', async () => {
+    const fakeStream = new Readable({
+      read() {
+        this.push(null);
+      },
+    });
+    mockedAxios.post.mockResolvedValueOnce({ status: 200, data: fakeStream });
+
+    const client = new MLClient('http://127.0.0.1:8000');
+    await client.streamTriage(
+      'I have an asthma flare-up',
+      ['wheezing'],
+      'Using medical profile: Age 34; Conditions: Asthma',
+    );
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/v1/ml/triage/stream',
+      {
+        query: 'I have an asthma flare-up',
+        symptoms: ['wheezing'],
+        medical_context: 'Using medical profile: Age 34; Conditions: Asthma',
+      },
+      expect.objectContaining({ responseType: 'stream' }),
+    );
   });
 
   it('analyzes wound image with multipart form upload', async () => {
@@ -107,7 +136,7 @@ describe('MLClient Inter-Service Bridge', () => {
       expect.any(Object),
       expect.objectContaining({
         headers: expect.any(Object),
-      })
+      }),
     );
   });
 
@@ -145,7 +174,7 @@ describe('MLClient Inter-Service Bridge', () => {
         systolic_bp: 75,
         severe_bleeding: 1,
       },
-      expect.any(Object)
+      expect.any(Object),
     );
   });
 });

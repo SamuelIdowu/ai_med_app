@@ -18,7 +18,11 @@ import Markdown from 'react-native-markdown-display';
 import { api } from '../services/api';
 import { Chat, Message } from '../types/chatTypes';
 import { createNewChat, updateChatMessages, getAllChats } from '../services/chatService';
-import { deleteChat as deleteChatFromStorage, setCurrentChatId, getCurrentChatId } from '../services/chatStorage';
+import {
+  deleteChat as deleteChatFromStorage,
+  setCurrentChatId,
+  getCurrentChatId,
+} from '../services/chatStorage';
 import { ChatHistorySidebar } from '../components/ChatHistorySidebar';
 import { ThingsYouCanDoCards, ActionCardItem } from '../components/chat/ThingsYouCanDoCards';
 import { FloatingChatInput } from '../components/chat/FloatingChatInput';
@@ -27,6 +31,10 @@ import { MedicalCard } from '../components/ui/MedicalCard';
 import { OrganicFluidSphere } from '../components/ui/OrganicFluidSphere';
 import { VoiceService } from '../services/voiceService';
 import { getApiErrorMessage } from '../services/apiError';
+import {
+  MedicalProfileService,
+  buildMedicalProfileContext,
+} from '../services/medicalProfileService';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../theme';
 import type { IconName } from '../icons';
@@ -38,7 +46,11 @@ const QUICK_SUGGESTIONS: { label: string; icon: IconName; prompt: string }[] = [
   { label: 'Burns', icon: 'burns', prompt: 'How should I treat a burn injury?' },
   { label: 'Shock', icon: 'pulse', prompt: 'What are the signs of shock and how do I treat it?' },
   { label: 'Seizure', icon: 'brain', prompt: 'What should I do if someone is having a seizure?' },
-  { label: 'Allergic', icon: 'allergy', prompt: 'How do I handle a severe allergic reaction or anaphylaxis?' },
+  {
+    label: 'Allergic',
+    icon: 'allergy',
+    prompt: 'How do I handle a severe allergic reaction or anaphylaxis?',
+  },
 ];
 
 export const AIChatScreen: React.FC = () => {
@@ -174,9 +186,14 @@ export const AIChatScreen: React.FC = () => {
         parts: [{ text: m.text }],
       }));
 
+      const guestProfileContext = isGuest
+        ? buildMedicalProfileContext(await MedicalProfileService.getProfile())
+        : undefined;
+
       const response = await api.post('/ai/chat', {
         message: userMsg.text,
         history,
+        ...(guestProfileContext ? { profileContext: guestProfileContext } : {}),
       });
 
       const aiResponse = response.data.response;
@@ -270,11 +287,7 @@ export const AIChatScreen: React.FC = () => {
           style={styles.iconButton}
           activeOpacity={0.7}
         >
-          <Icon
-            name="arrowLeft"
-            size={22}
-            color={theme.colors.text.primary}
-          />
+          <Icon name="arrowLeft" size={22} color={theme.colors.text.primary} />
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
@@ -296,33 +309,17 @@ export const AIChatScreen: React.FC = () => {
             activeOpacity={0.7}
             accessibilityLabel="All AI Clinical Tools"
           >
-            <Icon
-              name="sparkle"
-              size={22}
-              color={theme.colors.text.primary}
-            />
+            <Icon name="sparkle" size={22} color={theme.colors.text.primary} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={handleNewChat}
-            activeOpacity={0.7}
-          >
-            <Icon
-              name="plus"
-              size={22}
-              color={theme.colors.text.primary}
-            />
+          <TouchableOpacity style={styles.iconButton} onPress={handleNewChat} activeOpacity={0.7}>
+            <Icon name="plus" size={22} color={theme.colors.text.primary} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => setSidebarVisible(true)}
             activeOpacity={0.7}
           >
-            <Icon
-              name="history"
-              size={22}
-              color={theme.colors.text.primary}
-            />
+            <Icon name="history" size={22} color={theme.colors.text.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -384,32 +381,17 @@ export const AIChatScreen: React.FC = () => {
             return (
               <View
                 key={index}
-                style={[
-                  styles.messageRow,
-                  isUser ? styles.userRow : styles.modelRow,
-                ]}
+                style={[styles.messageRow, isUser ? styles.userRow : styles.modelRow]}
               >
                 {!isUser && (
                   <View style={styles.modelAvatarCircle}>
-                    <LinearGradient
-                      colors={['#0F1115', '#262A33']}
-                      style={styles.avatarGradient}
-                    >
-                      <Icon
-                        name="sparkle"
-                        size={14}
-                        color="#FFFFFF"
-                      />
+                    <LinearGradient colors={['#0F1115', '#262A33']} style={styles.avatarGradient}>
+                      <Icon name="sparkle" size={14} color="#FFFFFF" />
                     </LinearGradient>
                   </View>
                 )}
 
-                <View
-                  style={[
-                    styles.bubble,
-                    isUser ? styles.userBubble : styles.modelBubble,
-                  ]}
-                >
+                <View style={[styles.bubble, isUser ? styles.userBubble : styles.modelBubble]}>
                   {isUser ? (
                     <Text style={styles.userMessageText}>{msg.text}</Text>
                   ) : (
@@ -433,22 +415,12 @@ export const AIChatScreen: React.FC = () => {
           {loading && (
             <View style={[styles.messageRow, styles.modelRow]}>
               <View style={styles.modelAvatarCircle}>
-                <LinearGradient
-                  colors={['#0F1115', '#262A33']}
-                  style={styles.avatarGradient}
-                >
-                  <Icon
-                    name="sparkle"
-                    size={14}
-                    color="#FFFFFF"
-                  />
+                <LinearGradient colors={['#0F1115', '#262A33']} style={styles.avatarGradient}>
+                  <Icon name="sparkle" size={14} color="#FFFFFF" />
                 </LinearGradient>
               </View>
               <View style={[styles.bubble, styles.modelBubble, { paddingVertical: 14 }]}>
-                <ActivityIndicator
-                  size="small"
-                  color={theme.colors.primary.main}
-                />
+                <ActivityIndicator size="small" color={theme.colors.primary.main} />
               </View>
             </View>
           )}
@@ -467,11 +439,7 @@ export const AIChatScreen: React.FC = () => {
                   onPress={() => sendMessage(s.prompt)}
                   activeOpacity={0.7}
                 >
-                  <Icon
-                    name={s.icon}
-                    size={15}
-                    color={theme.colors.primary.main}
-                  />
+                  <Icon name={s.icon} size={15} color={theme.colors.primary.main} />
                   <Text style={styles.suggestionText}>{s.label}</Text>
                 </TouchableOpacity>
               ))}

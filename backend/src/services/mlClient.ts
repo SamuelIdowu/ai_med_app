@@ -136,19 +136,24 @@ export class MLClient {
   /**
    * Streams tokenized emergency triage guidelines and reasoning from Python ML server
    */
-  async streamTriage(query: string, symptoms: string[] = []): Promise<Readable> {
-    const response = await this.client.post(
-      `${this.baseUrl}/v1/ml/triage/stream`,
-      { query, symptoms },
-      {
-        responseType: 'stream',
-        timeout: 15000,
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-        },
-      }
-    );
+  async streamTriage(
+    query: string,
+    symptoms: string[] = [],
+    medicalContext?: string,
+  ): Promise<Readable> {
+    const payload: Record<string, unknown> = { query, symptoms };
+    if (medicalContext?.trim()) {
+      payload.medical_context = medicalContext.trim();
+    }
+
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/stream`, payload, {
+      responseType: 'stream',
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+    });
 
     return response.data as Readable;
   }
@@ -157,7 +162,10 @@ export class MLClient {
    * Synchronously evaluates triage query using the ML engine
    */
   async evaluateTriageSync(query: string, symptoms: string[] = []): Promise<SyncTriageResult> {
-    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/evaluate`, { query, symptoms });
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/evaluate`, {
+      query,
+      symptoms,
+    });
     return response.data as SyncTriageResult;
   }
 

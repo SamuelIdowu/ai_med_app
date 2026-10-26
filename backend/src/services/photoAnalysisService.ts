@@ -11,17 +11,9 @@ import * as encounterService from './encounterService';
 
 export type PhotoAnalysisMode = 'auto' | 'wound' | 'general';
 export type PhotoAnalysisResultMode = 'wound' | 'general';
-export type PhotoAnalysisSeverity =
-  | 'mild'
-  | 'moderate'
-  | 'severe'
-  | 'critical'
-  | 'none';
+export type PhotoAnalysisSeverity = 'mild' | 'moderate' | 'severe' | 'critical' | 'none';
 export type PhotoAnalysisFallbackReason =
-  | 'ml_unavailable'
-  | 'ml_error'
-  | 'non_medical'
-  | 'low_confidence';
+  'ml_unavailable' | 'ml_error' | 'non_medical' | 'low_confidence';
 
 export interface StructuredPhotoAnalysis {
   severity: PhotoAnalysisSeverity;
@@ -41,6 +33,7 @@ export interface PhotoAnalysisRequest {
   fileName?: string;
   userId: string;
   accessToken?: string;
+  profileContext?: string;
 }
 
 export interface PhotoAnalysisResponse {
@@ -62,11 +55,15 @@ export interface PhotoAnalysisDependencies {
   prepareImage: (base64Image: string) => Promise<ProcessedImageData>;
   checkMLHealth: () => Promise<boolean>;
   analyzeWound: (buffer: Buffer, fileName: string) => Promise<WoundAnalysisResult>;
-  analyzeGeneral: (base64Image: string, mimeType: string) => Promise<unknown>;
+  analyzeGeneral: (
+    base64Image: string,
+    mimeType: string,
+    profileContext?: string,
+  ) => Promise<unknown>;
   createEncounter: (
     userId: string,
     data: Record<string, unknown>,
-    token?: string
+    token?: string,
   ) => Promise<{ id: string }>;
   deleteEncounter: (encounterId: string, userId: string, token?: string) => Promise<unknown>;
   uploadImage: (args: {
@@ -93,7 +90,7 @@ export const buildPhotoStoragePath = (
   userId: string,
   encounterId: string,
   fileName: string,
-  timestamp: number = Date.now()
+  timestamp: number = Date.now(),
 ): string => {
   const safeFileName = sanitizeFilename(fileName || `photo-${timestamp}.jpg`);
   return `${userId}/${encounterId}/${timestamp}-${safeFileName}`;
@@ -108,7 +105,7 @@ const prepareImage = async (base64Image: string): Promise<ProcessedImageData> =>
         'INVALID_IMAGE',
         validation.errors.join(', '),
         validation.errors.join(', '),
-        400
+        400,
       );
     }
     return ImageProcessingService.processImage(buffer);
@@ -118,7 +115,7 @@ const prepareImage = async (base64Image: string): Promise<ProcessedImageData> =>
       'INVALID_IMAGE',
       error instanceof Error ? error.message : 'Invalid image',
       'The image could not be processed. Please choose a clear JPEG or PNG photo.',
-      400
+      400,
     );
   }
 };
@@ -159,9 +156,7 @@ const normalizeWoundAnalysis = (analysis: WoundAnalysisResult): StructuredPhotoA
   const severity = normalizeMLSeverity(analysis.severity_grade);
   const classification = analysis.classification || 'unknown';
   const isNonMedical =
-    classification === 'non_medical_image' ||
-    classification === 'unknown' ||
-    severity === 'none';
+    classification === 'non_medical_image' || classification === 'unknown' || severity === 'none';
   const recommendations = analysis.recommendation ? [analysis.recommendation] : [];
 
   return {
@@ -204,9 +199,7 @@ const normalizeGeneralAnalysis = (analysis: unknown): StructuredPhotoAnalysis =>
     typeof value.injuryType === 'string' && value.injuryType.trim()
       ? value.injuryType
       : 'General Assessment';
-  const isNonMedical =
-    classification === 'non_medical_image' ||
-    severity === 'none';
+  const isNonMedical = classification === 'non_medical_image' || severity === 'none';
 
   return {
     severity,
@@ -217,8 +210,7 @@ const normalizeGeneralAnalysis = (analysis: unknown): StructuredPhotoAnalysis =>
     symptoms: stringArray(value.symptoms),
     recommendations: stringArray(value.recommendations),
     warnings: stringArray(value.warnings),
-    rawAnalysis:
-      typeof value.rawAnalysis === 'string' ? value.rawAnalysis : undefined,
+    rawAnalysis: typeof value.rawAnalysis === 'string' ? value.rawAnalysis : undefined,
   };
 };
 
@@ -239,7 +231,7 @@ const toReadableAnalysis = (analysis: StructuredPhotoAnalysis): string => {
     parts.push(
       `\nFirst Aid Steps:\n${analysis.recommendations
         .map((item, index) => `${index + 1}. ${item}`)
-        .join('\n')}`
+        .join('\n')}`,
     );
   }
   if (analysis.warnings.length > 0) {
@@ -259,9 +251,7 @@ const shouldFallbackFromML = (analysis: StructuredPhotoAnalysis): boolean => {
   );
 };
 
-const fallbackReasonForML = (
-  analysis: StructuredPhotoAnalysis
-): PhotoAnalysisFallbackReason => {
+const fallbackReasonForML = (analysis: StructuredPhotoAnalysis): PhotoAnalysisFallbackReason => {
   if (analysis.isNonMedical || analysis.classification === 'non_medical_image') {
     return 'non_medical';
   }
@@ -272,36 +262,31 @@ const defaultDependencies: PhotoAnalysisDependencies = {
   prepareImage,
   checkMLHealth: () => defaultMLClient.checkHealth(),
   analyzeWound: (buffer, fileName) => defaultMLClient.analyzeWoundImage(buffer, fileName),
-  analyzeGeneral: (base64Image, mimeType) =>
-    GeminiService.analyzeImage(base64Image, mimeType),
-  createEncounter: (userId, data, token) =>
-    encounterService.createEncounter(userId, data, token),
+  analyzeGeneral: (base64Image, mimeType, profileContext) =>
+    GeminiService.analyzeImage(base64Image, mimeType, profileContext),
+  createEncounter: (userId, data, token) => encounterService.createEncounter(userId, data, token),
   deleteEncounter: (encounterId, userId, token) =>
     encounterService.deleteEncounter(encounterId, userId, token),
   uploadImage: async ({ userId, encounterId, buffer, mimeType, fileName }) => {
     const supabase = getSupabaseAdmin();
     const storagePath = buildPhotoStoragePath(userId, encounterId, fileName);
-    const { error } = await supabase.storage
-      .from('medical-images')
-      .upload(storagePath, buffer, {
-        contentType: mimeType,
-        upsert: true,
-      });
+    const { error } = await supabase.storage.from('medical-images').upload(storagePath, buffer, {
+      contentType: mimeType,
+      upsert: true,
+    });
     if (error) {
       throw new AIServiceError(
         'IMAGE_STORAGE_FAILED',
         error.message,
         'The photo could not be stored securely. Please try again.',
-        500
+        500,
       );
     }
     return { storagePath };
   },
   deleteStoredImage: async (storagePath) => {
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase.storage
-      .from('medical-images')
-      .remove([storagePath]);
+    const { error } = await supabase.storage.from('medical-images').remove([storagePath]);
     if (error) {
       console.error('Failed to clean up stored photo:', error);
     }
@@ -338,7 +323,7 @@ const defaultDependencies: PhotoAnalysisDependencies = {
         'WOUND_ASSESSMENT_FAILED',
         error.message,
         'The wound assessment could not be saved. Please try again.',
-        500
+        500,
       );
     }
     return data;
@@ -347,17 +332,15 @@ const defaultDependencies: PhotoAnalysisDependencies = {
 
 export const analyzePhoto = async (
   request: PhotoAnalysisRequest,
-  dependencies: PhotoAnalysisDependencies = defaultDependencies
+  dependencies: PhotoAnalysisDependencies = defaultDependencies,
 ): Promise<PhotoAnalysisResponse> => {
   const mode: PhotoAnalysisMode = request.mode || 'auto';
   const processedImage = await dependencies.prepareImage(request.image);
   const base64Image = ImageProcessingService.bufferToBase64(
     processedImage.buffer,
-    processedImage.mimeType
+    processedImage.mimeType,
   );
-  const fileName = sanitizeFilename(
-    request.fileName || `photo-${Date.now()}.jpg`
-  );
+  const fileName = sanitizeFilename(request.fileName || `photo-${Date.now()}.jpg`);
 
   let resultMode: PhotoAnalysisResultMode = 'general';
   let fallbackReason: PhotoAnalysisFallbackReason | undefined;
@@ -367,7 +350,8 @@ export const analyzePhoto = async (
   if (mode === 'general') {
     const generalAnalysis = await dependencies.analyzeGeneral(
       base64Image,
-      processedImage.mimeType
+      processedImage.mimeType,
+      request.profileContext,
     );
     structuredAnalysis = normalizeGeneralAnalysis(generalAnalysis);
   } else {
@@ -379,27 +363,24 @@ export const analyzePhoto = async (
           'WOUND_AI_UNAVAILABLE',
           'Wound vision service is unavailable',
           'Wound analysis is temporarily unavailable. Try General AI or retry shortly.',
-          503
+          503,
         );
       }
       fallbackReason = 'ml_unavailable';
       const generalAnalysis = await dependencies.analyzeGeneral(
         base64Image,
-        processedImage.mimeType
+        processedImage.mimeType,
       );
       structuredAnalysis = normalizeGeneralAnalysis(generalAnalysis);
     } else {
       try {
-        rawWoundAnalysis = await dependencies.analyzeWound(
-          processedImage.buffer,
-          fileName
-        );
+        rawWoundAnalysis = await dependencies.analyzeWound(processedImage.buffer, fileName);
         const woundAnalysis = normalizeWoundAnalysis(rawWoundAnalysis);
         if (mode === 'auto' && shouldFallbackFromML(woundAnalysis)) {
           fallbackReason = fallbackReasonForML(woundAnalysis);
           const generalAnalysis = await dependencies.analyzeGeneral(
             base64Image,
-            processedImage.mimeType
+            processedImage.mimeType,
           );
           structuredAnalysis = normalizeGeneralAnalysis(generalAnalysis);
         } else {
@@ -412,13 +393,13 @@ export const analyzePhoto = async (
             'WOUND_AI_FAILED',
             error instanceof Error ? error.message : 'Wound analysis failed',
             'Wound analysis failed. Try General AI or retake the photo.',
-            503
+            503,
           );
         }
         fallbackReason = 'ml_error';
         const generalAnalysis = await dependencies.analyzeGeneral(
           base64Image,
-          processedImage.mimeType
+          processedImage.mimeType,
         );
         structuredAnalysis = normalizeGeneralAnalysis(generalAnalysis);
       }
@@ -436,7 +417,7 @@ export const analyzePhoto = async (
       status: 'active',
       symptoms: structuredAnalysis.symptoms,
     },
-    request.accessToken
+    request.accessToken,
   );
 
   if (!encounter?.id) {
@@ -444,7 +425,7 @@ export const analyzePhoto = async (
       'ENCOUNTER_CREATE_FAILED',
       'Encounter creation returned no ID',
       'Your analysis could not be saved. Please try again.',
-      500
+      500,
     );
   }
 
@@ -481,7 +462,7 @@ export const analyzePhoto = async (
       'PHOTO_PERSISTENCE_FAILED',
       error instanceof Error ? error.message : 'Photo persistence failed',
       'Your analysis could not be saved. Please try again.',
-      500
+      500,
     );
   }
 

@@ -42,6 +42,7 @@ classical_ml_service = ClassicalMLService()
 class TriageRequest(BaseModel):
     query: str
     symptoms: Optional[List[str]] = []
+    medical_context: Optional[str] = None
 
 class VitalsTriageRequest(BaseModel):
     heart_rate: float = 80.0
@@ -88,6 +89,10 @@ async def stream_triage(req: TriageRequest):
         if contraindications:
             warning_text = "\n⚠️ **CRITICAL SAFETY WARNING:** " + " ".join(contraindications) + "\n\n"
             yield f"data: {json.dumps({'delta': warning_text, 'critical': False})}\n\n"
+
+        if req.medical_context and req.medical_context.strip():
+            profile_text = "\n" + req.medical_context.strip() + "\n\n"
+            yield f"data: {json.dumps({'delta': profile_text, 'critical': False})}\n\n"
 
         async for chunk in triage_engine.stream_protocol_steps(req.query, req.symptoms):
             yield f"data: {json.dumps({'delta': chunk, 'critical': False})}\n\n"

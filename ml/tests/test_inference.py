@@ -30,6 +30,17 @@ def test_safe_stream_triage():
     body = res.text
     assert "done" in body
 
+def test_stream_includes_medical_profile_context():
+    res = client.post(
+        "/v1/ml/triage/stream",
+        json={
+            "query": "Scraped my knee on gravel",
+            "medical_context": "Using medical profile: Age 34; Allergies: penicillin",
+        },
+    )
+    assert res.status_code == 200
+    assert "Using medical profile: Age 34; Allergies: penicillin" in res.text
+
 def test_embed_endpoint():
     res = client.post("/v1/ml/embed", json={"text": "CPR chest compression protocol"})
     assert res.status_code == 200

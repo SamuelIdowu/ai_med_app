@@ -7,7 +7,7 @@ import {
 } from '../photoAnalysisService';
 
 const makeDependencies = (
-  overrides: Partial<PhotoAnalysisDependencies> = {}
+  overrides: Partial<PhotoAnalysisDependencies> = {},
 ): PhotoAnalysisDependencies => ({
   prepareImage: jest.fn(async () => ({
     buffer: Buffer.from('processed-image'),
@@ -54,7 +54,7 @@ const request: PhotoAnalysisRequest = {
 describe('photoAnalysisService', () => {
   it('builds user-scoped storage paths for private bucket access', () => {
     expect(buildPhotoStoragePath('user-1', 'encounter-1', 'My Wound.JPG', 1234)).toBe(
-      'user-1/encounter-1/1234-my_wound.jpg'
+      'user-1/encounter-1/1234-my_wound.jpg',
     );
   });
 
@@ -87,14 +87,14 @@ describe('photoAnalysisService', () => {
         category: 'Wound Scan',
         notes: expect.stringContaining('Assessment: laceration'),
       }),
-      'token-1'
+      'token-1',
     );
     expect(dependencies.uploadImage).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',
         encounterId: 'encounter-1',
         fileName: 'my_wound.jpg',
-      })
+      }),
     );
     expect(dependencies.insertWoundAssessment).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -102,7 +102,7 @@ describe('photoAnalysisService', () => {
         storagePath: 'encounters/encounter-1/photo.jpg',
         confidence: 0.92,
         severity: 'moderate',
-      })
+      }),
     );
   });
 
@@ -185,9 +185,7 @@ describe('photoAnalysisService', () => {
       checkMLHealth: jest.fn(async () => false),
     });
 
-    await expect(
-      analyzePhoto({ ...request, mode: 'wound' }, dependencies)
-    ).rejects.toMatchObject({
+    await expect(analyzePhoto({ ...request, mode: 'wound' }, dependencies)).rejects.toMatchObject({
       code: 'WOUND_AI_UNAVAILABLE',
       statusCode: 503,
     });
@@ -208,6 +206,25 @@ describe('photoAnalysisService', () => {
     expect(dependencies.insertWoundAssessment).not.toHaveBeenCalled();
   });
 
+  it('passes the user profile context to general AI analysis', async () => {
+    const dependencies = makeDependencies();
+
+    await analyzePhoto(
+      {
+        ...request,
+        mode: 'general',
+        profileContext: 'USER MEDICAL PROFILE: Allergies: penicillin',
+      },
+      dependencies,
+    );
+
+    expect(dependencies.analyzeGeneral).toHaveBeenCalledWith(
+      expect.any(String),
+      'image/jpeg',
+      'USER MEDICAL PROFILE: Allergies: penicillin',
+    );
+  });
+
   it('deletes the encounter when image persistence fails', async () => {
     const dependencies = makeDependencies({
       uploadImage: jest.fn(async () => {
@@ -219,11 +236,7 @@ describe('photoAnalysisService', () => {
       code: 'PHOTO_PERSISTENCE_FAILED',
     });
 
-    expect(dependencies.deleteEncounter).toHaveBeenCalledWith(
-      'encounter-1',
-      'user-1',
-      'token-1'
-    );
+    expect(dependencies.deleteEncounter).toHaveBeenCalledWith('encounter-1', 'user-1', 'token-1');
     expect(dependencies.deleteStoredImage).not.toHaveBeenCalled();
   });
 
@@ -238,13 +251,7 @@ describe('photoAnalysisService', () => {
       code: 'PHOTO_PERSISTENCE_FAILED',
     });
 
-    expect(dependencies.deleteStoredImage).toHaveBeenCalledWith(
-      'encounters/encounter-1/photo.jpg'
-    );
-    expect(dependencies.deleteEncounter).toHaveBeenCalledWith(
-      'encounter-1',
-      'user-1',
-      'token-1'
-    );
+    expect(dependencies.deleteStoredImage).toHaveBeenCalledWith('encounters/encounter-1/photo.jpg');
+    expect(dependencies.deleteEncounter).toHaveBeenCalledWith('encounter-1', 'user-1', 'token-1');
   });
 });

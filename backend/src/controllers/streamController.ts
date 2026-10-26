@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import path from 'path';
 import { MLClient } from '../services/mlClient';
 import { getSupabaseAdmin } from '../db/client';
+import { getMedicalProfileContext } from '../services/aiContextService';
 
 let mlClientInstance: MLClient | null = null;
 
@@ -54,6 +55,8 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
     }
   }
 
+  const medicalContext = await getMedicalProfileContext(userId);
+
   // Setup Server-Sent Events headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -74,7 +77,11 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
     });
 
     // 2. Stream tokens from Python ML Engine
-    const mlStream = await mlClient.streamTriage(query, symptoms);
+    const mlStream = await mlClient.streamTriage(
+      query,
+      symptoms,
+      medicalContext.display || undefined,
+    );
 
     // Teardown listener for client abort
     req.on('close', () => {
