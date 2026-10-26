@@ -4,6 +4,8 @@
 import { Icon } from '../components/Icon';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Linking,
+  Platform,
   View,
   Text,
   StyleSheet,
@@ -11,18 +13,24 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LocationBanner } from '../components/LocationBanner';
 import { ProviderMap } from '../components/Map/ProviderMap';
 import { buildProviderMarkers } from '../components/Map/providerMapUtils';
 import { RootStackParamList } from '../navigation/types';
 import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
 import {
-  getUserLocationWithStatus,
   calculateDistanceMiles,
   formatDistance,
+  getValidCoordinates,
+  getUserLocationWithStatus,
+  type Coordinates,
+  type LocationPermissionStatus,
+  type LocationSource,
 } from '../services/geoUtils';
 import { callPhone, openDirections } from '../services/mapLinks';
 import { theme } from '../theme';
@@ -38,10 +46,9 @@ export const ProviderDetailScreen: React.FC = () => {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [distanceText, setDistanceText] = useState<string>('');
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(
-    null
-  );
-  const [locationGranted, setLocationGranted] = useState(false);
+  const [userCoords, setUserCoords] = useState<Coordinates | null>(null);
+  const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
+  const [locationSource, setLocationSource] = useState<LocationSource>('none');
 
   const loadProvider = useCallback(async () => {
     try {
@@ -52,17 +59,26 @@ export const ProviderDetailScreen: React.FC = () => {
       if (!data) return;
 
       const location = await getUserLocationWithStatus();
-      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
-      setLocationGranted(location.status === 'granted');
+      const coords =
+        location.latitude !== null && location.longitude !== null
+          ? { latitude: location.latitude, longitude: location.longitude }
+          : null;
+      const providerCoords = getValidCoordinates(data.lat, data.lng);
 
-      if (data.lat !== null && data.lat !== undefined && data.lng !== null && data.lng !== undefined) {
+      setUserCoords(coords);
+      setLocationStatus(location.status);
+      setLocationSource(location.source);
+
+      if (coords && providerCoords) {
         const miles = calculateDistanceMiles(
-          location.latitude,
-          location.longitude,
-          data.lat,
-          data.lng
+          coords.latitude,
+          coords.longitude,
+          providerCoords.latitude,
+          providerCoords.longitude
         );
         setDistanceText(formatDistance(miles));
+      } else {
+        setDistanceText('');
       }
     } catch (error) {
       console.error('Failed to load provider detail:', error);
@@ -70,6 +86,17 @@ export const ProviderDetailScreen: React.FC = () => {
       setLoading(false);
     }
   }, [providerId]);
+
+  const handleLocationPress = useCallback(() => {
+    if (locationStatus === 'denied' && Platform.OS !== 'web') {
+      Linking.openSettings().catch(() => {
+        void loadProvider();
+      });
+      return;
+    }
+
+    void loadProvider();
+  }, [loadProvider, locationStatus]);
 
   useEffect(() => {
     loadProvider();
@@ -93,7 +120,8 @@ export const ProviderDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <StatusBar style="dark" />
+        <ActivityIndicator size="large" color={theme.colors.primary.hover} />
         <Text style={styles.loadingText}>Loading facility details...</Text>
       </View>
     );
@@ -102,9 +130,10 @@ export const ProviderDetailScreen: React.FC = () => {
   if (!provider) {
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar style="dark" />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="caretLeft" size={24} color="#FFFFFF" />
+            <Icon name="caretLeft" size={24} color={theme.colors.primary.hover} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Provider Details</Text>
           <View style={{ width: 40 }} />
@@ -121,6 +150,7 @@ export const ProviderDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar style="dark" />
       {/* Top App Bar */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -128,7 +158,7 @@ export const ProviderDetailScreen: React.FC = () => {
           style={styles.backButton}
           accessibilityLabel="Go back"
         >
-          <Icon name="caretLeft" size={24} color="#FFFFFF" />
+          <Icon name="caretLeft" size={24} color={theme.colors.primary.hover} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {provider.name}
@@ -146,7 +176,7 @@ export const ProviderDetailScreen: React.FC = () => {
                 providers={mapProviders}
                 selectedProviderId={provider.id}
                 userCoordinate={userCoords}
-                showUserLocation={locationGranted}
+                showUserLocation={Boolean(userCoords)}
                 interactive={false}
                 style={styles.mapView}
               />
@@ -156,7 +186,11 @@ export const ProviderDetailScreen: React.FC = () => {
                 activeOpacity={0.85}
                 accessibilityLabel="Open this facility in Maps"
               >
-                <Icon name="navigationArrow" size={15} color="#FFFFFF" />
+                <Icon
+                  name="navigationArrow"
+                  size={15}
+                  color={theme.colors.text.inverse}
+                />
                 <Text style={styles.mapDirectionsText}>Directions</Text>
               </TouchableOpacity>
             </>
@@ -166,7 +200,7 @@ export const ProviderDetailScreen: React.FC = () => {
               onPress={handleOpenMaps}
               activeOpacity={0.8}
             >
-              <Icon name="mapPin" size={44} color="#FFFFFF" />
+              <Icon name="mapPin" size={44} color={theme.colors.primary.hover} />
               <Text style={styles.mapWebText}>Tap to Open Interactive Map</Text>
               {distanceText ? (
                 <Text style={styles.mapDistanceTag}>{distanceText}</Text>
@@ -174,6 +208,16 @@ export const ProviderDetailScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        {locationStatus ? (
+          <View style={styles.locationBannerContainer}>
+            <LocationBanner
+              status={locationStatus}
+              source={locationSource}
+              onPress={handleLocationPress}
+            />
+          </View>
+        ) : null}
 
         {/* Facility Header Info */}
         <View style={styles.infoSection}>
@@ -184,7 +228,11 @@ export const ProviderDetailScreen: React.FC = () => {
             </View>
             {distanceText ? (
               <View style={styles.distanceBadge}>
-                <Icon name="navigationArrow" size={13} color="#9CA3AF" />
+                <Icon
+                  name="navigationArrow"
+                  size={13}
+                  color={theme.colors.text.muted}
+                />
                 <Text style={styles.distanceBadgeText}>{distanceText}</Text>
               </View>
             ) : null}
@@ -197,7 +245,7 @@ export const ProviderDetailScreen: React.FC = () => {
             {/* Address */}
             <TouchableOpacity style={styles.detailItem} onPress={handleOpenMaps}>
               <View style={styles.iconBox}>
-                <Icon name="mapPin" size={22} color="#FFFFFF" />
+                <Icon name="mapPin" size={22} color={theme.colors.primary.hover} />
               </View>
               <View style={styles.itemContent}>
                 <Text style={styles.itemValue}>{provider.address || 'Address on file'}</Text>
@@ -208,7 +256,7 @@ export const ProviderDetailScreen: React.FC = () => {
             {/* Phone */}
             <TouchableOpacity style={styles.detailItem} onPress={handleCall}>
               <View style={styles.iconBox}>
-                <Icon name="phoneCall" size={20} color="#FFFFFF" />
+                <Icon name="phoneCall" size={20} color={theme.colors.primary.hover} />
               </View>
               <View style={styles.itemContent}>
                 <Text style={styles.itemValue}>{provider.phone || 'Phone not available'}</Text>
@@ -219,7 +267,7 @@ export const ProviderDetailScreen: React.FC = () => {
             {/* Emergency Service status */}
             <View style={styles.detailItem}>
               <View style={styles.iconBox}>
-                <Icon name="clock" size={22} color="#FFFFFF" />
+                <Icon name="clock" size={22} color={theme.colors.primary.hover} />
               </View>
               <View style={styles.itemContent}>
                 <Text style={styles.itemValue}>Open 24/7 for Emergencies</Text>
@@ -239,7 +287,7 @@ export const ProviderDetailScreen: React.FC = () => {
           onPress={handleOpenMaps}
           accessibilityLabel="Open clinic directions in Maps"
         >
-          <Icon name="navigationArrow" size={20} color="#0F1115" />
+          <Icon name="navigationArrow" size={20} color={theme.colors.text.inverse} />
           <Text style={styles.primaryButtonText}>Open in Maps</Text>
         </TouchableOpacity>
 
@@ -248,7 +296,7 @@ export const ProviderDetailScreen: React.FC = () => {
           onPress={handleCall}
           accessibilityLabel="Call clinic now"
         >
-          <Icon name="phoneCall" size={18} color="#FFFFFF" />
+          <Icon name="phoneCall" size={18} color={theme.colors.primary.hover} />
           <Text style={styles.secondaryButtonText}>Call Now</Text>
         </TouchableOpacity>
       </View>
@@ -259,11 +307,11 @@ export const ProviderDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -271,21 +319,21 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: theme.colors.text.secondary,
   },
   errorText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginBottom: 16,
   },
   retryBtn: {
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.primary.hover,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 12,
   },
   retryBtnText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '600',
   },
   header: {
@@ -294,22 +342,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.palette.darkSideMoon,
+    backgroundColor: theme.colors.canvas.background,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.palette.petroBlue,
+    borderBottomColor: theme.colors.canvas.border,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: theme.colors.palette.eliteTeal,
+    backgroundColor: theme.colors.primary.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     flex: 1,
     textAlign: 'center',
     paddingHorizontal: 12,
@@ -322,14 +370,18 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: theme.colors.palette.eliteTeal,
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderWidth: 1,
-    borderColor: theme.colors.palette.petroBlue,
-    ...theme.spatial.shadows3d.level1,
+    borderColor: theme.colors.canvas.border,
+    ...theme.spatial.shadows.card,
   },
   mapView: {
     width: '100%',
     height: '100%',
+  },
+  locationBannerContainer: {
+    marginHorizontal: 16,
+    marginBottom: 12,
   },
   mapDirectionsPill: {
     position: 'absolute',
@@ -338,41 +390,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: theme.colors.palette.coralCoast,
+    backgroundColor: theme.colors.primary.hover,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 18,
-    ...theme.spatial.shadows3d.level1,
+    ...theme.spatial.shadows.md,
   },
   mapDirectionsText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   mapWebFallback: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.palette.eliteTeal,
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     gap: 8,
   },
   mapWebText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
   },
   mapDistanceTag: {
     fontSize: 12,
-    color: theme.colors.palette.blissfulBlue,
+    color: theme.colors.text.secondary,
   },
   pinBubble: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: theme.colors.palette.eliteTeal,
+    backgroundColor: theme.colors.primary.hover,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: theme.colors.canvas.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -382,7 +434,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginBottom: 8,
   },
   badgeRow: {
@@ -392,7 +444,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   badge: {
-    backgroundColor: theme.colors.palette.petroBlue,
+    backgroundColor: theme.colors.primary.light,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 8,
@@ -400,7 +452,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.colors.palette.blissfulBlue,
+    color: theme.colors.primary.hover,
   },
   distanceBadge: {
     flexDirection: 'row',
@@ -409,12 +461,12 @@ const styles = StyleSheet.create({
   },
   distanceBadgeText: {
     fontSize: 12,
-    color: theme.colors.palette.blissfulBlue,
+    color: theme.colors.text.secondary,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: theme.colors.palette.petroBlue,
+    backgroundColor: theme.colors.canvas.border,
     marginVertical: 16,
   },
   detailList: {
@@ -423,18 +475,18 @@ const styles = StyleSheet.create({
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.palette.eliteTeal,
+    backgroundColor: theme.colors.canvas.surface,
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.palette.petroBlue,
-    ...theme.spatial.shadows3d.level1,
+    borderColor: theme.colors.canvas.border,
+    ...theme.spatial.shadows.card,
   },
   iconBox: {
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: theme.colors.palette.petroBlue,
+    backgroundColor: theme.colors.primary.light,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -445,12 +497,12 @@ const styles = StyleSheet.create({
   itemValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   itemLabel: {
     fontSize: 12,
-    color: theme.colors.palette.blissfulBlue,
+    color: theme.colors.text.muted,
   },
   footer: {
     position: 'absolute',
@@ -459,44 +511,45 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: theme.colors.palette.darkSideMoon,
+    backgroundColor: theme.colors.canvas.surface,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.palette.petroBlue,
+    borderTopColor: theme.colors.canvas.border,
     flexDirection: 'row',
     gap: 12,
+    ...theme.spatial.shadows.lg,
   },
   primaryButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.palette.coralCoast,
+    backgroundColor: theme.colors.primary.hover,
     paddingVertical: 14,
     borderRadius: theme.spatial.radii.pill,
     gap: 8,
-    ...theme.spatial.shadows3d.level2,
+    ...theme.spatial.shadows.md,
   },
   primaryButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.palette.eliteTeal,
+    backgroundColor: theme.colors.canvas.surface,
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderRadius: theme.spatial.radii.pill,
     borderWidth: 1,
-    borderColor: theme.colors.palette.petroBlue,
+    borderColor: theme.colors.canvas.border,
     gap: 6,
-    ...theme.spatial.shadows3d.level1,
+    ...theme.spatial.shadows.sm,
   },
   secondaryButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
   },
 });

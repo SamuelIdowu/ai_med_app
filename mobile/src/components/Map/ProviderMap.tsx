@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
-import { DEFAULT_USER_COORDS } from '../../services/geoUtils';
+import { FALLBACK_MAP_CENTER } from '../../services/geoUtils';
 import { theme } from '../../theme';
 import type { MapCoordinate, ProviderMapHandle, ProviderMapProps } from './mapTypes';
 import type { IconName } from '../../icons';
@@ -82,16 +82,20 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
         const map = mapRef.current;
         if (!map) return;
 
-        if (providers.length === 0) {
-          focusUser(animated);
+        const coordinates = providers.map((provider) => provider.coordinate);
+
+        if (userCoordinate) {
+          coordinates.push(userCoordinate);
+        }
+
+        if (coordinates.length === 0) {
           return;
         }
 
-        if (providers.length === 1) {
-          const only = providers[0];
+        if (coordinates.length === 1) {
           map.animateToRegion(
             {
-              ...only.coordinate,
+              ...coordinates[0],
               latitudeDelta: PROVIDER_DELTA,
               longitudeDelta: PROVIDER_DELTA,
             },
@@ -100,12 +104,9 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
           return;
         }
 
-        map.fitToCoordinates(
-          providers.map((provider) => provider.coordinate),
-          { edgePadding: FIT_PADDING, animated }
-        );
+        map.fitToCoordinates(coordinates, { edgePadding: FIT_PADDING, animated });
       },
-      [focusUser, providers]
+      [providers, userCoordinate]
     );
 
     useImperativeHandle(
@@ -122,7 +123,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
     }, [fitToProviders, isReady]);
 
     const initialCoordinate: MapCoordinate =
-      userCoordinate ?? providers[0]?.coordinate ?? DEFAULT_USER_COORDS;
+      userCoordinate ?? providers[0]?.coordinate ?? FALLBACK_MAP_CENTER;
 
     return (
       <MapView
@@ -138,6 +139,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
         showsMyLocationButton={false}
         showsCompass={false}
         toolbarEnabled={false}
+        userInterfaceStyle="light"
         pitchEnabled={false}
         rotateEnabled={interactive}
         scrollEnabled={interactive}
@@ -170,7 +172,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
                 <Icon
                   name={markerIcon(provider.type)}
                   size={20}
-                  color="#FFFFFF"
+                  color={theme.colors.text.inverse}
                 />
               </View>
               <Callout
@@ -184,7 +186,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
                     <Icon
                       name={markerIcon(provider.type)}
                       size={16}
-                      color={theme.colors.palette.darkSideMoon}
+                      color={theme.colors.primary.hover}
                     />
                     <Text style={styles.calloutTitle} numberOfLines={2}>
                       {provider.name}
@@ -221,12 +223,12 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: theme.colors.palette.eliteTeal,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: theme.colors.canvas.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   markerSelected: {
-    backgroundColor: theme.colors.palette.coralCoast,
+    backgroundColor: theme.colors.primary.hover,
     transform: [{ scale: 1.18 }],
   },
   callout: {
@@ -243,23 +245,23 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.palette.darkSideMoon,
+    color: theme.colors.text.primary,
   },
   calloutMeta: {
     fontSize: 11,
     fontWeight: '600',
-    color: theme.colors.palette.coralCoast,
+    color: theme.colors.primary.hover,
     marginTop: 4,
   },
   calloutAddress: {
     fontSize: 11,
-    color: theme.colors.palette.pompeiiAsh,
+    color: theme.colors.text.muted,
     marginTop: 2,
   },
   calloutAction: {
     fontSize: 11,
     fontWeight: '700',
-    color: theme.colors.palette.eliteTeal,
+    color: theme.colors.primary.hover,
     marginTop: 6,
   },
 });

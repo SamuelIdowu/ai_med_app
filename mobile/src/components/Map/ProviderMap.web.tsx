@@ -11,7 +11,8 @@ import React, {
 import { StyleSheet, View } from 'react-native';
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { DEFAULT_USER_COORDS } from '../../services/geoUtils';
+import { FALLBACK_MAP_CENTER } from '../../services/geoUtils';
+import { theme } from '../../theme';
 import type {
   MapCoordinate,
   MapProvider,
@@ -31,10 +32,10 @@ function toLatLng(coordinate: MapCoordinate): L.LatLngTuple {
 }
 
 function markerColor(provider: MapProvider, selected: boolean): string {
-  if (selected) return '#F26B5E';
-  if (provider.type?.toLowerCase() === 'hospital') return '#D9554A';
+  if (selected) return theme.colors.primary.hover;
+  if (provider.type?.toLowerCase() === 'hospital') return theme.colors.emergency.primary;
   if (provider.type?.toLowerCase() === 'pharmacy') return '#4C6FFF';
-  return '#123B3A';
+  return theme.colors.palette.eliteTeal;
 }
 
 function buildPopupContent(
@@ -44,7 +45,7 @@ function buildPopupContent(
   const root = document.createElement('div');
   root.style.minWidth = '180px';
   root.style.fontFamily = 'PlusJakartaSans, sans-serif';
-  root.style.color = '#111318';
+  root.style.color = theme.colors.text.primary;
 
   const title = document.createElement('div');
   title.textContent = provider.name;
@@ -59,7 +60,7 @@ function buildPopupContent(
     metaLine.textContent = meta;
     metaLine.style.fontSize = '11px';
     metaLine.style.fontWeight = '600';
-    metaLine.style.color = '#D9554A';
+    metaLine.style.color = theme.colors.primary.hover;
     metaLine.style.marginBottom = '4px';
     root.appendChild(metaLine);
   }
@@ -68,7 +69,7 @@ function buildPopupContent(
     const address = document.createElement('div');
     address.textContent = provider.address;
     address.style.fontSize = '11px';
-    address.style.color = '#667085';
+    address.style.color = theme.colors.text.muted;
     address.style.marginBottom = '8px';
     root.appendChild(address);
   }
@@ -80,8 +81,8 @@ function buildPopupContent(
     button.style.border = 'none';
     button.style.borderRadius = '8px';
     button.style.padding = '7px 10px';
-    button.style.backgroundColor = '#123B3A';
-    button.style.color = '#FFFFFF';
+    button.style.backgroundColor = theme.colors.primary.hover;
+    button.style.color = theme.colors.text.inverse;
     button.style.fontSize = '11px';
     button.style.fontWeight = '700';
     button.style.cursor = 'pointer';
@@ -111,7 +112,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
     const providerLayerRef = useRef<L.LayerGroup | null>(null);
     const userLayerRef = useRef<L.LayerGroup | null>(null);
     const initialCenterRef = useRef<MapCoordinate>(
-      userCoordinate ?? providers[0]?.coordinate ?? DEFAULT_USER_COORDS
+      userCoordinate ?? providers[0]?.coordinate ?? FALLBACK_MAP_CENTER
     );
 
     const focusProvider = useCallback(
@@ -142,19 +143,22 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
         const map = mapRef.current;
         if (!map) return;
 
-        if (providers.length === 0) {
-          if (userCoordinate) {
-            map.setView(toLatLng(userCoordinate), 13, { animate: animated });
-          }
+        const coordinates = providers.map((provider) => toLatLng(provider.coordinate));
+
+        if (userCoordinate) {
+          coordinates.push(toLatLng(userCoordinate));
+        }
+
+        if (coordinates.length === 0) {
           return;
         }
 
-        if (providers.length === 1) {
-          map.setView(toLatLng(providers[0].coordinate), 14, { animate: animated });
+        if (coordinates.length === 1) {
+          map.setView(coordinates[0], 14, { animate: animated });
           return;
         }
 
-        const bounds = L.latLngBounds(providers.map((provider) => toLatLng(provider.coordinate)));
+        const bounds = L.latLngBounds(coordinates);
         map.fitBounds(bounds, {
           paddingTopLeft: FIT_PADDING_TOP_LEFT,
           paddingBottomRight: FIT_PADDING_BOTTOM_RIGHT,
@@ -225,7 +229,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
         const isSelected = selectedProviderId === provider.id;
         const marker = L.circleMarker(toLatLng(provider.coordinate), {
           radius: isSelected ? 11 : 8,
-          color: '#FFFFFF',
+          color: theme.colors.canvas.surface,
           weight: isSelected ? 3 : 2,
           fillColor: markerColor(provider, isSelected),
           fillOpacity: 1,
@@ -257,7 +261,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
 
       L.circleMarker(toLatLng(userCoordinate), {
         radius: 8,
-        color: '#FFFFFF',
+        color: theme.colors.canvas.surface,
         weight: 3,
         fillColor: '#2563EB',
         fillOpacity: 1,
