@@ -4,8 +4,6 @@
 import { Icon } from '../components/Icon';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Linking,
-  Platform,
   View,
   Text,
   StyleSheet,
@@ -17,7 +15,6 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LocationBanner } from '../components/LocationBanner';
 import { ProviderMap } from '../components/Map/ProviderMap';
 import { buildProviderMarkers } from '../components/Map/providerMapUtils';
 import { RootStackParamList } from '../navigation/types';
@@ -26,11 +23,7 @@ import { ProviderService } from '../services/providerService';
 import {
   calculateDistanceMiles,
   formatDistance,
-  getValidCoordinates,
   getUserLocationWithStatus,
-  type Coordinates,
-  type LocationPermissionStatus,
-  type LocationSource,
 } from '../services/geoUtils';
 import { callPhone, openDirections } from '../services/mapLinks';
 import { theme } from '../theme';
@@ -46,9 +39,10 @@ export const ProviderDetailScreen: React.FC = () => {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [distanceText, setDistanceText] = useState<string>('');
-  const [userCoords, setUserCoords] = useState<Coordinates | null>(null);
-  const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
-  const [locationSource, setLocationSource] = useState<LocationSource>('none');
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
+  const [locationGranted, setLocationGranted] = useState(false);
 
   const loadProvider = useCallback(async () => {
     try {
@@ -59,26 +53,22 @@ export const ProviderDetailScreen: React.FC = () => {
       if (!data) return;
 
       const location = await getUserLocationWithStatus();
-      const coords =
-        location.latitude !== null && location.longitude !== null
-          ? { latitude: location.latitude, longitude: location.longitude }
-          : null;
-      const providerCoords = getValidCoordinates(data.lat, data.lng);
+      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
+      setLocationGranted(location.status === 'granted');
 
-      setUserCoords(coords);
-      setLocationStatus(location.status);
-      setLocationSource(location.source);
-
-      if (coords && providerCoords) {
+      if (
+        data.lat !== null &&
+        data.lat !== undefined &&
+        data.lng !== null &&
+        data.lng !== undefined
+      ) {
         const miles = calculateDistanceMiles(
-          coords.latitude,
-          coords.longitude,
-          providerCoords.latitude,
-          providerCoords.longitude
+          location.latitude,
+          location.longitude,
+          data.lat,
+          data.lng
         );
         setDistanceText(formatDistance(miles));
-      } else {
-        setDistanceText('');
       }
     } catch (error) {
       console.error('Failed to load provider detail:', error);
@@ -86,17 +76,6 @@ export const ProviderDetailScreen: React.FC = () => {
       setLoading(false);
     }
   }, [providerId]);
-
-  const handleLocationPress = useCallback(() => {
-    if (locationStatus === 'denied' && Platform.OS !== 'web') {
-      Linking.openSettings().catch(() => {
-        void loadProvider();
-      });
-      return;
-    }
-
-    void loadProvider();
-  }, [loadProvider, locationStatus]);
 
   useEffect(() => {
     loadProvider();
@@ -176,7 +155,7 @@ export const ProviderDetailScreen: React.FC = () => {
                 providers={mapProviders}
                 selectedProviderId={provider.id}
                 userCoordinate={userCoords}
-                showUserLocation={Boolean(userCoords)}
+                showUserLocation={locationGranted}
                 interactive={false}
                 style={styles.mapView}
               />
@@ -208,16 +187,6 @@ export const ProviderDetailScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
-
-        {locationStatus ? (
-          <View style={styles.locationBannerContainer}>
-            <LocationBanner
-              status={locationStatus}
-              source={locationSource}
-              onPress={handleLocationPress}
-            />
-          </View>
-        ) : null}
 
         {/* Facility Header Info */}
         <View style={styles.infoSection}>
@@ -378,10 +347,6 @@ const styles = StyleSheet.create({
   mapView: {
     width: '100%',
     height: '100%',
-  },
-  locationBannerContainer: {
-    marginHorizontal: 16,
-    marginBottom: 12,
   },
   mapDirectionsPill: {
     position: 'absolute',

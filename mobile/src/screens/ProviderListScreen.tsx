@@ -4,7 +4,6 @@
 import { Icon } from '../components/Icon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AppState,
   View,
   Text,
   StyleSheet,
@@ -18,23 +17,20 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Illustration } from '../components/Illustration';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LocationBanner } from '../components/LocationBanner';
 import { ProviderMap } from '../components/Map/ProviderMap';
 import type { ProviderMapHandle } from '../components/Map/mapTypes';
 import { buildProviderMarkers } from '../components/Map/providerMapUtils';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
+import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
 import {
-  formatDistanceLabel,
   getUserLocationWithStatus,
   sortProvidersByProximity,
-  type Coordinates,
+  formatDistance,
+  DEFAULT_USER_COORDS,
   type LocationPermissionStatus,
-  type LocationSource,
-  type ProviderWithDistance,
-  type UserLocationResult,
 } from '../services/geoUtils';
 import { callPhone, openDirections } from '../services/mapLinks';
 import { showAlert } from '../services/alert';
@@ -44,7 +40,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FILTERS = ['All', 'Hospital', 'Clinic', 'Pharmacy'];
 
-type EnrichedProvider = ProviderWithDistance;
+type EnrichedProvider = Provider & { distanceMiles: number };
 
 export const ProviderListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -57,23 +53,9 @@ export const ProviderListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [userCoords, setUserCoords] = useState<Coordinates | null>(null);
+  const [userCoords, setUserCoords] = useState(DEFAULT_USER_COORDS);
   const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
-  const [locationSource, setLocationSource] = useState<LocationSource>('none');
   const [selectedProvider, setSelectedProvider] = useState<EnrichedProvider | null>(null);
-  const hasInitializedRef = useRef(false);
-
-  const applyLocationState = useCallback((location: UserLocationResult): Coordinates | null => {
-    const coords =
-      location.latitude !== null && location.longitude !== null
-        ? { latitude: location.latitude, longitude: location.longitude }
-        : null;
-
-    setUserCoords(coords);
-    setLocationStatus(location.status);
-    setLocationSource(location.source);
-    return coords;
-  }, []);
 
   const initScreenData = useCallback(async () => {
     try {
@@ -81,10 +63,11 @@ export const ProviderListScreen: React.FC = () => {
       setLoadError(null);
 
       const location = await getUserLocationWithStatus();
-      const coords = applyLocationState(location);
+      setUserCoords({ latitude: location.latitude, longitude: location.longitude });
+      setLocationStatus(location.status);
 
       const rawData = await ProviderService.getProviders();
-      const sorted = sortProvidersByProximity(rawData, coords);
+      const sorted = sortProvidersByProximity(rawData, location);
       setProviders(sorted);
     } catch (error) {
       console.error('Failed to load providers:', error);
@@ -94,7 +77,7 @@ export const ProviderListScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [applyLocationState]);
+  }, []);
 
   const filterData = useCallback(() => {
     let result = providers;
@@ -123,43 +106,9 @@ export const ProviderListScreen: React.FC = () => {
     [filteredProviders]
   );
 
-  const refreshLocation = useCallback(
-    async (options: { requestPermission?: boolean } = {}) => {
-      const location = await getUserLocationWithStatus(options);
-      const coords = applyLocationState(location);
-
-      setProviders((current) => sortProvidersByProximity(current, coords));
-
-      if (coords) {
-        setTimeout(() => mapRef.current?.focusUser(), 0);
-      }
-
-      return coords;
-    },
-    [applyLocationState]
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!hasInitializedRef.current) {
-        hasInitializedRef.current = true;
-        void initScreenData();
-        return;
-      }
-
-      void refreshLocation({ requestPermission: false });
-    }, [initScreenData, refreshLocation])
-  );
-
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active' && hasInitializedRef.current) {
-        void refreshLocation({ requestPermission: false });
-      }
-    });
-
-    return () => subscription.remove();
-  }, [refreshLocation]);
+    initScreenData();
+  }, [initScreenData]);
 
   useEffect(() => {
     filterData();
@@ -179,15 +128,28 @@ export const ProviderListScreen: React.FC = () => {
     });
   }, [filteredProviders]);
 
+  const refreshLocation = useCallback(async () => {
+    const location = await getUserLocationWithStatus();
+    const coords = { latitude: location.latitude, longitude: location.longitude };
+
+    setUserCoords(coords);
+    setLocationStatus(location.status);
+    setProviders((current) => sortProvidersByProximity(current, coords));
+
+    if (location.status === 'granted') {
+      setTimeout(() => mapRef.current?.focusUser(), 0);
+    }
+  }, []);
+
   const handleLocationPress = useCallback(() => {
     if (locationStatus === 'denied' && Platform.OS !== 'web') {
       Linking.openSettings().catch(() => {
-        void refreshLocation({ requestPermission: true });
+        refreshLocation();
       });
       return;
     }
 
-    void refreshLocation({ requestPermission: true });
+    refreshLocation();
   }, [locationStatus, refreshLocation]);
 
   const handleSelectProvider = useCallback(
@@ -211,25 +173,15 @@ export const ProviderListScreen: React.FC = () => {
     callPhone(phone);
   };
 
-  const handleCenterOnClosestClinic = async () => {
-    const coords = userCoords ?? (await refreshLocation({ requestPermission: true }));
-
-    if (!coords) {
-      showAlert(
-        'Location Needed',
-        'Enable location access to find the facility closest to you.'
-      );
-      return;
-    }
-
-    const closest = sortProvidersByProximity(filteredProviders, coords).find(
-      (provider) => provider.distanceMiles !== null
+  const handleCenterOnClosestClinic = () => {
+    const closest = filteredProviders.find(
+      (provider) => provider.lat !== null && provider.lng !== null
     );
 
     if (!closest) {
       showAlert(
-        'No Located Facilities',
-        'No facilities with valid coordinates match your filters.'
+        'No Mapped Facilities',
+        'No facilities with map coordinates match your filters.'
       );
       return;
     }
@@ -242,17 +194,10 @@ export const ProviderListScreen: React.FC = () => {
     mapRef.current?.fitToProviders();
   };
 
-  const handleRecenterOnUser = async () => {
-    if (!userCoords) {
-      const coords = await refreshLocation({ requestPermission: true });
-
-      if (!coords) {
-        showAlert(
-          'Location Needed',
-          'Enable location access to center the map on your current position.'
-        );
-        return;
-      }
+  const handleRecenterOnUser = () => {
+    if (locationStatus !== 'granted') {
+      refreshLocation();
+      return;
     }
 
     mapRef.current?.focusUser();
@@ -271,9 +216,7 @@ export const ProviderListScreen: React.FC = () => {
       <View style={styles.cardHeader}>
         <View style={styles.cardContent}>
           <Text style={styles.providerName}>{item.name}</Text>
-          <Text style={styles.providerDistance}>
-            {formatDistanceLabel(item.distanceMiles) ?? 'Distance unavailable'}
-          </Text>
+          <Text style={styles.providerDistance}>{formatDistance(item.distanceMiles)}</Text>
           {item.address ? (
             <Text style={styles.providerAddress} numberOfLines={1}>
               {item.address}
@@ -372,16 +315,6 @@ export const ProviderListScreen: React.FC = () => {
         />
       </View>
 
-      {!loading && !loadError && locationStatus ? (
-        <View style={styles.inlineBannerContainer}>
-          <LocationBanner
-            status={locationStatus}
-            source={locationSource}
-            onPress={handleLocationPress}
-          />
-        </View>
-      ) : null}
-
       {/* Content Body: List vs Map View */}
       {loadError ? (
         <View style={styles.centerContainer}>
@@ -436,20 +369,33 @@ export const ProviderListScreen: React.FC = () => {
             providers={mapProviders}
             selectedProviderId={selectedProvider?.id ?? null}
             userCoordinate={userCoords}
-            showUserLocation={Boolean(userCoords)}
+            showUserLocation={locationStatus === 'granted'}
             interactive
             onSelectProvider={handleSelectProvider}
             onOpenProvider={handleOpenProvider}
             style={StyleSheet.absoluteFillObject}
           />
 
-          {locationStatus ? (
-            <LocationBanner
-              status={locationStatus}
-              source={locationSource}
-              onPress={handleLocationPress}
-              variant="floating"
-            />
+          {locationStatus && locationStatus !== 'granted' ? (
+            <View style={styles.locationBanner}>
+              <Icon
+                name="mapPin"
+                size={16}
+                color={theme.colors.primary.hover}
+              />
+              <Text style={styles.locationBannerText} numberOfLines={2}>
+                Using an approximate location. Enable GPS for accurate distances.
+              </Text>
+              <TouchableOpacity
+                style={styles.locationBannerAction}
+                onPress={handleLocationPress}
+                accessibilityLabel="Update location permission"
+              >
+                <Text style={styles.locationBannerActionText}>
+                  {locationStatus === 'denied' && Platform.OS !== 'web' ? 'Settings' : 'Retry'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           ) : null}
 
           {mapProviders.length === 0 ? (
@@ -527,8 +473,8 @@ export const ProviderListScreen: React.FC = () => {
                     {selectedProvider.name}
                   </Text>
                   <Text style={styles.bottomCardMeta}>
-                    {[selectedProvider.type, formatDistanceLabel(selectedProvider.distanceMiles)]
-                      .filter((value): value is string => Boolean(value))
+                    {[selectedProvider.type, formatDistance(selectedProvider.distanceMiles)]
+                      .filter(Boolean)
                       .join(' • ')}
                   </Text>
                   {selectedProvider.address ? (
@@ -839,10 +785,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...theme.spatial.shadows.md,
   },
-  inlineBannerContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: theme.colors.palette.darkSideMoon,
+  locationBanner: {
+    position: 'absolute',
+    top: 68,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: theme.colors.canvas.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    ...theme.spatial.shadows3d.level2,
+  },
+  locationBannerText: {
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+  },
+  locationBannerAction: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: theme.colors.primary.hover,
+  },
+  locationBannerActionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.text.inverse,
   },
   mapEmptyOverlay: {
     ...StyleSheet.absoluteFillObject,

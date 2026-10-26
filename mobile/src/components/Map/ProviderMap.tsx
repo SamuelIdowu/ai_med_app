@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
-import { FALLBACK_MAP_CENTER } from '../../services/geoUtils';
+import { DEFAULT_USER_COORDS } from '../../services/geoUtils';
 import { theme } from '../../theme';
 import type { MapCoordinate, ProviderMapHandle, ProviderMapProps } from './mapTypes';
 import type { IconName } from '../../icons';
@@ -123,7 +123,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
     }, [fitToProviders, isReady]);
 
     const initialCoordinate: MapCoordinate =
-      userCoordinate ?? providers[0]?.coordinate ?? FALLBACK_MAP_CENTER;
+      userCoordinate ?? providers[0]?.coordinate ?? DEFAULT_USER_COORDS;
 
     return (
       <MapView

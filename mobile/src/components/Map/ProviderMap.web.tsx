@@ -11,7 +11,7 @@ import React, {
 import { StyleSheet, View } from 'react-native';
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { FALLBACK_MAP_CENTER } from '../../services/geoUtils';
+import { DEFAULT_USER_COORDS } from '../../services/geoUtils';
 import { theme } from '../../theme';
 import type {
   MapCoordinate,
@@ -112,7 +112,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
     const providerLayerRef = useRef<L.LayerGroup | null>(null);
     const userLayerRef = useRef<L.LayerGroup | null>(null);
     const initialCenterRef = useRef<MapCoordinate>(
-      userCoordinate ?? providers[0]?.coordinate ?? FALLBACK_MAP_CENTER
+      userCoordinate ?? providers[0]?.coordinate ?? DEFAULT_USER_COORDS
     );
 
     const focusProvider = useCallback(
