@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../services/supabase';
+import { signInWithGoogle } from '../services/googleAuth';
 import { useAuth } from '../context/AuthContext';
 import { TactileButton } from '../components/ui/TactileButton';
 import { theme } from '../theme';
@@ -28,6 +29,7 @@ export const SignupScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async () => {
@@ -71,8 +73,24 @@ export const SignupScreen: React.FC = () => {
     }
   };
 
-  const handleGoogleSignup = () => {
-    Alert.alert('Google Sign-In', 'Google authentication is ready to connect with your Supabase credentials.');
+  const handleGoogleSignup = async () => {
+    if (googleLoading) return;
+
+    setGoogleLoading(true);
+
+    try {
+      const result = await signInWithGoogle();
+
+      if (result.status === 'cancelled') {
+        setGoogleLoading(false);
+      }
+    } catch (error) {
+      setGoogleLoading(false);
+      Alert.alert(
+        'Google Sign-In Failed',
+        error instanceof Error ? error.message : 'Could not sign in with Google.'
+      );
+    }
   };
 
   return (
@@ -98,12 +116,19 @@ export const SignupScreen: React.FC = () => {
 
           {/* Sign up with Google */}
           <TouchableOpacity
-            style={styles.socialButton}
+            style={[styles.socialButton, googleLoading && styles.socialButtonDisabled]}
             onPress={handleGoogleSignup}
             activeOpacity={0.8}
+            disabled={googleLoading}
           >
-            <Icon name="googleLogo" size={20} color={theme.colors.text.primary} />
-            <Text style={styles.socialButtonText}>Sign in with Google</Text>
+            {googleLoading ? (
+              <ActivityIndicator size="small" color={theme.colors.text.primary} />
+            ) : (
+              <Icon name="googleLogo" size={20} color={theme.colors.text.primary} />
+            )}
+            <Text style={styles.socialButtonText}>
+              {googleLoading ? 'Connecting...' : 'Sign in with Google'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.dividerRow}>
@@ -256,6 +281,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.spatial.radii.pill,
     marginBottom: 20,
     ...theme.spatial.shadows.card,
+  },
+  socialButtonDisabled: {
+    opacity: 0.65,
   },
   socialButtonText: {
     fontSize: 15,

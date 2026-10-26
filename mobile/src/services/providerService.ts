@@ -1,6 +1,13 @@
 import { Provider } from './types';
 import { api } from './api';
 import { supabase } from './supabase';
+import { normalizeLatitude, normalizeLongitude } from './geoUtils';
+
+const normalizeProvider = (provider: Provider): Provider => ({
+    ...provider,
+    lat: normalizeLatitude(provider.lat),
+    lng: normalizeLongitude(provider.lng),
+});
 
 export const ProviderService = {
     getProviders: async (): Promise<Provider[]> => {
@@ -20,7 +27,7 @@ export const ProviderService = {
                 timeoutPromise
             ]) as any;
 
-            return response.data || [];
+            return ((response.data || []) as Provider[]).map(normalizeProvider);
         } catch (e) {
             console.error('Failed to fetch providers', e);
             throw e;
@@ -43,11 +50,13 @@ export const ProviderService = {
             ]) as any;
 
             const lowerQuery = query.toLowerCase();
-            return (response.data || []).filter((p: Provider) =>
-                p.name?.toLowerCase().includes(lowerQuery) ||
-                p.type?.toLowerCase().includes(lowerQuery) ||
-                p.address?.toLowerCase().includes(lowerQuery)
-            );
+            return ((response.data || []) as Provider[])
+                .map(normalizeProvider)
+                .filter((p) =>
+                    p.name?.toLowerCase().includes(lowerQuery) ||
+                    p.type?.toLowerCase().includes(lowerQuery) ||
+                    p.address?.toLowerCase().includes(lowerQuery)
+                );
         } catch (e) {
             console.error('Failed to search providers', e);
             throw e;
@@ -61,7 +70,7 @@ export const ProviderService = {
         }
         try {
             const response = await api.get(`/providers/${id}`);
-            return response.data;
+            return normalizeProvider(response.data as Provider);
         } catch (e) {
             console.error(`Failed to get provider by id ${id}:`, e);
             return undefined;

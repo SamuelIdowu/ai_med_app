@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Readable } from 'stream';
 import axios from 'axios';
-import { MLClient } from '../mlClient';
+import { MLClient, normalizeServiceUrl } from '../mlClient';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -20,6 +20,22 @@ describe('MLClient Inter-Service Bridge', () => {
   it('instantiates client with custom base URL', () => {
     const client = new MLClient('http://custom-ml:8080');
     expect(client.getBaseUrl()).toBe('http://custom-ml:8080');
+  });
+
+  it('normalizes Render bare hostnames to HTTPS', () => {
+    expect(normalizeServiceUrl('laso-ml.onrender.com')).toBe('https://laso-ml.onrender.com');
+    expect(normalizeServiceUrl('laso-ml.onrender.com/')).toBe('https://laso-ml.onrender.com');
+  });
+
+  it('preserves protocols and uses HTTP for internal host:port values', () => {
+    expect(normalizeServiceUrl('https://laso-ml.example.com')).toBe('https://laso-ml.example.com');
+    expect(normalizeServiceUrl('laso-ml:10000')).toBe('http://laso-ml:10000');
+    expect(normalizeServiceUrl('localhost:8000')).toBe('http://localhost:8000');
+  });
+
+  it('falls back when the configured URL is empty', () => {
+    expect(normalizeServiceUrl()).toBe('http://127.0.0.1:8000');
+    expect(normalizeServiceUrl('   ')).toBe('http://127.0.0.1:8000');
   });
 
   it('checks health successfully', async () => {

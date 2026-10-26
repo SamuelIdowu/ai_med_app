@@ -55,6 +55,37 @@ export interface VitalsTriageResult {
   latency_ms: number;
 }
 
+const DEFAULT_ML_SERVICE_URL = 'http://127.0.0.1:8000';
+
+/**
+ * Render's blueprint `fromService.host` returns a bare hostname (for example
+ * `laso-ml.onrender.com`). Axios requires an absolute URL, so normalize it
+ * here. Explicit protocols are preserved, localhost and host:port values use
+ * HTTP, and public hostnames default to HTTPS.
+ */
+export function normalizeServiceUrl(value?: string): string {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return DEFAULT_ML_SERVICE_URL;
+  }
+
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+
+  if (/^https?:\/\//i.test(withoutTrailingSlash)) {
+    return withoutTrailingSlash;
+  }
+
+  if (
+    /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(withoutTrailingSlash) ||
+    /:\d+$/.test(withoutTrailingSlash)
+  ) {
+    return `http://${withoutTrailingSlash}`;
+  }
+
+  return `https://${withoutTrailingSlash}`;
+}
+
 export class MLClient {
   private baseUrl: string;
   private client: AxiosInstance;
@@ -63,7 +94,7 @@ export class MLClient {
   private readonly HEALTH_CACHE_TTL_MS = 10000;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+    this.baseUrl = normalizeServiceUrl(baseUrl || process.env.ML_SERVICE_URL);
 
     // Configure resilient HTTP agent with keep-alive
     const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 50 });

@@ -185,7 +185,7 @@ To ensure zero downtime, rapid bug fixes, and seamless patient access, updates a
   2. **Deploy**: Release backend code that reads/writes the new structure while falling back to the old.
   3. **Contract**: Once all pods run the new code, drop legacy unused columns in a follow-up migration.
 * **Execution:**
-  - Migrations are versioned SQL scripts located in [infra/supabase/](file:///c:/Users/USER/Desktop/saas%20projects/ai-med-app/infra/supabase).
+  - Migrations are versioned SQL scripts located in [backend/src/db/migrations/](file:///c:/Users/USER/Desktop/saas%20projects/ai-med-app/backend/src/db/migrations).
   - Executed either via Supabase CLI (`supabase db push`) or the Supabase SQL Editor.
 
 ---

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Laso",
     "slug": "laso",
+    "scheme": "laso",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.laso.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Laso uses your camera to analyze injuries, scan wounds, and provide guided first-aid assistance.",
         "NSMicrophoneUsageDescription": "Laso uses your microphone for hands-free voice triage during medical emergencies.",
@@ -24,6 +26,7 @@
     },
     "android": {
       "package": "com.laso.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -46,6 +49,7 @@
       "expo-secure-store",
       "expo-font",
       "expo-sqlite",
+      "expo-web-browser",
       [
         "expo-camera",
         {

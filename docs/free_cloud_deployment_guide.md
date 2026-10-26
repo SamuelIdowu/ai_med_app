@@ -40,12 +40,8 @@ This guide details how to host and deploy the entire **Laso** medical ecosystem 
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open the **SQL Editor** in the Supabase Dashboard.
-3. Run the migrations in sequence from `infra/supabase/`:
-   - `00_initial_schema.sql`
-   - `01_add_rls_policies.sql`
-   - `02_add_photo_url.sql`
-   - `03_sync_users.sql`
-   - `04_add_emergency_directives_and_notes.sql`
+3. Run every migration in `backend/src/db/migrations/` in filename order
+   (`000_initial_schema.sql` through `009_reconcile_core_schema.sql`).
 4. Create a storage bucket named `medical-images` with Private access.
 5. In **Project Settings** $\rightarrow$ **API**, copy:
    - `Project URL`
@@ -97,13 +93,19 @@ EXPO_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
 ```
 
-When building production binaries with EAS:
-```bash
-cd mobile
-npx eas-cli secret:create --name EXPO_PUBLIC_BACKEND_URL --value https://laso-backend.onrender.com/api/v1
-npx eas-cli secret:create --name EXPO_PUBLIC_SUPABASE_URL --value https://<your-project-id>.supabase.co
-npx eas-cli secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value <your-supabase-anon-key>
+When building production binaries with EAS, create these variables in the
+Expo dashboard under **Environment Variables -> production** (or use
+`eas env:create`):
+
+```text
+EXPO_PUBLIC_BACKEND_URL=https://laso-backend.onrender.com/api/v1
+EXPO_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=<optional-android-maps-key>
 ```
+
+`mobile/app.config.js` blocks production builds that use a localhost or
+private LAN backend URL.
 
 ---
 

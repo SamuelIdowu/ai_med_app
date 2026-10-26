@@ -134,9 +134,18 @@ Full reference: [ml/README.md](ml/README.md).
 
 ## Deployment
 
+Before deploying, validate the environment and cloud resources:
+
+```powershell
+cd backend
+npm run preflight:deploy
+```
+
 - [render.yaml](render.yaml) — Render blueprint: `laso-backend` + `laso-ml` Docker services, Oregon, `/health` checks
 - [docker-compose.prod.yml](docker-compose.prod.yml) — full stack incl. Redis (password required via `REDIS_PASSWORD`)
 - Secrets are configured in the Render dashboard / GitHub Actions secrets — never in the repo
+- Production EAS builds require `EXPO_PUBLIC_BACKEND_URL`, `EXPO_PUBLIC_SUPABASE_URL`, and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; see [docs/setup.md](docs/setup.md#9-production-deployment)
+- Render Free's 512 MB ML container may be too small for PyTorch; use a Hugging Face Docker Space or a paid Render plan if it fails
 
 ## Documentation
 
