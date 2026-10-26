@@ -7,7 +7,7 @@ describe('reportService', () => {
       resolvePatientName({
         users: { name: 'Jane Doe', email: 'jane@example.com' },
         blood_type: 'O+',
-      })
+      }),
     ).toBe('Jane Doe');
   });
 
@@ -16,9 +16,7 @@ describe('reportService', () => {
   });
 
   it('falls back to legacy profile name fields', () => {
-    expect(resolvePatientName({ first_name: 'Ada', last_name: 'Lovelace' })).toBe(
-      'Ada Lovelace'
-    );
+    expect(resolvePatientName({ first_name: 'Ada', last_name: 'Lovelace' })).toBe('Ada Lovelace');
     expect(resolvePatientName({ full_name: 'Grace Hopper' })).toBe('Grace Hopper');
   });
 

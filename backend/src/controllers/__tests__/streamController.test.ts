@@ -103,7 +103,10 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       const liveMLFixture = {
         streamTriage: jest.fn().mockImplementation(async () => {
           setTimeout(() => {
-            liveStream.emit('data', Buffer.from('data: {"delta": "Rest, elevate, and apply ice pack."}\n\n'));
+            liveStream.emit(
+              'data',
+              Buffer.from('data: {"delta": "Rest, elevate, and apply ice pack."}\n\n'),
+            );
             setTimeout(() => {
               liveStream.emit('end');
             }, 30);
@@ -142,7 +145,9 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
 
       expect(setHeaderMock).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
       expect(setHeaderMock).toHaveBeenCalledWith('Cache-Control', 'no-cache');
-      expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('Rest, elevate, and apply ice pack.'));
+      expect(writeMock).toHaveBeenCalledWith(
+        expect.stringContaining('Rest, elevate, and apply ice pack.'),
+      );
       expect(endMock).toHaveBeenCalled();
 
       // Verify real rows in live Supabase triage_messages table
@@ -188,7 +193,7 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(writeMock).toHaveBeenCalledWith(
-        expect.stringContaining('Triage service temporarily unavailable')
+        expect.stringContaining('Triage service temporarily unavailable'),
       );
       expect(endMock).toHaveBeenCalled();
     });
@@ -258,7 +263,9 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       await handleWoundUpload(req as Request, mockRes as Response);
 
       expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ error: 'Image data is required' }));
+      expect(jsonMock).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Image data is required' }),
+      );
     });
   });
 });

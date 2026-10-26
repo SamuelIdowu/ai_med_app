@@ -21,12 +21,16 @@ export const create = async (req: Request, res: Response): Promise<void> => {
     const { title, severity = 'medium', status = 'active', symptoms = [] } = req.body;
 
     if (severity && !VALID_SEVERITIES.includes(severity)) {
-      res.status(400).json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
+      res
+        .status(400)
+        .json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
       return;
     }
 
     if (status && !VALID_STATUSES.includes(status)) {
-      res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+      res
+        .status(400)
+        .json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
       return;
     }
 
@@ -136,7 +140,9 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
 
     if (status !== undefined) {
       if (!VALID_STATUSES.includes(status)) {
-        res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+        res
+          .status(400)
+          .json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
         return;
       }
       updates.status = status;
@@ -144,7 +150,9 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
 
     if (severity !== undefined) {
       if (!VALID_SEVERITIES.includes(severity)) {
-        res.status(400).json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
+        res
+          .status(400)
+          .json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
         return;
       }
       updates.severity = severity;

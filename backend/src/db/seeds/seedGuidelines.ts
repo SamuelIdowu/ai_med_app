@@ -149,7 +149,10 @@ export const DEFAULT_EMERGENCY_PROTOCOLS: Protocol[] = [
  * Loads first-aid-content.json if available, or falls back to default emergency protocols
  */
 export function loadAllProtocols(): Protocol[] {
-  const contentPath = path.resolve(__dirname, '../../../../mobile/src/content/first-aid-content.json');
+  const contentPath = path.resolve(
+    __dirname,
+    '../../../../mobile/src/content/first-aid-content.json',
+  );
 
   if (fs.existsSync(contentPath)) {
     try {
@@ -159,9 +162,7 @@ export function loadAllProtocols(): Protocol[] {
         return data.categories.map((cat: any) => ({
           title: cat.title,
           category: cat.id,
-          steps: Array.isArray(cat.steps)
-            ? cat.steps.map((s: any) => s.content || s.title)
-            : [],
+          steps: Array.isArray(cat.steps) ? cat.steps.map((s: any) => s.content || s.title) : [],
         }));
       }
     } catch (err) {
@@ -198,11 +199,14 @@ export async function seedMedicalGuidelines(): Promise<{ inserted: number; error
           content: chunk.content,
           embedding: embedding,
         },
-        { onConflict: 'id' }
+        { onConflict: 'id' },
       );
 
       if (error) {
-        console.error(`Failed to seed chunk [${chunk.topic} - ${chunk.chunkIndex}]:`, error.message);
+        console.error(
+          `Failed to seed chunk [${chunk.topic} - ${chunk.chunkIndex}]:`,
+          error.message,
+        );
         errorCount++;
       } else {
         insertedCount++;

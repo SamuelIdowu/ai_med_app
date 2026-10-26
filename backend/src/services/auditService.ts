@@ -25,7 +25,10 @@ export const logAudit = async (entry: AuditLogEntry): Promise<void> => {
   } catch (err: any) {
     // Non-blocking: Audit failure should never crash clinical or emergency response
     if (process.env.NODE_ENV !== 'test') {
-      console.warn(`[AuditLog] Warning: failed to record audit entry (${entry.action}):`, err.message);
+      console.warn(
+        `[AuditLog] Warning: failed to record audit entry (${entry.action}):`,
+        err.message,
+      );
     }
   }
 };

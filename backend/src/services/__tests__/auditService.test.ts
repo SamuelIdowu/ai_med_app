@@ -40,7 +40,7 @@ describe('Audit Logging Service', () => {
         ip_address: '127.0.0.1',
         user_agent: 'LasoMobile/1.0',
         metadata: { severity: 'critical' },
-      })
+      }),
     );
   });
 
@@ -52,7 +52,7 @@ describe('Audit Logging Service', () => {
         userId: 'user-uuid-123',
         action: 'READ_PROFILE',
         resourceType: 'PROFILE',
-      })
+      }),
     ).resolves.not.toThrow();
   });
 });

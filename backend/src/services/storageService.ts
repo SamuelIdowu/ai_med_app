@@ -19,7 +19,7 @@ export interface SignedUploadResponse {
 export const getUploadUrl = async (
   userId: string,
   fileName: string,
-  expiresInSeconds: number = 3600
+  expiresInSeconds: number = 3600,
 ): Promise<SignedUploadResponse> => {
   const supabase = getSupabaseAdmin();
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -48,7 +48,7 @@ export const getUploadUrl = async (
  */
 export const getSignedDownloadUrl = async (
   filePath: string,
-  expiresInSeconds: number = 3600
+  expiresInSeconds: number = 3600,
 ): Promise<string> => {
   const supabase = getSupabaseAdmin();
 
@@ -76,9 +76,7 @@ export const getDownloadUrl = async (filePath: string): Promise<string> => {
  */
 export const deleteMedicalImage = async (filePath: string): Promise<void> => {
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase.storage
-    .from(MEDICAL_STORAGE_BUCKET)
-    .remove([filePath]);
+  const { error } = await supabase.storage.from(MEDICAL_STORAGE_BUCKET).remove([filePath]);
 
   if (error) {
     console.error('Error deleting medical image:', error);

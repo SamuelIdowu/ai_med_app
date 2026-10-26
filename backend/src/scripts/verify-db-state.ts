@@ -10,7 +10,7 @@ async function verifyAllTables() {
     'wound_assessments',
     'guideline_embeddings',
     'providers',
-    'audit_logs'
+    'audit_logs',
   ];
 
   console.log('=== Verifying Live Database Schema ===');

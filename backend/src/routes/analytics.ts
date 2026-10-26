@@ -74,7 +74,9 @@ router.get('/vitals', async (req, res) => {
     }
 
     const values = heartRatePoints.map((p) => p.value);
-    const average = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
+    const average = values.length
+      ? Math.round(values.reduce((a, b) => a + b, 0) / values.length)
+      : 0;
     const min = values.length ? Math.min(...values) : 0;
     const max = values.length ? Math.max(...values) : 0;
     const current = values.length ? values[values.length - 1] : average;
@@ -83,8 +85,8 @@ router.get('/vitals', async (req, res) => {
       average < 60
         ? 'Resting / Low (Bradycardia indicator)'
         : average > 100
-        ? 'Elevated (Tachycardia indicator)'
-        : `Normal resting range (±${average})`;
+          ? 'Elevated (Tachycardia indicator)'
+          : `Normal resting range (±${average})`;
 
     // Dynamic sleep telemetry
     const sleepRings: RingData[] = [
@@ -96,7 +98,7 @@ router.get('/vitals', async (req, res) => {
     // Dynamic lab / hemoglobin data
     const labMonths = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
     const labBars: BarDataPoint[] = labMonths.map((m, idx) => {
-      const baseVal = 100 + ((userId.charCodeAt(0) || 10) + idx * 6) % 24;
+      const baseVal = 100 + (((userId.charCodeAt(0) || 10) + idx * 6) % 24);
       return {
         label: m,
         value: baseVal,
@@ -123,12 +125,12 @@ router.get('/vitals', async (req, res) => {
       dataSource: 'synthetic',
       isSynthetic: true,
     });
-    } catch (error: any) {
-        if (process.env.NODE_ENV !== 'test') {
-            console.error('Analytics Vitals error');
-        }
-        res.status(500).json({ error: 'Failed to fetch analytics' });
+  } catch (error: any) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Analytics Vitals error');
     }
+    res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
 });
 
 export default router;

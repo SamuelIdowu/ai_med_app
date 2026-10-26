@@ -107,7 +107,7 @@ describe('ML & AI Dual-Tier Gateway Integration Suite', () => {
                 triage_level: 2,
                 triage_label: 'Emergency',
                 confidence: 0.96,
-                probabilities: { 'Non-Urgent': 0.01, 'Urgent': 0.03, 'Emergency': 0.96 },
+                probabilities: { 'Non-Urgent': 0.01, Urgent: 0.03, Emergency: 0.96 },
                 risk_drivers: ['Hypoxemia (SpO2: 84%)', 'Tachycardia (HR: 142 bpm)'],
                 is_emergency: true,
                 is_urgent: false,
@@ -125,7 +125,7 @@ describe('ML & AI Dual-Tier Gateway Integration Suite', () => {
         respiratory_rate: 30,
         body_temperature: 38.8,
         severe_bleeding: 0,
-        altered_mental_status: 1
+        altered_mental_status: 1,
       });
 
       expect(result).toBeDefined();

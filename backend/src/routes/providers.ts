@@ -10,67 +10,67 @@ const CACHE_TTL_SECONDS = 300; // 5 minutes
 router.use(authenticateUser);
 
 router.get('/', async (req, res) => {
-    try {
-        // 1. Check cache first
-        const cached = await cacheService.get<any[]>(CACHE_KEY_ALL_PROVIDERS);
-        if (cached) {
-            res.setHeader('X-Cache-Status', 'HIT');
-            res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
-            return res.json(cached);
-        }
-
-        // 2. Fetch from Supabase
-        const supabase = getSupabaseAdmin();
-        const { data: providers, error } = await supabase
-            .from('providers')
-            .select('*')
-            .order('name', { ascending: true });
-
-        if (error) throw error;
-
-        const results = providers || [];
-        await cacheService.set(CACHE_KEY_ALL_PROVIDERS, results, CACHE_TTL_SECONDS);
-
-        res.setHeader('X-Cache-Status', 'MISS');
-        res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
-        res.json(results);
-    } catch (error: any) {
-        if (process.env.NODE_ENV !== 'test') {
-            console.error('Failed to fetch providers');
-        }
-        res.status(500).json({ error: 'Failed to fetch providers' });
+  try {
+    // 1. Check cache first
+    const cached = await cacheService.get<any[]>(CACHE_KEY_ALL_PROVIDERS);
+    if (cached) {
+      res.setHeader('X-Cache-Status', 'HIT');
+      res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
+      return res.json(cached);
     }
+
+    // 2. Fetch from Supabase
+    const supabase = getSupabaseAdmin();
+    const { data: providers, error } = await supabase
+      .from('providers')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    const results = providers || [];
+    await cacheService.set(CACHE_KEY_ALL_PROVIDERS, results, CACHE_TTL_SECONDS);
+
+    res.setHeader('X-Cache-Status', 'MISS');
+    res.setHeader('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
+    res.json(results);
+  } catch (error: any) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Failed to fetch providers');
+    }
+    res.status(500).json({ error: 'Failed to fetch providers' });
+  }
 });
 
 router.get('/:id', async (req, res) => {
-    try {
-        const cacheKey = `provider:${req.params.id}`;
-        const cached = await cacheService.get<any>(cacheKey);
-        if (cached) {
-            res.setHeader('X-Cache-Status', 'HIT');
-            return res.json(cached);
-        }
-
-        const supabase = getSupabaseAdmin();
-        const { data: provider, error } = await supabase
-            .from('providers')
-            .select('*')
-            .eq('id', req.params.id)
-            .single();
-
-        if (error) {
-            return res.status(404).json({ error: 'Provider not found' });
-        }
-
-        await cacheService.set(cacheKey, provider, CACHE_TTL_SECONDS);
-        res.setHeader('X-Cache-Status', 'MISS');
-        res.json(provider);
-    } catch (error: any) {
-        if (process.env.NODE_ENV !== 'test') {
-            console.error('Failed to fetch provider');
-        }
-        res.status(500).json({ error: 'Failed to fetch provider' });
+  try {
+    const cacheKey = `provider:${req.params.id}`;
+    const cached = await cacheService.get<any>(cacheKey);
+    if (cached) {
+      res.setHeader('X-Cache-Status', 'HIT');
+      return res.json(cached);
     }
+
+    const supabase = getSupabaseAdmin();
+    const { data: provider, error } = await supabase
+      .from('providers')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error) {
+      return res.status(404).json({ error: 'Provider not found' });
+    }
+
+    await cacheService.set(cacheKey, provider, CACHE_TTL_SECONDS);
+    res.setHeader('X-Cache-Status', 'MISS');
+    res.json(provider);
+  } catch (error: any) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Failed to fetch provider');
+    }
+    res.status(500).json({ error: 'Failed to fetch provider' });
+  }
 });
 
 export default router;

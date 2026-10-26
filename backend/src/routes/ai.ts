@@ -10,11 +10,11 @@ router.use(aiRateLimiter);
 
 // Guests may use chat (no function tools), but with a stricter per-IP limit.
 const guestOnlyLimiter: express.RequestHandler = (req, res, next) => {
-    if (req.user) {
-        next();
-        return;
-    }
-    guestAiRateLimiter(req, res, next);
+  if (req.user) {
+    next();
+    return;
+  }
+  guestAiRateLimiter(req, res, next);
 };
 
 // Chat supports optional auth so guest mode works; analyze stays auth-only (PHI/cost).
@@ -25,4 +25,3 @@ router.post('/analyze', authenticateUser, AIController.analyze);
 router.post('/triage/vitals', optionalAuthenticateUser, AIController.triageVitals);
 
 export default router;
-

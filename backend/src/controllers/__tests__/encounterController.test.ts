@@ -56,7 +56,7 @@ describe('Encounter Controller', () => {
     expect(mockedEncounterService.createEncounter).toHaveBeenCalledWith(
       'user-123',
       mockReq.body,
-      'token-xyz'
+      'token-xyz',
     );
   });
 
@@ -134,7 +134,7 @@ describe('Encounter Controller', () => {
       'enc-456',
       'user-123',
       { status: 'resolved' },
-      'token-xyz'
+      'token-xyz',
     );
   });
 
