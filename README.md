@@ -146,6 +146,7 @@ npm run preflight:deploy
 
 - [render.yaml](render.yaml) — Render blueprint: `laso-backend` Docker service, Oregon, `/health` checks (ML runs on Google Cloud Run — see [docs/deploy-zero-dollar.md](docs/deploy-zero-dollar.md))
 - [docker-compose.prod.yml](docker-compose.prod.yml) — full stack incl. Redis (password required via `REDIS_PASSWORD`)
+- [docs/deployment-guide.md](docs/deployment-guide.md) — step-by-step $0 deployment runbook (Supabase + Render + Oracle VPS ML + EAS local builds)
 - Production Render deployments are triggered by `.github/workflows/ci.yml` after backend, mobile, ML, and Docker checks pass on `main`. Set the Render deploy hook URL as GitHub Actions secret `RENDER_BACKEND_DEPLOY_HOOK`; automatic Render deploys are disabled in the blueprint to keep deployments behind CI.
 - Runtime secrets are configured in the Render dashboard / GitHub Actions secrets — never in the repo
 - Nearby facilities are searched around device GPS coordinates using Overpass, with Geoapify Places as an optional fallback when Overpass is unavailable or returns no nearby facilities. Set `GEOAPIFY_API_KEY` in the backend environment to enable it. Facility completeness depends on source coverage.

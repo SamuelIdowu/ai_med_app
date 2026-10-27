@@ -35,9 +35,13 @@ Operational notes:
 - Restore window for paused projects: up to 1 year (data preserved, config restored on resume).
 - Snapshot `pg_dump` of schema + data periodically as a free manual backup (no automated backups on Free).
 
-## Phase 2 — ML subsystem: Google Cloud Run
+## Phase 2 — ML subsystem
 
-Render Free is 512 MB and cannot hold the torch/transformers/sentence-transformers stack. The old zero-dollar HF Docker Space now requires a PRO subscription, so Cloud Run is the replacement.
+Two $0 paths. Both satisfy the same backend contract (`ML_SERVICE_URL` + `/v1/ml/health`).
+
+### Option A (default): Google Cloud Run
+
+Render Free is 512 MB and cannot hold the torch/transformers stack, and HF Docker Spaces now require PRO.
 
 1. Build & deploy (Cloud Build gets 180 free build minutes/day; image is heavy due to torch — expect ~10-15 min build, first run only):
 
@@ -55,9 +59,56 @@ Render Free is 512 MB and cannot hold the torch/transformers/sentence-transforme
 
 Free tier budget consumed: 2M requests/month, 360k GiB-seconds/month, up to 2 vCPU & 2 GB per instance, scale-to-zero.
 
-Operational notes:
-- Cold start from zero is ~10-30s on first triage request. Backend must already degrade gracefully when ML is unreachable — verify this during smoke test.
-- Add a `requirements.txt`/Dockerfile review pass so only runtime deps (not training tools like matplotlib/seaborn/pandas) go into the tights image if size becomes an issue.
+### Option B (recommended): existing Oracle AMD E2.1.Micro VPS
+
+Verified host already running a Telegram bot. Confirmed shape: ~1 GB RAM (`/dev/shm` 479M), 45 GB disk (38 GB free).
+
+Runtime torch usage is confined to `embedding_engine.py` (`/v1/ml/embed`), which **no production backend code path calls** (`embedText` is test-only; seedGuidelines generates vectors locally). All production endpoints — triage stream/evaluate (pure Python), vitals (sklearn joblib, 981 KB), wound vision (PIL only) — fit comfortably in a ~200-300 MB RSS slim profile.
+
+Slim image included in repo: `ml/Dockerfile.micro` (no torch/transformers/peft/accelerate).
+
+Deploy coexisting with the Telegram bot:
+
+```bash
+# 1. Clone repo and build the slim image
+cd ~ && git clone https://github.com/SamuelIdowu/ai_med_app.git laso
+cd laso/ml && docker build -f Dockerfile.micro -t laso-ml:slim .
+
+# 2. Add swap first (torch-free stack is small but 1 GB host RAM is shared with the bot)
+sudo fallocate -l 1G /swapfile && sudo chmod 600 /swapfile \
+  && sudo mkswap /swapfile && sudo swapon /swapfile
+
+# 3. Run with a hard memory cap so ML spikes can never OOM the bot
+docker run -d --name laso-ml \
+  --memory 500m --memory-swap 1g --restart unless-stopped \
+  -p 127.0.0.1:8001:8000 \
+  -e SAFETY_STRICTNESS=high -e CORS_ORIGINS='*' -e PORT=8000 \
+  laso-ml:slim
+
+# 4. Smoke check
+curl http://127.0.0.1:8001/health
+curl -X POST http://127.0.0.1:8001/v1/ml/triage/vitals \
+  -H 'Content-Type: application/json' \
+  -d '{"heart_rate":130,"systolic_bp":90,"oxygen_saturation":94}'
+```
+
+Exposure:
+- Binds `127.0.0.1:8001` — NOT public. Backend is the only consumer.
+- If TLS/reverse proxy (Caddy/Nginx) already fronts the bot, add a location block for ML and bind it to `127.0.0.1:8001`, then set `ML_SERVICE_URL=https://<oracle-tls-domain>/ml`. A bash access route with Cloudflare Tunnel also works ($0, no TLS management).
+- If no proxy exists and there is no domain: simplest $0 minimal path is Oracle's public listener + `iptables` allow on the chosen port + `ML_SERVICE_URL=http://<ephemeral-public-ip>:8001` (unencrypted, acceptable only because payloads are non-PHI vitals/threshold JSON — ideally still upgrade to TLS later).
+
+Merge into Render dashboard env (single source of truth):
+
+| Var | Value |
+| --- | --- |
+| `ML_SERVICE_URL` | `http://<oracle-url>:8001` or `https://<oracle-domain>/ml` |
+| `SAFETY_STRICTNESS` | already set via Docker env (`high`) — no Render var needed |
+
+Ops notes:
+- `--restart unless-stopped` keeps it alive across the bot's redeploys/reboots; Docker handles ordering automatically.
+- Oracle free-tier reclamation (idle <20% VM load for 7 days): the always-on Telegram bot consumption covers this.
+- Backend degradation on ML loss is already implemented (Render Free also enforces idle restores, same behavior as Cloud Run) — see smoke test.
+- Disk budget: slim image ~1.2 GB (vs torch version ~2-4 GB); 38 GB free is ample even with the bot's images.
 
 ## Phase 3 — Node backend: Render (Free)
 
