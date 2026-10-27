@@ -1,0 +1,12 @@
+# EAS builds only need the optimized transparent illustrations.
+# Original renders and optimizer backups stay in git but are not uploaded.
+assets/illustrations/*.jpg
+assets/illustrations/*.jpeg
+assets/illustrations/transparent_full/
+scripts/
+
+# Local and generated artifacts
+.expo/
+dist/
+web-build/
+*.tsbuildinfo

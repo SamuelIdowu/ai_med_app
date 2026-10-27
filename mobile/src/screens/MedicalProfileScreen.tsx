@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { MedicalProfileService, MedicalProfile, EmergencyContact } from '../services/medicalProfileService';
 import { useAuth } from '../context/AuthContext';
@@ -39,7 +39,7 @@ const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'Unknown'
 
 export const MedicalProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isEditingModal, setIsEditingModal] = useState(false);
 
@@ -236,7 +236,7 @@ export const MedicalProfileScreen: React.FC = () => {
           style={styles.backCircle}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="chevron-left" size={24} color="#0F1115" />
+          <Icon name="caretLeft" size={24} color="#0F1115" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Medical Profile</Text>
@@ -246,11 +246,24 @@ export const MedicalProfileScreen: React.FC = () => {
           style={styles.editPill}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="pencil-outline" size={16} color="#0F1115" />
+          <Icon name="pencil" size={16} color="#0F1115" />
           <Text style={styles.editPillText}>Edit</Text>
         </TouchableOpacity>
       </View>
 
+      {/* Guest mode banner */}
+      {isGuest && (
+        <TouchableOpacity
+          style={styles.guestBanner}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('Signup')}
+        >
+          <Icon name="user" size={16} color="#0F1115" />
+          <Text style={styles.guestBannerText}>
+            You’re in guest mode — <Text style={{ fontWeight: '700' }}>create an account</Text> to save your profile.
+          </Text>
+        </TouchableOpacity>
+      )}
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={styles.contentPadding}
@@ -270,7 +283,7 @@ export const MedicalProfileScreen: React.FC = () => {
               />
             ) : (
               <View style={[styles.heroAvatar, styles.heroAvatarPlaceholder]}>
-                <MaterialCommunityIcons name="account" size={72} color="#9CA3AF" />
+                <Icon name="user" size={72} color="#9CA3AF" />
               </View>
             )}
           </View>
@@ -285,7 +298,7 @@ export const MedicalProfileScreen: React.FC = () => {
             </View>
 
             <View style={styles.bloodTypePill}>
-              <MaterialCommunityIcons name="water" size={16} color="#0F1115" />
+              <Icon name="drop" size={16} color="#0F1115" />
               <Text style={styles.bloodTypeText}>{profile.bloodType || '—'}</Text>
             </View>
           </View>
@@ -316,7 +329,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons name="shield-alert-outline" size={18} color="#0F1115" />
+            <Icon name="shieldWarning" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Emergency Directives & Alerts</Text>
           </View>
 
@@ -324,7 +337,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <View style={styles.pillWrap}>
               {profile.medicalDirectives.map((directive, index) => (
                 <View key={index} style={styles.directiveBadge}>
-                  <MaterialCommunityIcons name="alert-circle-check" size={15} color="#0F1115" />
+                  <Icon name="checkCircle" size={15} color="#0F1115" />
                   <Text style={styles.directiveBadgeText}>{directive}</Text>
                 </View>
               ))}
@@ -341,7 +354,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons name="alert-decagram-outline" size={18} color="#0F1115" />
+            <Icon name="allergy" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Severe Allergies</Text>
           </View>
 
@@ -349,7 +362,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <View style={styles.pillWrap}>
               {profile.allergies.map((allergy, index) => (
                 <View key={index} style={styles.allergyBadge}>
-                  <MaterialCommunityIcons name="close-circle-outline" size={14} color="#0F1115" />
+                  <Icon name="closeCircle" size={14} color="#0F1115" />
                   <Text style={styles.allergyBadgeText}>{allergy}</Text>
                 </View>
               ))}
@@ -366,7 +379,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons name="heart-pulse" size={18} color="#0F1115" />
+            <Icon name="heartbeat" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Chronic Medical Conditions</Text>
           </View>
 
@@ -390,7 +403,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons name="pill" size={18} color="#0F1115" />
+            <Icon name="pill" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Current Medications</Text>
           </View>
 
@@ -398,7 +411,7 @@ export const MedicalProfileScreen: React.FC = () => {
             profile.medications.map((med, index) => (
               <MedicalCard key={index} style={styles.medicationRow}>
                 <View style={styles.medIconBox}>
-                  <MaterialCommunityIcons name="pill" size={18} color="#0F1115" />
+                  <Icon name="pill" size={18} color="#0F1115" />
                 </View>
                 <Text style={styles.medicationText}>{med}</Text>
               </MedicalCard>
@@ -415,7 +428,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons name="notebook-outline" size={18} color="#0F1115" />
+            <Icon name="notebook" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Paramedic & Responder Notes</Text>
           </View>
 
@@ -432,7 +445,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <MaterialCommunityIcons name="phone-alert-outline" size={18} color="#0F1115" />
+            <Icon name="emergencyCall" size={18} color="#0F1115" />
             <Text style={styles.sectionHeader}>Emergency Contacts (ICE)</Text>
           </View>
 
@@ -441,7 +454,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <MedicalCard style={styles.contactCard}>
               <View style={styles.contactLeft}>
                 <View style={styles.contactAvatar}>
-                  <MaterialCommunityIcons name="account" size={20} color="#0F1115" />
+                  <Icon name="user" size={20} color="#0F1115" />
                 </View>
                 <View style={styles.contactDetails}>
                   <View style={styles.contactBadgeRow}>
@@ -472,7 +485,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     )
                   }
                 >
-                  <MaterialCommunityIcons name="phone" size={18} color="#FFFFFF" />
+                  <Icon name="phone" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
               ) : null}
             </MedicalCard>
@@ -487,7 +500,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <MedicalCard style={[styles.contactCard, { marginTop: 10 }]}>
               <View style={styles.contactLeft}>
                 <View style={styles.contactAvatar}>
-                  <MaterialCommunityIcons name="account-outline" size={20} color="#0F1115" />
+                  <Icon name="user" size={20} color="#0F1115" />
                 </View>
                 <View style={styles.contactDetails}>
                   <View style={styles.contactBadgeRow}>
@@ -517,7 +530,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   )
                 }
               >
-                <MaterialCommunityIcons name="phone" size={18} color="#FFFFFF" />
+                <Icon name="phone" size={18} color="#FFFFFF" />
               </TouchableOpacity>
             </MedicalCard>
           ) : null}
@@ -527,7 +540,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* 10. PRIVACY & SENSITIVITY SHIELD */}
         {/* =================================================================== */}
         <View style={styles.privacyBanner}>
-          <MaterialCommunityIcons name="shield-lock-outline" size={20} color="#0F1115" />
+          <Icon name="shieldCheck" size={20} color="#0F1115" />
           <View style={styles.privacyTextCol}>
             <Text style={styles.privacyTitle}>Encrypted & Data-Minimized</Text>
             <Text style={styles.privacyDesc}>
@@ -589,14 +602,14 @@ export const MedicalProfileScreen: React.FC = () => {
                 />
               ) : (
                 <View style={[styles.modalAvatarImage, styles.modalAvatarPlaceholder]}>
-                  <MaterialCommunityIcons name="account" size={32} color="#9CA3AF" />
+                  <Icon name="user" size={32} color="#9CA3AF" />
                 </View>
               )}
               <TouchableOpacity
                 style={styles.modalChangePhotoBtn}
                 onPress={handlePickImage}
               >
-                <MaterialCommunityIcons name="camera" size={16} color="#0F1115" />
+                <Icon name="camera" size={16} color="#0F1115" />
                 <Text style={styles.modalChangePhotoText}>Change Photo</Text>
               </TouchableOpacity>
             </View>
@@ -706,7 +719,7 @@ export const MedicalProfileScreen: React.FC = () => {
                       isActive && styles.directiveToggleChipActive,
                     ]}
                   >
-                    <MaterialCommunityIcons
+                    <Icon
                       name={isActive ? 'check' : 'plus'}
                       size={14}
                       color={isActive ? '#FFFFFF' : '#0F1115'}
@@ -755,7 +768,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     onPress={() => removeChip('allergies', idx)}
                     style={styles.removeChipIcon}
                   >
-                    <MaterialCommunityIcons name="close" size={14} color="#0F1115" />
+                    <Icon name="close" size={14} color="#0F1115" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -788,7 +801,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     onPress={() => removeChip('conditions', idx)}
                     style={styles.removeChipIcon}
                   >
-                    <MaterialCommunityIcons name="close" size={14} color="#0F1115" />
+                    <Icon name="close" size={14} color="#0F1115" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -821,7 +834,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     onPress={() => removeChip('medications', idx)}
                     style={styles.removeChipIcon}
                   >
-                    <MaterialCommunityIcons name="close" size={14} color="#0F1115" />
+                    <Icon name="close" size={14} color="#0F1115" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -1577,5 +1590,24 @@ const styles = StyleSheet.create({
   },
   removeChipIcon: {
     padding: 2,
+  },
+  guestBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#FEF9C3',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FDE047',
+  },
+  guestBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#713F12',
+    lineHeight: 18,
   },
 });

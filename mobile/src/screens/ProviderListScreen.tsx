@@ -1,7 +1,8 @@
 // mobile/src/screens/ProviderListScreen.tsx
 // Provider Directory, Nearest Clinic Locator & Interactive Map
 
-import React, { useEffect, useState, useRef } from 'react';
+import { Icon } from '../components/Icon';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,72 +12,107 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
-  Alert,
-  Dimensions,
+  Platform,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Illustration } from '../components/Illustration';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import MapView, { Marker, Callout } from '../components/Map';
+import { ProviderMap } from '../components/Map/ProviderMap';
+import type { ProviderMapHandle } from '../components/Map/mapTypes';
+import { buildProviderMarkers } from '../components/Map/providerMapUtils';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
 import {
-  getCurrentUserLocation,
+  getUserLocationWithStatus,
   sortProvidersByProximity,
-  formatDistance,
-  DEFAULT_USER_COORDS,
+  formatDistanceKilometersLabel,
+  milesToKilometers,
+  type Coordinates,
+  type LocationPermissionStatus,
+  type ProviderWithDistance,
 } from '../services/geoUtils';
+import { callPhone, openDirections } from '../services/mapLinks';
+import { showAlert } from '../services/alert';
 import { theme } from '../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FILTERS = ['All', 'Hospital', 'Clinic', 'Pharmacy'];
+const DISTANCE_FILTERS = [
+  { label: 'Up to 50 km', maxKm: null },
+  { label: '5 km', maxKm: 5 },
+  { label: '10 km', maxKm: 10 },
+  { label: '25 km', maxKm: 25 },
+];
 
-type EnrichedProvider = Provider & { distanceMiles: number };
+type EnrichedProvider = ProviderWithDistance;
+
+function getProviderMeta(provider: EnrichedProvider): string {
+  return [provider.type, formatDistanceKilometersLabel(provider.distanceMiles)]
+    .filter((value): value is string => Boolean(value))
+    .join(' · ');
+}
 
 export const ProviderListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<ProviderMapHandle>(null);
 
   const [providers, setProviders] = useState<EnrichedProvider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<EnrichedProvider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [maxDistanceKm, setMaxDistanceKm] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [userCoords, setUserCoords] = useState(DEFAULT_USER_COORDS);
+  const [userCoords, setUserCoords] = useState<Coordinates | null>(null);
+  const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<EnrichedProvider | null>(null);
+  const [sourceTimestamp, setSourceTimestamp] = useState<string | null>(null);
+  const [providerSource, setProviderSource] = useState<'OpenStreetMap' | 'Geoapify'>('OpenStreetMap');
 
-  useEffect(() => {
-    initScreenData();
+  const loadNearbyProviders = useCallback(async (coords: Coordinates | null) => {
+    if (!coords) {
+      setProviders([]);
+      setSourceTimestamp(null);
+      setProviderSource('OpenStreetMap');
+      return;
+    }
+
+    const result = await ProviderService.getProviders(coords);
+    setProviderSource(result.source);
+    setSourceTimestamp(result.sourceTimestamp);
+    setProviders(sortProvidersByProximity(result.providers, coords));
   }, []);
 
-  useEffect(() => {
-    filterData();
-  }, [providers, searchQuery, activeFilter]);
-
-  const initScreenData = async () => {
+  const initScreenData = useCallback(async () => {
     try {
       setLoading(true);
-      const coords = await getCurrentUserLocation();
-      setUserCoords(coords);
+      setLoadError(null);
 
-      const rawData = await ProviderService.getProviders();
-      const sorted = sortProvidersByProximity(rawData, coords);
-      setProviders(sorted);
-      if (sorted.length > 0) {
-        setSelectedProvider(sorted[0]);
-      }
+      const location = await getUserLocationWithStatus();
+      const coords =
+        location.latitude !== null && location.longitude !== null
+          ? { latitude: location.latitude, longitude: location.longitude }
+          : null;
+      setUserCoords(coords);
+      setLocationStatus(location.status);
+
+      await loadNearbyProviders(coords);
     } catch (error) {
       console.error('Failed to load providers:', error);
+      setLoadError(
+        'Could not reach live facility data. Check the backend connection and try again.',
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadNearbyProviders]);
 
-  const filterData = () => {
+  const filterData = useCallback(() => {
     let result = providers;
 
     if (searchQuery.trim()) {
@@ -85,55 +121,155 @@ export const ProviderListScreen: React.FC = () => {
         (p) =>
           p.name?.toLowerCase().includes(lower) ||
           p.type?.toLowerCase().includes(lower) ||
-          p.address?.toLowerCase().includes(lower)
+          p.address?.toLowerCase().includes(lower),
       );
     }
 
     if (activeFilter !== 'All') {
+      result = result.filter((p) => p.type?.toLowerCase() === activeFilter.toLowerCase());
+    }
+
+    if (maxDistanceKm !== null) {
       result = result.filter(
-        (p) => p.type?.toLowerCase() === activeFilter.toLowerCase()
+        (provider) =>
+          provider.distanceMiles !== null &&
+          milesToKilometers(provider.distanceMiles) <= maxDistanceKm,
       );
     }
 
     setFilteredProviders(result);
-  };
+  }, [activeFilter, maxDistanceKm, providers, searchQuery]);
+
+  const mapProviders = useMemo(() => buildProviderMarkers(filteredProviders), [filteredProviders]);
+
+  useEffect(() => {
+    initScreenData();
+  }, [initScreenData]);
+
+  useEffect(() => {
+    filterData();
+  }, [filterData]);
+
+  useEffect(() => {
+    setSelectedProvider((current) => {
+      if (!current) {
+        return filteredProviders[0] ?? null;
+      }
+
+      return (
+        filteredProviders.find((provider) => provider.id === current.id) ??
+        filteredProviders[0] ??
+        null
+      );
+    });
+  }, [filteredProviders]);
+
+  const refreshLocation = useCallback(async () => {
+    const location = await getUserLocationWithStatus();
+    const coords =
+      location.latitude !== null && location.longitude !== null
+        ? { latitude: location.latitude, longitude: location.longitude }
+        : null;
+
+    setUserCoords(coords);
+    setLocationStatus(location.status);
+    try {
+      setLoading(true);
+      setLoadError(null);
+      await loadNearbyProviders(coords);
+    } catch (error) {
+      console.error('Failed to refresh nearby providers:', error);
+      setLoadError(
+        'Could not reach live facility data. Check the backend connection and try again.',
+      );
+    } finally {
+      setLoading(false);
+    }
+
+    if (location.status === 'granted') {
+      setTimeout(() => mapRef.current?.focusUser(), 0);
+    }
+  }, [loadNearbyProviders]);
+
+  const handleLocationPress = useCallback(() => {
+    if (locationStatus === 'denied' && Platform.OS !== 'web') {
+      Linking.openSettings().catch(() => {
+        refreshLocation();
+      });
+      return;
+    }
+
+    refreshLocation();
+  }, [locationStatus, refreshLocation]);
+
+  const handleSelectProvider = useCallback(
+    (providerId: string) => {
+      const provider = filteredProviders.find((item) => item.id === providerId);
+      if (provider) {
+        setSelectedProvider(provider);
+      }
+    },
+    [filteredProviders],
+  );
+
+  const handleOpenProvider = useCallback(
+    (providerId: string) => {
+      const provider = filteredProviders.find((item) => item.id === providerId);
+      if (provider) {
+        navigation.navigate('ProviderDetail', { providerId, provider });
+      }
+    },
+    [filteredProviders, navigation],
+  );
 
   const handleCall = (phone?: string | null) => {
-    if (phone) {
-      Linking.openURL(`tel:${phone}`).catch(() => {
-        Alert.alert('Error', 'Unable to initiate call on this device');
-      });
-    } else {
-      Alert.alert('Phone Unavailable', 'No contact phone number listed for this provider.');
-    }
+    callPhone(phone);
   };
 
   const handleCenterOnClosestClinic = () => {
-    if (filteredProviders.length > 0 && mapRef.current) {
-      const closest = filteredProviders[0];
-      setSelectedProvider(closest);
-      mapRef.current.animateToRegion(
-        {
-          latitude: closest.lat ?? userCoords.latitude,
-          longitude: closest.lng ?? userCoords.longitude,
-          latitudeDelta: 0.03,
-          longitudeDelta: 0.03,
-        },
-        600
-      );
+    const closest = filteredProviders.find(
+      (provider) => provider.lat !== null && provider.lng !== null,
+    );
+
+    if (!closest) {
+      showAlert('No Mapped Facilities', 'No facilities with map coordinates match your filters.');
+      return;
     }
+
+    setSelectedProvider(closest);
+    mapRef.current?.focusProvider(closest.id);
+  };
+
+  const handleShowAllProviders = () => {
+    mapRef.current?.fitToProviders();
+  };
+
+  const handleRecenterOnUser = () => {
+    if (locationStatus !== 'granted') {
+      refreshLocation();
+      return;
+    }
+
+    mapRef.current?.focusUser();
+  };
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setActiveFilter('All');
+    setMaxDistanceKm(null);
   };
 
   const renderItem = ({ item }: { item: EnrichedProvider }) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.85}
-      onPress={() => navigation.navigate('ProviderDetail', { providerId: item.id })}
+      onPress={() => navigation.navigate('ProviderDetail', { providerId: item.id, provider: item })}
     >
       <View style={styles.cardHeader}>
         <View style={styles.cardContent}>
           <Text style={styles.providerName}>{item.name}</Text>
-          <Text style={styles.providerDistance}>{formatDistance(item.distanceMiles)}</Text>
+          <Text style={styles.providerDistance}>
+            {formatDistanceKilometersLabel(item.distanceMiles) ?? 'Distance unavailable'}
+          </Text>
           {item.address ? (
             <Text style={styles.providerAddress} numberOfLines={1}>
               {item.address}
@@ -151,14 +287,16 @@ export const ProviderListScreen: React.FC = () => {
           onPress={() => handleCall(item.phone)}
           accessibilityLabel={`Call ${item.name}`}
         >
-          <Ionicons name="call" size={20} color="#111318" />
+          <Icon name="phoneCall" size={20} color={theme.colors.text.inverse} />
         </TouchableOpacity>
       </View>
+
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar style="dark" />
       {/* Top App Bar */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -166,7 +304,7 @@ export const ProviderListScreen: React.FC = () => {
           style={styles.headerBtn}
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color="#111318" />
+          <Icon name="caretLeft" size={24} color={theme.colors.primary.hover} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Provider Directory</Text>
@@ -176,10 +314,10 @@ export const ProviderListScreen: React.FC = () => {
           onPress={() => setViewMode((prev) => (prev === 'list' ? 'map' : 'list'))}
           accessibilityLabel={viewMode === 'list' ? 'Switch to map view' : 'Close map view'}
         >
-          <MaterialCommunityIcons
-            name={viewMode === 'list' ? 'map-outline' : 'format-list-bulleted'}
+          <Icon
+            name={viewMode === 'list' ? 'map' : 'list'}
             size={22}
-            color={viewMode === 'map' ? '#FFFFFF' : '#111318'}
+            color={viewMode === 'map' ? theme.colors.text.inverse : theme.colors.primary.hover}
           />
         </TouchableOpacity>
       </View>
@@ -187,17 +325,17 @@ export const ProviderListScreen: React.FC = () => {
       {/* Search Input */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#6B7280" />
+          <Icon name="search" size={20} color={theme.colors.text.muted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search clinics, hospitals, pharmacies..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.colors.text.muted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+              <Icon name="closeCircle" size={18} color={theme.colors.text.muted} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -227,10 +365,71 @@ export const ProviderListScreen: React.FC = () => {
         />
       </View>
 
+      <View style={styles.filterContainer}>
+        <FlatList
+          horizontal
+          data={DISTANCE_FILTERS}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterList}
+          keyExtractor={(item) => item.label}
+          renderItem={({ item }) => {
+            const isActive = maxDistanceKm === item.maxKm;
+            return (
+              <TouchableOpacity
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
+                onPress={() => setMaxDistanceKm(item.maxKm)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`Filter providers within ${item.label}`}
+              >
+                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
+
+      <View style={styles.attributionContainer}>
+        <Text style={styles.attributionText}>
+          Nearby facilities from {providerSource}
+          {sourceTimestamp && Number.isFinite(Date.parse(sourceTimestamp))
+            ? ` · Data as of ${new Date(sourceTimestamp).toLocaleString()}`
+            : ''}
+        </Text>
+        <TouchableOpacity
+          onPress={() => Linking.openURL('https://www.openstreetmap.org/copyright')}
+          accessibilityRole="link"
+          accessibilityLabel="OpenStreetMap contributors and license"
+        >
+          <Text style={styles.attributionLink}>© OpenStreetMap contributors</Text>
+        </TouchableOpacity>
+        {providerSource === 'Geoapify' ? (
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://www.geoapify.com/')}
+            accessibilityRole="link"
+            accessibilityLabel="Powered by Geoapify"
+          >
+            <Text style={styles.attributionLink}>Powered by Geoapify</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
       {/* Content Body: List vs Map View */}
-      {loading ? (
+      {loadError ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#111318" />
+          <Icon name="cloudSlash" size={48} color={theme.colors.text.muted} />
+          <Text style={styles.errorTitle}>Couldn&apos;t load facilities</Text>
+          <Text style={styles.errorSubtitle}>{loadError}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => initScreenData()}>
+            <Icon name="arrowClockwise" size={18} color={theme.colors.text.inverse} />
+            <Text style={styles.retryButtonText}>Try again</Text>
+          </TouchableOpacity>
+        </View>
+      ) : loading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary.hover} />
           <Text style={styles.loadingText}>Locating nearby medical providers...</Text>
         </View>
       ) : viewMode === 'list' ? (
@@ -241,83 +440,124 @@ export const ProviderListScreen: React.FC = () => {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="hospital-building" size={48} color="#9CA3AF" />
+              <Illustration
+                name="hospitalLocator"
+                width={160}
+                height={160}
+                accessibilityLabel="Hospital locator"
+                fallback={<Icon name="hospital" size={48} color={theme.colors.text.muted} />}
+              />
               <Text style={styles.emptyTitle}>No Providers Found</Text>
-              <Text style={styles.emptySubtitle}>Try adjusting your search query or filters.</Text>
+              <Text style={styles.emptySubtitle}>
+                {providers.length === 0
+                  ? userCoords
+                    ? 'No mapped facilities were returned within 50 km. Try refreshing or checking nearby towns.'
+                    : 'Enable location access to find medical facilities near you.'
+                  : 'Try adjusting your search, category, or distance filters.'}
+              </Text>
+              {providers.length > 0 &&
+              (searchQuery || activeFilter !== 'All' || maxDistanceKm !== null) ? (
+                <TouchableOpacity style={styles.emptyResetBtn} onPress={handleResetFilters}>
+                  <Text style={styles.emptyResetText}>Clear filters</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           }
         />
       ) : (
         <View style={styles.mapViewport}>
-          <MapView
+          <ProviderMap
             ref={mapRef}
+            providers={mapProviders}
+            selectedProviderId={selectedProvider?.id ?? null}
+            userCoordinate={userCoords}
+            showUserLocation={locationStatus === 'granted'}
+            interactive
+            onSelectProvider={handleSelectProvider}
+            onOpenProvider={handleOpenProvider}
             style={StyleSheet.absoluteFillObject}
-            initialRegion={{
-              latitude: userCoords.latitude,
-              longitude: userCoords.longitude,
-              latitudeDelta: 0.08,
-              longitudeDelta: 0.08,
-            }}
-            showsUserLocation
-            showsMyLocationButton
-          >
-            {filteredProviders.map((item) =>
-              item.lat && item.lng ? (
-                <Marker
-                  key={item.id}
-                  coordinate={{ latitude: item.lat, longitude: item.lng }}
-                  title={item.name || ''}
-                  description={`${item.type || 'Clinic'} • ${formatDistance(item.distanceMiles)}`}
-                  onPress={() => setSelectedProvider(item)}
-                >
-                  <View
-                    style={[
-                      styles.mapMarker,
-                      selectedProvider?.id === item.id && styles.mapMarkerSelected,
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={item.type === 'Hospital' ? 'hospital-box' : 'medical-bag'}
-                      size={20}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                  <Callout
-                    onPress={() =>
-                      navigation.navigate('ProviderDetail', { providerId: item.id })
-                    }
-                  >
-                    <View style={styles.calloutBox}>
-                      <Text style={styles.calloutTitle}>{item.name}</Text>
-                      <Text style={styles.calloutSubtitle}>
-                        {formatDistance(item.distanceMiles)} • Tap for details
-                      </Text>
-                    </View>
-                  </Callout>
-                </Marker>
-              ) : null
-            )}
-          </MapView>
+          />
+
+          {locationStatus && locationStatus !== 'granted' ? (
+            <View style={styles.locationBanner}>
+              <Icon name="mapPin" size={16} color={theme.colors.primary.hover} />
+              <Text style={styles.locationBannerText} numberOfLines={2}>
+                Using an approximate location. Enable GPS for accurate distances.
+              </Text>
+              <TouchableOpacity
+                style={styles.locationBannerAction}
+                onPress={handleLocationPress}
+                accessibilityLabel="Update location permission"
+              >
+                <Text style={styles.locationBannerActionText}>
+                  {locationStatus === 'denied' && Platform.OS !== 'web' ? 'Settings' : 'Retry'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {mapProviders.length === 0 ? (
+            <View style={styles.mapEmptyOverlay} pointerEvents="box-none">
+              <View style={styles.mapEmptyCard}>
+                <Icon name="mapPin" size={34} color={theme.colors.primary.hover} />
+                <Text style={styles.mapEmptyTitle}>No mapped facilities</Text>
+                <Text style={styles.mapEmptyText}>
+                  {providers.length === 0
+                    ? userCoords
+                      ? 'No mapped facilities were returned within 50 km. Try refreshing or checking nearby towns.'
+                      : 'Enable location access to find medical facilities near you.'
+                    : filteredProviders.length === 0
+                      ? 'No facilities match your search, category, or distance filters.'
+                      : 'The matching facilities do not have map coordinates.'}
+                </Text>
+                {searchQuery || activeFilter !== 'All' || maxDistanceKm !== null ? (
+                  <TouchableOpacity style={styles.emptyResetBtn} onPress={handleResetFilters}>
+                    <Text style={styles.emptyResetText}>Clear filters</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+          ) : null}
 
           {/* Floating Action Buttons over Map */}
           <View style={styles.mapFloatingControls}>
-            <TouchableOpacity
-              style={styles.floatingActionBtn}
-              onPress={handleCenterOnClosestClinic}
-              accessibilityLabel="Locate closest clinic"
-            >
-              <MaterialCommunityIcons name="crosshairs-gps" size={22} color="#111318" />
-              <Text style={styles.floatingActionText}>Nearest Facility</Text>
-            </TouchableOpacity>
+            <View style={styles.mapControlGroup}>
+              <TouchableOpacity
+                style={styles.floatingActionBtn}
+                onPress={handleCenterOnClosestClinic}
+                accessibilityLabel="Locate closest facility"
+              >
+                <Icon name="crosshair" size={18} color={theme.colors.primary.hover} />
+                <Text style={styles.floatingActionText}>Nearest</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.closeMapPill}
-              onPress={() => setViewMode('list')}
-              accessibilityLabel="Close map view and return to list"
-            >
-              <MaterialCommunityIcons name="close" size={18} color="#FFFFFF" />
-              <Text style={styles.closeMapText}>Close Map</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mapIconBtn}
+                onPress={handleShowAllProviders}
+                accessibilityLabel="Show all facilities on the map"
+              >
+                <Icon name="mapPin" size={20} color={theme.colors.primary.hover} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.mapControlGroup}>
+              <TouchableOpacity
+                style={styles.mapIconBtn}
+                onPress={handleRecenterOnUser}
+                accessibilityLabel="Center the map on my location"
+              >
+                <Icon name="crosshair" size={20} color={theme.colors.primary.hover} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.closeMapPill}
+                onPress={() => setViewMode('list')}
+                accessibilityLabel="Close map view and return to list"
+              >
+                <Icon name="close" size={18} color={theme.colors.text.inverse} />
+                <Text style={styles.closeMapText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Bottom Selected Provider Highlight Card */}
@@ -328,9 +568,7 @@ export const ProviderListScreen: React.FC = () => {
                   <Text style={styles.bottomCardTitle} numberOfLines={1}>
                     {selectedProvider.name}
                   </Text>
-                  <Text style={styles.bottomCardMeta}>
-                    {selectedProvider.type} • {formatDistance(selectedProvider.distanceMiles)}
-                  </Text>
+                  <Text style={styles.bottomCardMeta}>{getProviderMeta(selectedProvider)}</Text>
                   {selectedProvider.address ? (
                     <Text style={styles.bottomCardAddress} numberOfLines={1}>
                       {selectedProvider.address}
@@ -342,9 +580,17 @@ export const ProviderListScreen: React.FC = () => {
                   <TouchableOpacity
                     style={styles.bottomCallBtn}
                     onPress={() => handleCall(selectedProvider.phone)}
-                    accessibilityLabel="Call clinic"
+                    accessibilityLabel="Call facility"
                   >
-                    <Ionicons name="call" size={18} color="#111318" />
+                    <Icon name="phoneCall" size={18} color={theme.colors.text.inverse} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.bottomDirectionsBtn}
+                    onPress={() => openDirections(selectedProvider)}
+                    accessibilityLabel="Open directions to facility"
+                  >
+                    <Icon name="navigationArrow" size={18} color={theme.colors.primary.hover} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -352,11 +598,12 @@ export const ProviderListScreen: React.FC = () => {
                     onPress={() =>
                       navigation.navigate('ProviderDetail', {
                         providerId: selectedProvider.id,
+                        provider: selectedProvider,
                       })
                     }
                   >
                     <Text style={styles.bottomDetailBtnText}>Details</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                    <Icon name="arrowRight" size={16} color={theme.colors.text.inverse} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -371,7 +618,7 @@ export const ProviderListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
   },
   header: {
     flexDirection: 'row',
@@ -379,60 +626,76 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#222630',
+    borderBottomColor: theme.colors.canvas.border,
   },
   headerBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.primary.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     letterSpacing: -0.2,
   },
   modeToggleBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1E232E',
+    backgroundColor: theme.colors.primary.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modeToggleBtnActive: {
-    backgroundColor: '#374151',
+    backgroundColor: theme.colors.primary.hover,
   },
   searchContainer: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 14,
     paddingHorizontal: 12,
     height: 46,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.canvas.border,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginLeft: 8,
   },
   filterContainer: {
     paddingVertical: 8,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
+  },
+  attributionContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    backgroundColor: theme.colors.canvas.background,
+  },
+  attributionText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: theme.colors.text.muted,
+  },
+  attributionLink: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: theme.colors.primary.hover,
+    textDecorationLine: 'underline',
   },
   filterList: {
     paddingHorizontal: 16,
@@ -442,32 +705,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.canvas.border,
   },
   filterChipActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: theme.colors.primary.hover,
+    borderColor: theme.colors.primary.hover,
   },
   filterText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.text.secondary,
   },
   filterTextActive: {
-    color: '#0F1115',
+    color: theme.colors.text.inverse,
   },
   listContent: {
     padding: 16,
     gap: 12,
   },
   card: {
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.canvas.border,
+    ...theme.spatial.shadows.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -481,18 +745,18 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginBottom: 4,
   },
   providerDistance: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.primary.hover,
     marginBottom: 4,
   },
   providerAddress: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.text.muted,
     marginBottom: 8,
   },
   tagContainer: {
@@ -502,20 +766,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: '#262C38',
+    backgroundColor: theme.colors.primary.light,
   },
   tagText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#D1D5DB',
+    color: theme.colors.primary.hover,
   },
   callButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.primary.hover,
     alignItems: 'center',
     justifyContent: 'center',
+    ...theme.spatial.shadows.sm,
   },
   centerContainer: {
     flex: 1,
@@ -526,7 +791,37 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: theme.colors.text.secondary,
+  },
+  errorTitle: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.text.primary,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 19,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  retryButton: {
+    marginTop: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: theme.colors.primary.hover,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 22,
+  },
+  retryButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.text.inverse,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -536,44 +831,30 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginTop: 12,
   },
   emptySubtitle: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: theme.colors.text.secondary,
     marginTop: 4,
+    textAlign: 'center',
+  },
+  emptyResetBtn: {
+    marginTop: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: theme.colors.primary.hover,
+  },
+  emptyResetText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.text.inverse,
   },
   mapViewport: {
     flex: 1,
-  },
-  mapMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#111318',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapMarkerSelected: {
-    backgroundColor: '#2563EB',
-    transform: [{ scale: 1.15 }],
-  },
-  calloutBox: {
-    padding: 8,
-    minWidth: 140,
-  },
-  calloutTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0F1115',
-  },
-  calloutSubtitle: {
-    fontSize: 11,
-    color: '#4B5563',
-    marginTop: 2,
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
   },
   mapFloatingControls: {
     position: 'absolute',
@@ -582,43 +863,116 @@ const styles = StyleSheet.create({
     right: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     zIndex: 10,
+  },
+  mapControlGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   floatingActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 24,
     gap: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    ...theme.spatial.shadows.md,
+  },
+  mapIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.canvas.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.spatial.shadows.md,
+  },
+  locationBanner: {
+    position: 'absolute',
+    top: 68,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: theme.colors.canvas.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    ...theme.spatial.shadows3d.level2,
+  },
+  locationBannerText: {
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    color: theme.colors.text.secondary,
+  },
+  locationBannerAction: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: theme.colors.primary.hover,
+  },
+  locationBannerActionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.text.inverse,
+  },
+  mapEmptyOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    zIndex: 5,
+  },
+  mapEmptyCard: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.canvas.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    maxWidth: 320,
+    ...theme.spatial.shadows.md,
+  },
+  mapEmptyTitle: {
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.text.primary,
+  },
+  mapEmptyText: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 18,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
   },
   floatingActionText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#111318',
+    color: theme.colors.primary.hover,
   },
   closeMapPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111318',
+    backgroundColor: theme.colors.primary.hover,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 24,
     gap: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    ...theme.spatial.shadows.md,
   },
   closeMapText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   bottomCardWrapper: {
     position: 'absolute',
@@ -628,18 +982,15 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   bottomCard: {
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.canvas.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
+    ...theme.spatial.shadows.lg,
   },
   bottomCardInfo: {
     flex: 1,
@@ -648,18 +999,18 @@ const styles = StyleSheet.create({
   bottomCardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   bottomCardMeta: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.primary.hover,
     marginBottom: 4,
   },
   bottomCardAddress: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.text.muted,
   },
   bottomCardActions: {
     flexDirection: 'row',
@@ -670,14 +1021,22 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.primary.hover,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomDirectionsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   bottomDetailBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#262C38',
+    backgroundColor: theme.colors.primary.hover,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
@@ -686,6 +1045,6 @@ const styles = StyleSheet.create({
   bottomDetailBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 });

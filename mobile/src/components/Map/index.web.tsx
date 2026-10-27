@@ -1,7 +1,8 @@
 // mobile/src/components/Map/index.web.tsx
+import { Icon } from '../Icon';
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { theme } from '../../theme';
 
 export interface Region {
   latitude: number;
@@ -32,7 +33,7 @@ const MapView = forwardRef<MapViewHandle, any>(({ style }, ref) => {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.card}>
-        <MaterialCommunityIcons name="map-marker-radius" size={48} color="#9CA3AF" />
+        <Icon name="mapPin" size={48} color={theme.colors.primary.hover} />
         <Text style={styles.title}>Map View Unavailable on Web</Text>
         <Text style={styles.subtitle}>
           Interactive GPS mapping is supported on iOS and Android native apps. On web, please use the facility list or tap a facility for direct Google Maps directions.
@@ -45,31 +46,32 @@ const MapView = forwardRef<MapViewHandle, any>(({ style }, ref) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.canvas.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   card: {
-    backgroundColor: '#1A1E26',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     maxWidth: 420,
     borderWidth: 1,
-    borderColor: '#262C38',
+    borderColor: theme.colors.canvas.border,
+    ...theme.spatial.shadows.card,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.primary,
     marginTop: 12,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: theme.colors.text.secondary,
     textAlign: 'center',
     lineHeight: 18,
   },

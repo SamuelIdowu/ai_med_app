@@ -1,43 +1,54 @@
+import { Icon } from '../components/Icon';
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Animated, Easing, Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { MediaTypeOptions } from 'expo-image-picker';
-import { useNavigation } from '@react-navigation/native';
-import { EncounterService } from '../services/encounterService';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { reportService } from '../services/reportService';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { api } from '../services/api';
-import { ImageService, ProcessedImage } from '../services/imageService';
+import { ImageService } from '../services/imageService';
+import { photoAnalysisService } from '../services/photoAnalysisService';
+import { capturePhoto, PhotoCaptureError, pickPhoto } from '../services/photoCaptureService';
+import { getApiErrorMessage } from '../services/apiError';
+import {
+    PhotoAnalysisFallbackReason,
+    PhotoAnalysisMode,
+    StructuredPhotoAnalysis,
+} from '../types/photoAnalysis';
+import { theme } from '../theme';
+import { Illustration } from '../components/Illustration';
 
-interface StructuredAnalysis {
-    severity: 'minor' | 'moderate' | 'serious' | 'critical';
-    injuryType: string;
-    confidence: number;
-    emergencyFlag: boolean;
-    symptoms: string[];
-    recommendations: string[];
-    warnings: string[];
-    rawAnalysis?: string;
-}
+const PRIMARY_COLOR = theme.colors.primary.main;
+const BG_LIGHT = theme.colors.canvas.background;
+const CARD_LIGHT = theme.colors.canvas.surface;
+const TEXT_LIGHT = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
 
-const PRIMARY_COLOR = '#0F1115';
-const BG_LIGHT = '#F8F9FA';
-const CARD_LIGHT = '#FFFFFF';
-const TEXT_LIGHT = '#0F1115';
-const TEXT_SECONDARY = '#6B7280';
+const ANALYSIS_MODES: Array<{
+    id: PhotoAnalysisMode;
+    label: string;
+    description: string;
+}> = [
+    { id: 'auto', label: 'Auto', description: 'Best available model' },
+    { id: 'wound', label: 'Wound CV', description: 'Wound severity model' },
+    { id: 'general', label: 'General AI', description: 'Broader assessment' },
+];
 
 export const AIAnalysisScreen = () => {
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
+    const initialPhotoUri = route.params?.photoUri as string | undefined;
+    const initialMode = (route.params?.mode as PhotoAnalysisMode) || 'auto';
     const [analyzing, setAnalyzing] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [processingStage, setProcessingStage] = useState<string>('');
-    const [images, setImages] = useState<string[]>([]);
+    const [images, setImages] = useState<string[]>(initialPhotoUri ? [initialPhotoUri] : []);
+    const [analysisMode, setAnalysisMode] = useState<PhotoAnalysisMode>(initialMode);
     const [analysisResult, setAnalysisResult] = useState<string | null>(null);
-    const [structuredAnalysis, setStructuredAnalysis] = useState<StructuredAnalysis | null>(null);
+    const [structuredAnalysis, setStructuredAnalysis] = useState<StructuredPhotoAnalysis | null>(null);
+    const [fallbackReason, setFallbackReason] = useState<PhotoAnalysisFallbackReason | undefined>();
     const [reportUri, setReportUri] = useState<string | null>(null);
+    const autoStartedRef = useRef(false);
 
     // --- Animated progress bar ---
     const animatedProgress = useRef(new Animated.Value(0)).current;
@@ -51,7 +62,7 @@ export const AIAnalysisScreen = () => {
             easing: Easing.out(Easing.cubic),
             useNativeDriver: false,
         }).start();
-    }, [uploadProgress]);
+    }, [uploadProgress, animatedProgress]);
 
     useEffect(() => {
         if (analyzing) {
@@ -77,94 +88,65 @@ export const AIAnalysisScreen = () => {
             pulseDot.stopAnimation();
             pulseDot.setValue(1);
         }
-    }, [analyzing]);
+    }, [analyzing, shimmerAnim, pulseDot]);
 
 
-    const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permission needed', 'Sorry, we need camera roll permissions to make this work!');
+    const selectPhoto = async (newImage: string) => {
+        setProcessingStage('Validating image quality...');
+        const quality = await ImageService.validateImageQuality(newImage);
+
+        if (!quality.isValid) {
+            Alert.alert(
+                'Image Quality Issue',
+                quality.warnings.join('\n'),
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Use Anyway',
+                        onPress: () => {
+                            setImages([newImage]);
+                            setAnalysisResult(null);
+                            setStructuredAnalysis(null);
+                            setReportUri(null);
+                        },
+                    },
+                ]
+            );
+            setProcessingStage('');
             return;
         }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 1,
-            allowsMultipleSelection: false, // For now, keep single selection for simplicity
-        });
+        if (quality.warnings.length > 0) {
+            Alert.alert('Image Quality', quality.warnings.join('\n'));
+        }
 
-        if (!result.canceled) {
-            const newImage = result.assets[0].uri;
+        setImages([newImage]);
+        setAnalysisResult(null);
+        setStructuredAnalysis(null);
+        setFallbackReason(undefined);
+        setReportUri(null);
+        setProcessingStage('');
+    };
 
-            // Validate image quality
-            setProcessingStage('Validating image quality...');
-            const quality = await ImageService.validateImageQuality(newImage);
-
-            if (!quality.isValid) {
-                Alert.alert(
-                    'Image Quality Issue',
-                    quality.warnings.join('\n'),
-                    [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Use Anyway', onPress: () => setImages([...images, newImage]) }
-                    ]
-                );
-                setProcessingStage('');
-                return;
+    const pickImage = async () => {
+        try {
+            const newImage = await pickPhoto();
+            await selectPhoto(newImage);
+        } catch (error) {
+            if (error instanceof PhotoCaptureError && error.code !== 'cancelled') {
+                Alert.alert('Permission needed', error.message);
             }
-
-            if (quality.warnings.length > 0) {
-                Alert.alert('Image Quality', quality.warnings.join('\n'));
-            }
-
-            setImages([...images, newImage]);
-            setAnalysisResult(null);
-            setReportUri(null);
-            setProcessingStage('');
         }
     };
 
     const takePhoto = async () => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permission needed', 'Sorry, we need camera permissions to make this work!');
-            return;
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            const newImage = result.assets[0].uri;
-
-            // Validate image quality
-            setProcessingStage('Validating image quality...');
-            const quality = await ImageService.validateImageQuality(newImage);
-
-            if (!quality.isValid) {
-                Alert.alert(
-                    'Image Quality Issue',
-                    quality.warnings.join('\n'),
-                    [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Use Anyway', onPress: () => setImages([...images, newImage]) }
-                    ]
-                );
-                setProcessingStage('');
-                return;
+        try {
+            const newImage = await capturePhoto();
+            await selectPhoto(newImage);
+        } catch (error) {
+            if (error instanceof PhotoCaptureError && error.code !== 'cancelled') {
+                Alert.alert('Permission needed', error.message);
             }
-
-            if (quality.warnings.length > 0) {
-                Alert.alert('Image Quality', quality.warnings.join('\n'));
-            }
-
-            setImages([...images, newImage]);
-            setAnalysisResult(null);
-            setReportUri(null);
-            setProcessingStage('');
         }
     };
 
@@ -178,101 +160,87 @@ export const AIAnalysisScreen = () => {
         setImages([]);
         setAnalysisResult(null);
         setStructuredAnalysis(null);
+        setFallbackReason(undefined);
         setReportUri(null);
         setUploadProgress(0);
         setProcessingStage('');
     };
 
-    const removeImage = (index: number) => {
-        setImages(images.filter((_, i) => i !== index));
-    };
+    const handleAnalyze = async (
+        photoUriOverride?: string,
+        modeOverride?: PhotoAnalysisMode
+    ) => {
+        const photoUri = photoUriOverride ?? images[0];
+        if (!photoUri) return;
 
-    const handleAnalyze = async () => {
-        if (images.length === 0) return;
-
+        const mode = modeOverride ?? analysisMode;
         setAnalyzing(true);
-        setUploadProgress(0);
+        setUploadProgress(10);
 
         try {
-            setProcessingStage('Processing images...');
-            setUploadProgress(20);
+            setProcessingStage('Preparing photo...');
+            setUploadProgress(30);
 
-            // Process all images using ImageService
-            const processedImages: ProcessedImage[] = [];
-            for (let i = 0; i < images.length; i++) {
-                const processed = await ImageService.processImage(images[i]);
-                processedImages.push(processed);
-                setUploadProgress(20 + (30 * (i + 1) / images.length));
+            setProcessingStage(mode === 'general' ? 'Running general AI analysis...' : 'Running clinical analysis...');
+            setUploadProgress(55);
+
+            const result = await photoAnalysisService.analyze(photoUri, mode);
+
+            setUploadProgress(85);
+            setProcessingStage('Saving encounter...');
+
+            let generatedReportUri: string | null = null;
+            try {
+                generatedReportUri = await reportService.generateReport(result.encounterId);
+                setReportUri(generatedReportUri);
+            } catch (reportError) {
+                console.error('Report generation failed', reportError);
             }
 
-            setProcessingStage('Uploading to server...');
-            setUploadProgress(50);
-
-            // Send to backend - using the first image for now (single image analysis)
-            // In Phase 2, we'll send all images
-            const apiResponse = await api.post('/ai/analyze', {
-                image: processedImages[0].base64
-            });
-
-            setUploadProgress(80);
-            setProcessingStage('Creating encounter...');
-
-            // Create encounter with all images
-            const result = await EncounterService.createEncounter(
-                'AI Analysis',
-                apiResponse.data.analysis || 'Analysis Completed',
-                images
-            );
-
+            setImages([photoUri]);
+            setAnalysisResult(result.analysis);
+            setStructuredAnalysis(result.structuredAnalysis);
+            setFallbackReason(result.fallbackReason);
             setUploadProgress(100);
             setProcessingStage('Complete!');
 
-            let successButtons: any[] = [{ text: 'OK', onPress: () => navigation.navigate('History') }];
-
-            // If we have a backend encounter, we can generate a report
-            if (result.backendEncounter && result.backendEncounter.id) {
-                try {
-                    const reportUri = await reportService.generateReport(result.backendEncounter.id);
-
-                    successButtons = [
-                        {
-                            text: 'Share Report',
-                            onPress: async () => {
-                                await reportService.shareReport(reportUri);
-                                navigation.navigate('History');
+            const successButtons: any[] = generatedReportUri
+                ? [
+                    {
+                        text: 'Share Report',
+                        onPress: async () => {
+                            if (generatedReportUri) {
+                                await reportService.shareReport(generatedReportUri);
                             }
+                            navigation.navigate('History');
                         },
-                        { text: 'Done', onPress: () => navigation.navigate('History') }
-                    ];
-                } catch (reportError) {
-                    console.error("Report generation failed", reportError);
-                    // Fallback to normal success if report fails
-                }
-            }
+                    },
+                    { text: 'Done', onPress: () => navigation.navigate('History') },
+                ]
+                : [{ text: 'Done', onPress: () => navigation.navigate('History') }];
 
-            // Capture structured analysis if available
-            if (apiResponse.data.structuredAnalysis) {
-                setStructuredAnalysis(apiResponse.data.structuredAnalysis);
-            }
-            setAnalysisResult(apiResponse.data.analysis);
-            setProcessingStage('');
-
-            if (result.backendEncounter?.id) {
-                Alert.alert(
-                    '✅ Analysis Complete',
-                    'Your assessment has been saved to history.',
-                    successButtons
-                );
-            }
-        } catch (err: any) {
-            console.error("API Error", err?.response?.data || err);
-            Alert.alert('Analysis Failed', err?.response?.data?.userMessage || 'Could not analyze image.');
-            setProcessingStage('');
+            Alert.alert(
+                'Analysis Complete',
+                'Your assessment has been saved to history.',
+                successButtons
+            );
+        } catch (error: any) {
+            console.error('API Error', error?.response?.data || error);
+            Alert.alert('Analysis Failed', getApiErrorMessage(error));
         } finally {
             setAnalyzing(false);
             setUploadProgress(0);
+            setProcessingStage('');
         }
     };
+
+    useEffect(() => {
+        if (initialPhotoUri && !autoStartedRef.current) {
+            autoStartedRef.current = true;
+            void handleAnalyze(initialPhotoUri, initialMode);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -284,7 +252,7 @@ export const AIAnalysisScreen = () => {
                     onPress={() => navigation.goBack()}
                     style={styles.backButton}
                 >
-                    <MaterialCommunityIcons name="chevron-left" size={28} color={TEXT_LIGHT} />
+                    <Icon name="caretLeft" size={28} color={TEXT_LIGHT} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>AI Analysis</Text>
                 <View style={{ width: 40 }} />
@@ -296,7 +264,7 @@ export const AIAnalysisScreen = () => {
                     <View style={styles.headlineRow}>
                         <Text style={styles.headlineText}>Assess Injury</Text>
                         <View style={styles.offlineChip}>
-                            <MaterialCommunityIcons name="cloud-sync" size={16} color="#065f46" />
+                            <Icon name="cloudCheck" size={16} color="#065f46" />
                             <Text style={styles.offlineText}>ONLINE AI</Text>
                         </View>
                     </View>
@@ -304,6 +272,45 @@ export const AIAnalysisScreen = () => {
                         {analysisResult ? "Review your assessment below." : "Snap a photo of the affected area. Our AI will analyze the injury and save it to your history."}
                     </Text>
                 </View>
+
+                {!analysisResult && (
+                    <View style={styles.modeSection}>
+                        <Text style={styles.modeLabel}>Analysis mode</Text>
+                        <View style={styles.modeRow}>
+                            {ANALYSIS_MODES.map((option) => {
+                                const selected = analysisMode === option.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        style={[
+                                            styles.modeChip,
+                                            selected && styles.modeChipSelected,
+                                        ]}
+                                        onPress={() => setAnalysisMode(option.id)}
+                                        activeOpacity={0.75}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.modeChipText,
+                                                selected && styles.modeChipTextSelected,
+                                            ]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.modeChipDescription,
+                                                selected && styles.modeChipDescriptionSelected,
+                                            ]}
+                                        >
+                                            {option.description}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    </View>
+                )}
 
                 {/* Progress Indicator */}
                 {analyzing && (
@@ -370,17 +377,28 @@ export const AIAnalysisScreen = () => {
                                 {/* Emergency Banner */}
                                 {structuredAnalysis.emergencyFlag && (
                                     <View style={styles.emergencyBanner}>
-                                        <MaterialCommunityIcons name="alert-circle" size={20} color="#fff" />
+                                        <Icon name="warningCircle" size={20} color="#fff" />
                                         <Text style={styles.emergencyText}>⚠️ EMERGENCY — Call 911 Immediately</Text>
                                     </View>
                                 )}
 
-                                {/* Severity + Injury Type */}
+                                {fallbackReason && (
+                                    <View style={styles.fallbackBanner}>
+                                        <Icon name="arrowsLeftRight" size={16} color="#6B7280" />
+                                        <Text style={styles.fallbackText}>
+                                            Auto mode used General AI ({formatFallbackReason(fallbackReason)}).
+                                        </Text>
+                                    </View>
+                                )}
+
+                                {/* Severity + Classification */}
                                 <View style={styles.severityRow}>
                                     <View style={[styles.severityBadge, severityStyle(structuredAnalysis.severity)]}>
                                         <Text style={styles.severityBadgeText}>{structuredAnalysis.severity.toUpperCase()}</Text>
                                     </View>
-                                    <Text style={styles.injuryTypeText}>{structuredAnalysis.injuryType}</Text>
+                                    <Text style={styles.injuryTypeText}>
+                                        {formatClassification(structuredAnalysis.classification)}
+                                    </Text>
                                 </View>
 
                                 {/* Confidence */}
@@ -396,7 +414,7 @@ export const AIAnalysisScreen = () => {
                                 {structuredAnalysis.symptoms.length > 0 && (
                                     <View style={styles.section}>
                                         <View style={styles.sectionHeader}>
-                                            <MaterialCommunityIcons name="eye-outline" size={18} color={PRIMARY_COLOR} />
+                                            <Icon name="eye" size={18} color={PRIMARY_COLOR} />
                                             <Text style={styles.sectionTitle}>Observed Symptoms</Text>
                                         </View>
                                         {structuredAnalysis.symptoms.map((s, i) => (
@@ -412,7 +430,7 @@ export const AIAnalysisScreen = () => {
                                 {structuredAnalysis.recommendations.length > 0 && (
                                     <View style={styles.section}>
                                         <View style={styles.sectionHeader}>
-                                            <MaterialCommunityIcons name="medical-bag" size={18} color="#059669" />
+                                            <Icon name="firstAidKit" size={18} color="#059669" />
                                             <Text style={[styles.sectionTitle, { color: '#059669' }]}>First Aid Steps</Text>
                                         </View>
                                         {structuredAnalysis.recommendations.map((r, i) => (
@@ -430,12 +448,12 @@ export const AIAnalysisScreen = () => {
                                 {structuredAnalysis.warnings.length > 0 && (
                                     <View style={[styles.section, styles.warningSection]}>
                                         <View style={styles.sectionHeader}>
-                                            <MaterialCommunityIcons name="alert-outline" size={18} color="#d97706" />
+                                            <Icon name="warning" size={18} color="#d97706" />
                                             <Text style={[styles.sectionTitle, { color: '#d97706' }]}>Important Warnings</Text>
                                         </View>
                                         {structuredAnalysis.warnings.map((w, i) => (
                                             <View key={i} style={styles.bulletRow}>
-                                                <MaterialCommunityIcons name="alert-circle-outline" size={14} color="#d97706" style={{ marginTop: 2 }} />
+                                                <Icon name="warningCircle" size={14} color="#d97706" style={{ marginTop: 2 }} />
                                                 <Text style={[styles.bulletText, { color: '#92400e' }]}>{w}</Text>
                                             </View>
                                         ))}
@@ -453,13 +471,13 @@ export const AIAnalysisScreen = () => {
                         <View style={styles.actionButtons}>
                             {reportUri && (
                                 <TouchableOpacity style={styles.cameraButton} onPress={handleShareReport}>
-                                    <MaterialCommunityIcons name="share-variant" size={20} color="#fff" />
+                                    <Icon name="share" size={20} color="#fff" />
                                     <Text style={styles.cameraButtonText}>Share PDF Report</Text>
                                 </TouchableOpacity>
                             )}
 
                             <TouchableOpacity style={styles.galleryButton} onPress={handleReset}>
-                                <MaterialCommunityIcons name="refresh" size={20} color={TEXT_LIGHT} />
+                                <Icon name="arrowClockwise" size={20} color={TEXT_LIGHT} />
                                 <Text style={styles.galleryButtonText}>Start New Scan</Text>
                             </TouchableOpacity>
                         </View>
@@ -468,27 +486,17 @@ export const AIAnalysisScreen = () => {
                     /* Upload Area */
                     <View style={styles.uploadContainer}>
                         {images.length > 0 ? (
-                            /* Image Gallery View */
-                            <ScrollView horizontal style={styles.imageGalleryPreview} showsHorizontalScrollIndicator={false}>
-                                {images.map((img, index) => (
-                                    <View key={index} style={styles.imagePreviewItem}>
-                                        <Image source={{ uri: img }} style={styles.previewImageThumb} />
-                                        <TouchableOpacity
-                                            style={styles.removeImageButton}
-                                            onPress={() => removeImage(index)}
-                                        >
-                                            <MaterialCommunityIcons name="close-circle" size={24} color="#fff" />
-                                        </TouchableOpacity>
-                                    </View>
-                                ))}
+                            <View style={styles.singleImagePreview}>
+                                <Image source={{ uri: images[0] }} style={styles.singlePreviewImage} />
                                 <TouchableOpacity
-                                    style={styles.addMoreButton}
+                                    style={styles.changePhotoButton}
                                     onPress={pickImage}
+                                    activeOpacity={0.8}
                                 >
-                                    <MaterialCommunityIcons name="plus-circle-outline" size={40} color={PRIMARY_COLOR} />
-                                    <Text style={styles.addMoreText}>Add More</Text>
+                                    <Icon name="image" size={16} color="#fff" />
+                                    <Text style={styles.changePhotoText}>Change photo</Text>
                                 </TouchableOpacity>
-                            </ScrollView>
+                            </View>
                         ) : (
                             /* Empty State */
                             <TouchableOpacity
@@ -497,7 +505,15 @@ export const AIAnalysisScreen = () => {
                                 onPress={pickImage}
                             >
                                 <View style={styles.uploadIconCircle}>
-                                    <MaterialCommunityIcons name="camera-plus" size={40} color={PRIMARY_COLOR} />
+                                    <Illustration
+                                        name="diagnosticMolecule"
+                                        width={64}
+                                        height={64}
+                                        accessibilityLabel="Diagnostic molecule"
+                                        fallback={
+                                            <Icon name="cameraPlus" size={40} color={PRIMARY_COLOR} />
+                                        }
+                                    />
                                 </View>
                                 <Text style={styles.uploadTitle}>No Image Selected</Text>
                                 <Text style={styles.uploadSubtitle}>Tap to capture or upload</Text>
@@ -506,12 +522,12 @@ export const AIAnalysisScreen = () => {
 
                         <View style={styles.actionButtons}>
                             <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
-                                <MaterialCommunityIcons name="camera" size={20} color="#fff" />
+                                <Icon name="camera" size={20} color="#fff" />
                                 <Text style={styles.cameraButtonText}>Open Camera</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.galleryButton} onPress={pickImage}>
-                                <MaterialCommunityIcons name="image" size={20} color={TEXT_LIGHT} />
+                                <Icon name="image" size={20} color={TEXT_LIGHT} />
                                 <Text style={styles.galleryButtonText}>Select from Gallery</Text>
                             </TouchableOpacity>
 
@@ -522,7 +538,7 @@ export const AIAnalysisScreen = () => {
                                         analyzing && styles.analyzeButtonDisabled
                                     ]}
                                     disabled={analyzing}
-                                    onPress={handleAnalyze}
+                                    onPress={() => handleAnalyze()}
                                 >
                                     {analyzing ? (
                                         <>
@@ -537,9 +553,9 @@ export const AIAnalysisScreen = () => {
                                                 start={{ x: 0, y: 0 }}
                                                 end={{ x: 1, y: 0 }}
                                             />
-                                            <MaterialCommunityIcons name="line-scan" size={24} color="#fff" style={{ zIndex: 1 }} />
+                                            <Icon name="scan" size={24} color="#fff" style={{ zIndex: 1 }} />
                                             <Text style={[styles.analyzeButtonText, { color: "#fff", zIndex: 1 }]}>
-                                                Scan & Analyze ({images.length})
+                                                Analyze Photo
                                             </Text>
                                         </>
                                     )}
@@ -556,7 +572,7 @@ export const AIAnalysisScreen = () => {
                     style={styles.navItem}
                     onPress={() => navigation.navigate('AIChat')}
                 >
-                    <MaterialCommunityIcons name="message-text-outline" size={24} color="#9ca3af" />
+                    <Icon name="chatCircle" size={24} color="#9ca3af" />
                     <Text style={styles.navText}>Chat</Text>
                 </TouchableOpacity>
 
@@ -572,7 +588,7 @@ export const AIAnalysisScreen = () => {
                         {analyzing ? (
                             <ActivityIndicator size="small" color="#fff" />
                         ) : (
-                            <MaterialCommunityIcons name="line-scan" size={24} color="#fff" />
+                            <Icon name="scan" size={24} color="#fff" />
                         )}
                         {images.length > 0 && (
                             <View style={styles.badgeContainer}>
@@ -587,7 +603,7 @@ export const AIAnalysisScreen = () => {
                     style={styles.navItem}
                     onPress={() => navigation.navigate('FirstAidList')}
                 >
-                    <MaterialCommunityIcons name="book-open-variant" size={24} color="#9ca3af" />
+                    <Icon name="bookOpen" size={24} color="#9ca3af" />
                     <Text style={styles.navText}>Guides</Text>
                 </TouchableOpacity>
             </View>
@@ -596,11 +612,29 @@ export const AIAnalysisScreen = () => {
     );
 };
 
-const severityStyle = (severity: StructuredAnalysis['severity']) => {
-    const map: Record<StructuredAnalysis['severity'], object> = {
-        minor: { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' },
+const formatClassification = (classification: string): string => {
+    if (!classification) return 'General Assessment';
+    return classification
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
+
+const formatFallbackReason = (reason: PhotoAnalysisFallbackReason): string => {
+    const labels: Record<PhotoAnalysisFallbackReason, string> = {
+        ml_unavailable: 'wound model unavailable',
+        ml_error: 'wound model error',
+        non_medical: 'non-medical image',
+        low_confidence: 'low wound-model confidence',
+    };
+    return labels[reason];
+};
+
+const severityStyle = (severity: StructuredPhotoAnalysis['severity']) => {
+    const map: Record<StructuredPhotoAnalysis['severity'], object> = {
+        none: { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' },
+        mild: { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' },
         moderate: { backgroundColor: '#F3F4F6', borderColor: '#D1D5DB' },
-        serious: { backgroundColor: '#E5E7EB', borderColor: '#9CA3AF' },
+        severe: { backgroundColor: '#E5E7EB', borderColor: '#9CA3AF' },
         critical: { backgroundColor: '#0F1115', borderColor: '#0F1115' },
     };
     return map[severity] || map.moderate;
@@ -675,6 +709,67 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: TEXT_SECONDARY,
         lineHeight: 22,
+    },
+    modeSection: {
+        marginBottom: 18,
+    },
+    modeLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: TEXT_SECONDARY,
+        marginBottom: 8,
+    },
+    modeRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    modeChip: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        borderRadius: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+        backgroundColor: '#fff',
+    },
+    modeChipSelected: {
+        backgroundColor: '#0F1115',
+        borderColor: '#0F1115',
+    },
+    modeChipText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: TEXT_LIGHT,
+        marginBottom: 2,
+    },
+    modeChipTextSelected: {
+        color: '#fff',
+    },
+    modeChipDescription: {
+        fontSize: 10,
+        lineHeight: 13,
+        color: TEXT_SECONDARY,
+    },
+    modeChipDescriptionSelected: {
+        color: '#D1D5DB',
+    },
+    fallbackBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        marginBottom: 14,
+    },
+    fallbackText: {
+        flex: 1,
+        fontSize: 12,
+        lineHeight: 17,
+        color: TEXT_SECONDARY,
     },
     uploadContainer: {
         flex: 1,
@@ -877,15 +972,13 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     resultCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        backgroundColor: CARD_LIGHT,
+        borderRadius: 16,
         padding: 20,
         marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     resultTitle: {
         fontSize: 18,
@@ -991,6 +1084,36 @@ const styles = StyleSheet.create({
         height: '100%',
         resizeMode: 'cover',
     },
+    singleImagePreview: {
+        width: '100%',
+        height: 240,
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginBottom: 16,
+        backgroundColor: '#F3F4F6',
+    },
+    singlePreviewImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    changePhotoButton: {
+        position: 'absolute',
+        right: 10,
+        bottom: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: 'rgba(15, 17, 21, 0.78)',
+        borderRadius: 18,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    changePhotoText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+    },
     imageGalleryPreview: {
         marginBottom: 20,
         maxHeight: 180,
@@ -1038,11 +1161,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#0F1115',
-        borderRadius: 8,
+        backgroundColor: theme.colors.status.danger,
+        borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 10,
         marginBottom: 16,
+        ...theme.spatial.shadows3d.level1,
     },
     emergencyText: {
         color: '#fff',

@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,11 +10,13 @@ import {
   Platform,
   SafeAreaView,
 } from 'react-native';
+import { Illustration } from '../components/Illustration';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
+import { theme } from '../theme';
+import { resolveIconName } from '../icons';
 
 type RootStackParamList = {
   EmergencySteps: { categoryId: string };
@@ -39,7 +42,7 @@ export const EmergencyStepScreen: React.FC = () => {
       id: categoryId,
       title: 'Emergency Care',
       subtitle: 'Immediate First Aid',
-      icon: 'medical-bag',
+      icon: 'firstAidKit',
       warning: 'Call emergency services (911) immediately if victim is unresponsive.',
       steps: [
         {
@@ -47,7 +50,7 @@ export const EmergencyStepScreen: React.FC = () => {
           title: 'Ensure Scene Safety',
           content: 'Verify the environment is safe before administering first aid.',
           explanation: 'Personal safety is paramount to prevent multiple casualties.',
-          illustration_icon: 'shield-alert',
+          illustration_icon: 'shieldWarning',
           illustration_label: 'Safety Check',
         },
       ],
@@ -56,6 +59,7 @@ export const EmergencyStepScreen: React.FC = () => {
   const steps = category.steps || [];
   const currentStep = steps[currentStepIndex] || {};
   const totalSteps = steps.length;
+  const isCprProtocol = category.id === 'cpr' || /cpr|cardiopulmonary/i.test(category.title || '');
 
   const rawTitle = category.title || 'First Aid';
   const headerTitle = rawTitle.toLowerCase().endsWith('aid')
@@ -109,7 +113,7 @@ export const EmergencyStepScreen: React.FC = () => {
           style={styles.backCircle}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="chevron-left" size={24} color="#000000" />
+          <Icon name="caretLeft" size={24} color="#000000" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle} numberOfLines={1}>
@@ -130,11 +134,27 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Medical Illustration Hero Card (Replaces Video) */}
             <View style={styles.illustrationHeroCard}>
               <View style={styles.heroIconBadge}>
-                <MaterialCommunityIcons
-                  name={(category.icon as any) || 'medical-bag'}
-                  size={44}
-                  color="#0F1115"
-                />
+                {isCprProtocol ? (
+                  <Illustration
+                    name="cprGuide"
+                    width={72}
+                    height={72}
+                    accessibilityLabel="CPR chest compression guide"
+                    fallback={
+                      <Icon
+                        name={resolveIconName(category.icon)}
+                        size={44}
+                        color="#0F1115"
+                      />
+                    }
+                  />
+                ) : (
+                  <Icon
+                    name={resolveIconName(category.icon)}
+                    size={44}
+                    color="#0F1115"
+                  />
+                )}
               </View>
 
               <Text style={styles.heroProtocolName}>{category.title}</Text>
@@ -143,13 +163,13 @@ export const EmergencyStepScreen: React.FC = () => {
               {/* Protocol Spec Badges */}
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroPill}>
-                  <MaterialCommunityIcons name="format-list-numbered" size={14} color="#0F1115" />
+                  <Icon name="listNumbers" size={14} color="#0F1115" />
                   <Text style={styles.heroPillText}>{totalSteps} Detailed Steps</Text>
                 </View>
 
                 {category.urgency ? (
                   <View style={styles.heroPillAlert}>
-                    <MaterialCommunityIcons name="alert-circle-outline" size={14} color="#0F1115" />
+                    <Icon name="warningCircle" size={14} color="#0F1115" />
                     <Text style={styles.heroPillAlertText}>{category.urgency}</Text>
                   </View>
                 ) : null}
@@ -159,7 +179,7 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Critical Emergency Warning Banner */}
             {category.warning && (
               <View style={styles.criticalWarningBox}>
-                <MaterialCommunityIcons name="alert-decagram" size={22} color="#0F1115" />
+                <Icon name="warningOctagon" size={22} color="#0F1115" />
                 <View style={styles.criticalWarningContent}>
                   <Text style={styles.criticalWarningTitle}>Crucial Medical Notice</Text>
                   <Text style={styles.criticalWarningText}>{category.warning}</Text>
@@ -198,7 +218,7 @@ export const EmergencyStepScreen: React.FC = () => {
                     </Text>
                   </View>
 
-                  <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
+                  <Icon name="caretRight" size={20} color="#9CA3AF" />
                 </TouchableOpacity>
               ))}
             </View>
@@ -211,7 +231,7 @@ export const EmergencyStepScreen: React.FC = () => {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('AIChat')}
             >
-              <MaterialCommunityIcons name="robot" size={18} color="#0F1115" />
+              <Icon name="robot" size={18} color="#0F1115" />
               <Text style={styles.pillButtonOutlineText}>Ask AI Triage</Text>
             </TouchableOpacity>
 
@@ -224,7 +244,7 @@ export const EmergencyStepScreen: React.FC = () => {
               }}
             >
               <Text style={styles.pillButtonSolidText}>Start Instructions</Text>
-              <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" />
+              <Icon name="arrowRight" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -272,8 +292,10 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Step Medical Illustration Card (No Video) */}
             <View style={styles.stepIllustrationCard}>
               <View style={styles.stepIllustrationCircle}>
-                <MaterialCommunityIcons
-                  name={(currentStep.illustration_icon as any) || (category.icon as any) || 'medical-bag'}
+                <Icon
+                  name={resolveIconName(
+                  currentStep.illustration_icon || category.icon
+                )}
                   size={52}
                   color="#0F1115"
                 />
@@ -303,7 +325,7 @@ export const EmergencyStepScreen: React.FC = () => {
               {/* Safety Caution / Do's & Don'ts */}
               {currentStep.caution && (
                 <View style={styles.cautionBox}>
-                  <MaterialCommunityIcons name="alert-circle" size={18} color="#0F1115" />
+                  <Icon name="warningCircle" size={18} color="#0F1115" />
                   <View style={styles.cautionContent}>
                     <Text style={styles.cautionTitle}>Critical Warning:</Text>
                     <Text style={styles.cautionText}>{currentStep.caution}</Text>
@@ -346,7 +368,7 @@ export const EmergencyStepScreen: React.FC = () => {
         <View style={styles.modalBackdrop}>
           <View style={styles.feedbackModalCard}>
             <View style={styles.modalCheckCircle}>
-              <MaterialCommunityIcons name="check" size={32} color="#FFFFFF" />
+              <Icon name="check" size={32} color="#FFFFFF" />
             </View>
 
             <Text style={styles.feedbackTitle}>
@@ -365,10 +387,11 @@ export const EmergencyStepScreen: React.FC = () => {
                   activeOpacity={0.7}
                   style={styles.starTouch}
                 >
-                  <MaterialCommunityIcons
-                    name={star <= rating ? 'star' : 'star-outline'}
+                  <Icon
+                    name="star"
                     size={32}
                     color="#000000"
+                    weight={star <= rating ? 'fill' : 'regular'}
                   />
                 </TouchableOpacity>
               ))}
@@ -450,9 +473,9 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   heroIconBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
@@ -506,30 +529,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#0F1115',
+    borderColor: theme.colors.status.emergency.border,
   },
   heroPillAlertText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.status.emergency.primary,
   },
 
-  // Critical Warning Banner
+  // Critical Warning Banner (Vivid Medical Red with 3D Emergency Glow)
   criticalWarningBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.status.emergency.surface,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#0F1115',
+    borderColor: theme.colors.status.emergency.border,
     padding: 16,
     marginBottom: 20,
     gap: 12,
+    ...theme.spatial.shadows3d.emergencyGlow,
   },
   criticalWarningContent: {
     flex: 1,
@@ -537,14 +561,14 @@ const styles = StyleSheet.create({
   criticalWarningTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.status.emergency.primary,
     marginBottom: 2,
   },
   criticalWarningText: {
     fontSize: 13,
-    color: '#374151',
+    color: theme.colors.status.emergency.text,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 
   // Steps Section Header
@@ -557,33 +581,34 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   sectionStepCounter: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.text.secondary,
   },
 
-  // Step Capsule Row
+  // Step Capsule Row with 3D Depth
   stepListContainer: {
     gap: 10,
   },
   stepCapsuleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
     padding: 14,
     gap: 12,
+    ...theme.spatial.shadows3d.card3d,
   },
   stepBadge: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,4 +1,4 @@
-# Multi-stage production build for HealthPulse backend
+# Multi-stage production build for Laso backend
 
 # Stage 1: Build & compile TypeScript
 FROM node:20-alpine AS builder

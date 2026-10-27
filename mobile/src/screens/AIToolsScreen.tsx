@@ -1,8 +1,8 @@
+import { Icon } from '../components/Icon';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { MedicalCard } from '../components/ui/MedicalCard';
@@ -33,11 +33,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('LiveTriage')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="lightning-bolt"
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
+                <Icon
+                  name="lightning"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -51,34 +51,34 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('LiveTriage')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
-            {/* 2. Computer Vision Reticle Wound Scanner */}
+            {/* 2. Unified Photo Analysis */}
             <MedicalCard
               style={styles.toolCard}
-              onPress={() => navigation.navigate('WoundScanner')}
+              onPress={() => navigation.navigate('AIAnalysis')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="camera-iris"
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
+                <Icon
+                  name="scan"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
               <View style={styles.textContainer}>
-                <Text style={styles.toolTitle}>Reticle Wound Scanner</Text>
+                <Text style={styles.toolTitle}>Photo Analysis</Text>
                 <Text style={styles.toolDescription}>
-                  Targeted CV camera frame for lacerations, burns, and severity grading.
+                  Auto-routed wound vision or general AI assessment with severity guidance and report export.
                 </Text>
               </View>
 
               <CircularDrilldownButton
-                onPress={() => navigation.navigate('WoundScanner')}
+                onPress={() => navigation.navigate('AIAnalysis')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -87,25 +87,25 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('AIChat')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="chat-processing-outline"
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
+                <Icon
+                  name="chatCircle"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
               <View style={styles.textContainer}>
                 <Text style={styles.toolTitle}>Conversational AI Triage</Text>
                 <Text style={styles.toolDescription}>
-                  Chat triage with multi-modal photo & video capture attachment support.
+                  Text-based clinical triage with fast first-aid guidance and protocol links.
                 </Text>
               </View>
 
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('AIChat')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -114,11 +114,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('FirstAidList')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="medical-bag"
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
+                <Icon
+                  name="firstAidKit"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -132,7 +132,7 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('FirstAidList')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
@@ -141,11 +141,11 @@ export const AIToolsScreen: React.FC = () => {
               style={styles.toolCard}
               onPress={() => navigation.navigate('ProviderList')}
             >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="map-marker-radius"
+              <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
+                <Icon
+                  name="mapPin"
                   size={26}
-                  color="#0F1115"
+                  color={theme.colors.primary.main}
                 />
               </View>
 
@@ -159,63 +159,10 @@ export const AIToolsScreen: React.FC = () => {
               <CircularDrilldownButton
                 onPress={() => navigation.navigate('ProviderList')}
                 size={36}
-                iconColor="#0F1115"
+                iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
 
-            {/* 6. AI Photo Diagnostic Lab */}
-            <MedicalCard
-              style={styles.toolCard}
-              onPress={() => navigation.navigate('AIAnalysis')}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="image-search-outline"
-                  size={26}
-                  color="#0F1115"
-                />
-              </View>
-
-              <View style={styles.textContainer}>
-                <Text style={styles.toolTitle}>AI Photo Diagnostic Lab</Text>
-                <Text style={styles.toolDescription}>
-                  Upload multi-angle injury photos for clinical severity grading, symptoms & clinician report export.
-                </Text>
-              </View>
-
-              <CircularDrilldownButton
-                onPress={() => navigation.navigate('AIAnalysis')}
-                size={36}
-                iconColor="#0F1115"
-              />
-            </MedicalCard>
-
-            {/* 7. Clinical Camera Guide */}
-            <MedicalCard
-              style={styles.toolCard}
-              onPress={() => navigation.navigate('PhotoInstructions')}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: '#F3F4F6' }]}>
-                <MaterialCommunityIcons
-                  name="camera-metering-center"
-                  size={26}
-                  color="#0F1115"
-                />
-              </View>
-
-              <View style={styles.textContainer}>
-                <Text style={styles.toolTitle}>Clinical Camera Guide</Text>
-                <Text style={styles.toolDescription}>
-                  3-step capture guide ensuring proper lighting, distance & angle for AI diagnostic accuracy.
-                </Text>
-              </View>
-
-              <CircularDrilldownButton
-                onPress={() => navigation.navigate('PhotoInstructions')}
-                size={36}
-                iconColor="#0F1115"
-              />
-            </MedicalCard>
           </View>
 
           <View style={{ height: 110 }} />

@@ -23,7 +23,7 @@ from app.services.classical_ml_service import ClassicalMLService
 @pytest.fixture(scope="module")
 def temp_ml_workspace():
     """Creates an isolated temporary folder for data and model artifacts."""
-    temp_dir = tempfile.mkdtemp(prefix="ai_med_test_classical_ml_")
+    temp_dir = tempfile.mkdtemp(prefix="laso_test_classical_ml_")
     data_dir = os.path.join(temp_dir, "data")
     eda_dir = os.path.join(data_dir, "eda")
     models_dir = os.path.join(temp_dir, "models")

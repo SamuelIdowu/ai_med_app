@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { Icon } from '../components/Icon';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,32 +9,35 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { VitalsAreaChart } from '../components/charts/VitalsAreaChart';
-import { ConcentricVitalsRing } from '../components/charts/ConcentricVitalsRing';
-import { ClinicalBarChart } from '../components/charts/ClinicalBarChart';
 import { TimeSegmentControl, TimeSegment } from '../components/charts/TimeSegmentControl';
 import { TactileButton } from '../components/ui/TactileButton';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { EncounterService } from '../services/encounterService';
 import { reportService } from '../services/reportService';
 import { VitalsService, VitalsTelemetry } from '../services/vitalsService';
+import { supabase } from '../services/supabase';
+import { HealthDataService } from '../services/healthDataService';
 import { theme } from '../theme';
 
 export const HistoryScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const [encounters, setEncounters] = useState<any[]>([]);
   const [vitals, setVitals] = useState<VitalsTelemetry | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSegment, setActiveSegment] = useState<TimeSegment>('Hourly');
   const [activeTab, setActiveTab] = useState<'vitals' | 'activity'>('vitals');
   const [selectedEncounter, setSelectedEncounter] = useState<any | null>(null);
+  const [healthSyncing, setHealthSyncing] = useState(false);
+  const [healthSyncEnabled, setHealthSyncEnabled] = useState(false);
+  const [healthSyncMessage, setHealthSyncMessage] = useState('');
 
   useEffect(() => {
     loadHistory();
@@ -42,6 +46,22 @@ export const HistoryScreen: React.FC = () => {
   useEffect(() => {
     loadVitals(activeSegment);
   }, [activeSegment]);
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`vital-readings:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'vital_readings', filter: `user_id=eq.${userId}` },
+        () => { void loadVitals(activeSegment); },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [session?.user?.id, activeSegment]);
 
   const loadHistory = async () => {
     try {
@@ -63,10 +83,58 @@ export const HistoryScreen: React.FC = () => {
     }
   };
 
+  const connectHealthData = async () => {
+    if (!session?.access_token) {
+      Alert.alert('Sign In Required', 'Sign in before connecting health data so readings can be saved to your account.');
+      return;
+    }
+    setHealthSyncing(true);
+    setHealthSyncMessage('');
+    try {
+      const count = await HealthDataService.connectAndSync();
+      setHealthSyncEnabled(true);
+      setHealthSyncMessage(count > 0
+        ? `Health data sync complete. ${count} readings processed.`
+        : 'No readings were available. Check health permissions and connected data sources.');
+      await loadVitals(activeSegment);
+    } catch (error: any) {
+      setHealthSyncMessage(error?.message || 'Could not sync health data.');
+    } finally {
+      setHealthSyncing(false);
+    }
+  };
+
+  useFocusEffect(useCallback(() => {
+    if (!healthSyncEnabled || !session?.access_token) return undefined;
+    let syncing = false;
+    const syncRecentData = async () => {
+      if (syncing || AppState.currentState !== 'active') return;
+      syncing = true;
+      try {
+        await HealthDataService.syncGrantedData();
+        await loadVitals(activeSegment);
+      } catch (error) {
+        console.warn('Health data background refresh failed:', error);
+      } finally {
+        syncing = false;
+      }
+    };
+    void syncRecentData();
+    const timer = setInterval(() => { void syncRecentData(); }, 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [healthSyncEnabled, activeSegment, session?.access_token]));
+
   const handleGenerateReport = async (encounterId: string) => {
     try {
       if (!session) {
-        Alert.alert('Sign In Required', 'Sign in to generate official medical PDF reports.');
+        Alert.alert(
+          'Sign In Required',
+          'Sign in to generate official medical PDF reports.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Sign In', onPress: () => { void signOut(); } },
+          ]
+        );
         return;
       }
 
@@ -149,11 +217,41 @@ export const HistoryScreen: React.FC = () => {
       >
         {activeTab === 'vitals' ? (
           <>
+          <View style={styles.healthSyncRow}>
+            <View style={styles.healthSyncCopy}>
+              <Text style={styles.cardSectionTitle}>Connected health data</Text>
+              <Text style={styles.metricStatus}>Read-only sync from Apple Health or Health Connect</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.healthSyncButton, healthSyncing && styles.healthSyncButtonDisabled]}
+              onPress={connectHealthData}
+              disabled={healthSyncing}
+            >
+              {healthSyncing
+                ? <ActivityIndicator size="small" color="#FFFFFF" />
+                : <Text style={styles.healthSyncButtonText}>Connect / Sync</Text>}
+            </TouchableOpacity>
+          </View>
+          {healthSyncMessage ? <Text style={styles.healthSyncMessage}>{healthSyncMessage}</Text> : null}
+          {!vitals || vitals.readingCount === 0 ? (
+            <MedicalCard style={styles.emptyCard}>
+              <Icon name="heartbeat" size={40} color={theme.colors.text.muted} />
+              <Text style={styles.emptyTitle}>{vitals ? 'No heart-rate readings' : 'Readings unavailable'}</Text>
+              <Text style={styles.emptySubtitle}>
+                {vitals
+                  ? 'Connect Apple Health or Health Connect, or record measured vitals during a triage session.'
+                  : 'Could not load your readings. Check your connection and try again.'}
+              </Text>
+            </MedicalCard>
+          ) : (
+          <>
             {/* 2. Top Summary Metric Card (ref 2.webp) */}
             <MedicalCard style={styles.vitalsSummaryCard}>
               <View style={styles.vitalsHeaderRow}>
                 <View>
-                  <Text style={styles.metricSub}>Heart Rate</Text>
+                  <View style={styles.metricSubRow}>
+                    <Text style={styles.metricSub}>Heart Rate</Text>
+                  </View>
                   <View style={styles.metricRow}>
                     <Text style={styles.metricValue}>
                       {vitals?.currentHeartRate ?? '—'}
@@ -161,13 +259,13 @@ export const HistoryScreen: React.FC = () => {
                     <Text style={styles.metricUnit}>BPM</Text>
                   </View>
                   <Text style={styles.metricStatus}>
-                    {vitals?.heartRateStatus || 'Awaiting live biometric reading'}
+                    {vitals.heartRateStatus}
                   </Text>
                 </View>
 
                 <View style={styles.heartIconCircle}>
-                  <MaterialCommunityIcons
-                    name="heart-pulse"
+                  <Icon
+                    name="cpr"
                     size={24}
                     color={theme.colors.primary.main}
                   />
@@ -211,28 +309,8 @@ export const HistoryScreen: React.FC = () => {
               />
             </MedicalCard>
 
-            {/* 3. Sleep & Biometric Multi-Ring Donut (ref3.webp) */}
-            <MedicalCard style={styles.chartSectionCard}>
-              <Text style={styles.cardSectionTitle}>Sleep & Recovery Arc</Text>
-              <ConcentricVitalsRing
-                size={130}
-                strokeWidth={9}
-                rings={vitals?.sleepRings}
-                centerText={vitals?.sleepDuration || '—'}
-                centerSubtext="Sleep time"
-              />
-            </MedicalCard>
-
-            {/* 4. Hemoglobin & Vitals Bar Chart (ref3.webp) */}
-            <MedicalCard style={styles.chartSectionCard}>
-              <View style={styles.cardHeaderWithBadge}>
-                <Text style={styles.cardSectionTitle}>Hemoglobin (Hgb)</Text>
-                <View style={styles.badgeNorm}>
-                  <Text style={styles.badgeNormText}>{vitals?.labBadge || 'Clinical Norm'}</Text>
-                </View>
-              </View>
-              <ClinicalBarChart height={160} data={vitals?.labBars} />
-            </MedicalCard>
+          </>
+          )}
           </>
         ) : (
           /* Encounters & History Tab */
@@ -247,8 +325,8 @@ export const HistoryScreen: React.FC = () => {
               />
             ) : encounters.length === 0 ? (
               <MedicalCard style={styles.emptyCard}>
-                <MaterialCommunityIcons
-                  name="clipboard-check-outline"
+                <Icon
+                  name="clipboardText"
                   size={40}
                   color={theme.colors.text.muted}
                 />
@@ -266,8 +344,8 @@ export const HistoryScreen: React.FC = () => {
                 >
                   <View style={styles.encounterRow}>
                     <View style={styles.encIconCircle}>
-                      <MaterialCommunityIcons
-                        name="medical-bag"
+                      <Icon
+                        name="firstAidKit"
                         size={22}
                         color={theme.colors.primary.main}
                       />
@@ -290,14 +368,14 @@ export const HistoryScreen: React.FC = () => {
                       label="View Details"
                       variant="primary"
                       size="sm"
-                      icon="file-document-outline"
+                      icon="fileText"
                       onPress={() => navigation.navigate('ReportPreview', { encounterId: enc.id })}
                     />
                     <TactileButton
                       label="PDF Report"
                       variant="outline"
                       size="sm"
-                      icon="file-pdf-box"
+                      icon="filePdf"
                       onPress={() => handleGenerateReport(enc.id)}
                     />
                   </View>
@@ -368,6 +446,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spatial.spacing.md,
     paddingTop: 12,
   },
+  healthSyncRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: 14,
+    marginBottom: 8,
+    borderRadius: 16,
+    backgroundColor: theme.colors.canvas.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+  },
+  healthSyncCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  healthSyncButton: {
+    minHeight: 40,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary.main,
+  },
+  healthSyncButtonDisabled: {
+    opacity: 0.6,
+  },
+  healthSyncButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  healthSyncMessage: {
+    marginHorizontal: 4,
+    marginBottom: 10,
+    color: theme.colors.text.secondary,
+    fontSize: 12,
+  },
   vitalsSummaryCard: {
     padding: theme.spatial.spacing.md,
     marginBottom: 16,
@@ -377,6 +493,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
+  },
+  metricSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   metricSub: {
     fontSize: 13,
@@ -540,7 +661,7 @@ const styles = StyleSheet.create({
   },
   encActionsRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     marginTop: 10,
     borderTopWidth: 1,
     borderTopColor: theme.colors.canvas.border,

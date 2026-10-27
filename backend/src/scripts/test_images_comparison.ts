@@ -57,13 +57,18 @@ async function main() {
       console.log('  • Injury Type    :', geminiResult.injuryType);
       console.log('  • Severity       :', geminiResult.severity?.toUpperCase());
       console.log('  • Confidence     :', `${geminiResult.confidence}%`);
-      console.log('  • Emergency Flag :', geminiResult.emergencyFlag ? '🚨 YES (911 ALERT)' : 'No (Non-emergency)');
+      console.log(
+        '  • Emergency Flag :',
+        geminiResult.emergencyFlag ? '🚨 YES (911 ALERT)' : 'No (Non-emergency)',
+      );
       if (geminiResult.symptoms?.length) {
         console.log('  • Symptoms       :', geminiResult.symptoms.join(', '));
       }
       if (geminiResult.recommendations?.length) {
         console.log('  • Recommendations:');
-        geminiResult.recommendations.forEach((r: string, i: number) => console.log(`     ${i + 1}. ${r}`));
+        geminiResult.recommendations.forEach((r: string, i: number) =>
+          console.log(`     ${i + 1}. ${r}`),
+        );
       }
       if (geminiResult.warnings?.length) {
         console.log('  • Warnings       :', geminiResult.warnings.join(' | '));

@@ -4,7 +4,11 @@ import { upsertProfile } from '../services/profileService';
 async function main() {
   const admin = getSupabaseAdmin();
   const testEmail = `prof-brandnew-${Date.now()}@test.local`;
-  const u = await admin.auth.admin.createUser({ email: testEmail, password: 'Password123!', email_confirm: true });
+  const u = await admin.auth.admin.createUser({
+    email: testEmail,
+    password: 'Password123!',
+    email_confirm: true,
+  });
   const userId = u.data.user!.id;
 
   console.log('Testing upsertProfile for user:', userId);

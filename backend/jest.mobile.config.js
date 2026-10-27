@@ -3,8 +3,8 @@ module.exports = {
   rootDir: '..',
   roots: ['<rootDir>/mobile/src'],
   testMatch: [
-    '<rootDir>/mobile/src/services/**/__tests__/**/*.test.ts',
-    '<rootDir>/mobile/src/theme/**/__tests__/**/*.test.ts',
+    '<rootDir>/mobile/src/**/__tests__/**/*.test.ts',
+    '<rootDir>/mobile/src/**/__tests__/**/*.test.tsx',
   ],
   verbose: true,
   forceExit: true,
@@ -12,6 +12,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': [require.resolve('ts-jest'), {
       tsconfig: {
+        target: 'ES2022',
         jsx: 'react',
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
@@ -21,8 +22,15 @@ module.exports = {
     }],
   },
   moduleNameMapper: {
+    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/mobile/src/__mocks__/fileMock.ts',
+    '^expo-linear-gradient$': '<rootDir>/mobile/src/__mocks__/expo-linear-gradient.ts',
+    '^expo-speech$': '<rootDir>/mobile/src/__mocks__/expo-speech.ts',
+    '^react-native-svg$': '<rootDir>/mobile/src/__mocks__/react-native-svg.ts',
+    '^phosphor-react-native$': '<rootDir>/mobile/src/__mocks__/phosphor-react-native.ts',
+    '^phosphor-react-native/lib/module/icons/(.*)$': '<rootDir>/mobile/src/__mocks__/phosphor-icon.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/mobile/src/__mocks__/asyncStorage.ts',
     '^expo-secure-store$': '<rootDir>/mobile/src/__mocks__/expo-secure-store.ts',
+    '^expo-crypto$': '<rootDir>/mobile/src/__mocks__/expo-crypto.ts',
     '^expo-file-system$': '<rootDir>/mobile/src/__mocks__/expo-file-system.ts',
     '^expo-file-system/(.*)$': '<rootDir>/mobile/src/__mocks__/expo-file-system.ts',
     '^expo-sharing$': '<rootDir>/mobile/src/__mocks__/expo-sharing.ts',

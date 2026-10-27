@@ -3,15 +3,17 @@ import re
 
 CRITICAL_EMERGENCY_RULES: Dict[str, str] = {
     "anaphylaxis": r"(throat is closing|can't breathe|cant breathe|swollen tongue|difficulty swallowing|bee sting.*breathe|swelling lips|anaphylaxis|stridor)",
-    "cardiac": r"(chest pain|heart attack|crushing (chest|pain)|pressure in chest|pain in (the )?left arm|crushing.*chest|radiating to (jaw|arm|back)|cold sweat.*chest)",
+    "cardiac": r"(chest pain|heart attack|crushing (chest|pain)|pressure in chest|pain in (the )?left arm|crushing.*chest|radiating to (jaw|arm|back)|cold sweat.*chest|electrical shock|electrocuted)",
     "stroke": r"(face drooping|slurred speech|arm weakness|cannot speak|facial droop|sudden weakness|loss of speech|FAST protocol)",
-    "massive_hemorrhage": r"(spurting blood|uncontrolled bleeding|gushing blood|pools of blood|arterial (bleeding|laceration)|bleeding.*not stopping)",
-    "airway_obstruction": r"(choking|airway blocked|turning blue|gasping.*cannot cry|high pitched squeaking|clutching throat|cannot cough|cyanosis)",
+    "massive_hemorrhage": r"(spurting blood|uncontrolled bleeding|gushing blood|pools of blood|arterial (bleeding|laceration)|bleeding.*not stopping|severe bleeding|impaled)",
+    "airway_obstruction": r"(choking|airway blocked|turning blue|gasping.*cannot cry|high pitched squeaking|clutching throat|cannot cough|cyanosis|drowning|pulseless)",
     "severe_head_trauma": r"(head.*(unconscious|loss of consciousness|vomiting|dizziness)|(unconscious|loss of consciousness).*(head|fall)|unequal pupils|clear fluid from (ear|nose))",
     "spinal_trauma": r"(cannot move legs|numbness below neck|traumatic fall.*numb|neck injury.*tingling|spinal)",
-    "hypothermia_heatstroke": r"(heat stroke|confusion in heat|stopped sweating.*hot|core temp|severe shivering.*confused|hypothermia.*unresponsive)",
+    "hypothermia_heatstroke": r"(heat stroke|heatstroke|confusion in heat|stopped sweating|collapsed.*heat|heat.*collapsed|core temp|severe shivering.*confused|hypothermia.*unresponsive)",
     "severe_burns": r"(third degree burn|charred skin|circumferential burn|burn.*face|white or leathery skin|full thickness burn)",
-    "poisoning_overdose": r"(swallowed poison|ingested bleach|overdose.*unresponsive|pinpoint pupils|drank chemical|suspected fentanyl)"
+    "poisoning_overdose": r"(swallowed (poison|bleach|chemical)|ingested bleach|overdose.*unresponsive|pinpoint pupils|drank chemical|suspected fentanyl|carbon monoxide)",
+    "unresponsiveness": r"(unresponsive|loss of consciousness|passed out and won't wake)",
+    "seizure": r"(tonic clonic|grand mal|seizure|convulsions)"
 }
 
 CONTRAINDICATION_RULES: Dict[str, Tuple[str, str]] = {
@@ -72,6 +74,8 @@ class SafetyEngine:
             "hypothermia_heatstroke": "Severe Environmental Hyper/Hypothermia Emergency",
             "severe_burns": "Critical / Full-Thickness Burn Emergency",
             "poisoning_overdose": "Toxicological / Toxic Ingestion Emergency",
+            "unresponsiveness": "Acute Loss of Consciousness / Unresponsiveness",
+            "seizure": "Generalized Seizure / Convulsions",
         }
         detected = [flag_descriptions.get(f, f.replace("_", " ").title()) for f in flags]
 

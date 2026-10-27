@@ -1,20 +1,23 @@
 
+import { Icon } from '../components/Icon';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
 import { offlineStorage } from '../services/offlineStorage';
 import { Encounter } from '../services/types';
+import { theme } from '../theme';
+import { Illustration } from '../components/Illustration';
+import { resolveIconName } from '../icons';
 
-const BG_LIGHT = '#f8f6f6';
-const CARD_LIGHT = '#ffffff';
-const TEXT_LIGHT = '#1b0e0e';
-const TEXT_SECONDARY = '#666666'; // gray-500/600ish
-const SUCCESS_COLOR = '#27ae60';
-const TEXT_DARK = '#1b0e0e';
+const BG_LIGHT = theme.colors.canvas.background;
+const CARD_LIGHT = theme.colors.canvas.surface;
+const TEXT_LIGHT = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
+const SUCCESS_COLOR = theme.colors.status.success.primary;
+const TEXT_DARK = theme.colors.text.primary;
 
 type RootStackParamList = {
     EmergencySummary: { categoryId: string; encounterId?: string; symptoms?: string[] };
@@ -53,7 +56,7 @@ export const EmergencySummaryScreen = () => {
             }).catch(() => {});
         });
         return () => { isMounted = false; };
-    }, [encounterId]);
+    }, [encounterId, categoryId]);
 
     const displaySymptoms: string[] =
         (routeSymptoms && routeSymptoms.length > 0)
@@ -96,7 +99,15 @@ export const EmergencySummaryScreen = () => {
                 {/* Hero Section */}
                 <View style={styles.heroSection}>
                     <View style={styles.heroIconContainer}>
-                        <MaterialCommunityIcons name="check-circle" size={48} color={SUCCESS_COLOR} />
+                        <Illustration
+                            name="achievementBadge"
+                            width={96}
+                            height={96}
+                            accessibilityLabel="Completion badge"
+                            fallback={
+                                <Icon name="checkCircle" size={48} color={SUCCESS_COLOR} />
+                            }
+                        />
                     </View>
                     <Text style={styles.heroTitle}>Well Done</Text>
                     <Text style={styles.heroSubtitle}>You've successfully completed the first aid steps.</Text>
@@ -108,21 +119,26 @@ export const EmergencySummaryScreen = () => {
 
                     <View style={styles.cardSection}>
                         <View style={styles.infoRow}>
-                            <MaterialCommunityIcons name="fire" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
+                            <Icon
+                                name={resolveIconName(category?.icon)}
+                                size={24}
+                                color={TEXT_SECONDARY}
+                                style={styles.rowIcon}
+                            />
                             <View>
                                 <Text style={styles.label}>Incident</Text>
-                                <Text style={styles.value}>{category ? category.title : 'Emergency'}</Text>
+                            <Text style={styles.value}>{category ? category.title : 'Unknown incident'}</Text>
                             </View>
                         </View>
 
                         <View style={styles.infoRow}>
-                            <MaterialCommunityIcons name="calendar-month" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
+                            <Icon name="calendar" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
                             <View>
                                 <Text style={styles.label}>Date & Time</Text>
                                 <Text style={styles.value}>
-                                    {new Date(encounter?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    {", "}
-                                    {new Date(encounter?.created_at || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                    {encounter?.created_at
+                                        ? new Date(encounter.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+                                        : 'Unavailable'}
                                 </Text>
                             </View>
                         </View>
@@ -152,7 +168,6 @@ export const EmergencySummaryScreen = () => {
                     <View style={[styles.cardSection, { marginTop: 16 }]}>
                         <Text style={[styles.label, { marginBottom: 8 }]}>Actions Taken</Text>
                         <View style={styles.bulletList}>
-                            {/* Dynamic steps from category if available, otherwise sample */}
                             {category ? category.steps.slice(0, 3).map((step, idx) => (
                                 <View key={idx} style={styles.bulletItem}>
                                     <View style={styles.bullet} />
@@ -161,7 +176,7 @@ export const EmergencySummaryScreen = () => {
                             )) : (
                                 <View style={styles.bulletItem}>
                                     <View style={styles.bullet} />
-                                    <Text style={styles.bulletText}>Completed emergency procedure</Text>
+                                    <Text style={styles.bulletText}>No actions recorded</Text>
                                 </View>
                             )}
                         </View>
@@ -177,7 +192,7 @@ export const EmergencySummaryScreen = () => {
                     activeOpacity={0.9}
                     disabled={!encounterId}
                 >
-                    <MaterialCommunityIcons name="export-variant" size={20} color="white" style={{ marginRight: 8 }} />
+                    <Icon name="export" size={20} color="white" style={{ marginRight: 8 }} />
                     <Text style={styles.shareButtonText}>Share Report</Text>
                 </TouchableOpacity>
 
@@ -220,9 +235,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     heroIconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 112,
+        height: 112,
+        borderRadius: 56,
         backgroundColor: 'rgba(39, 174, 96, 0.1)', // green/10
         justifyContent: 'center',
         alignItems: 'center',
@@ -247,12 +262,10 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 16,
         padding: 20,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     cardHeader: {
         fontSize: 18,
@@ -284,7 +297,7 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: '#e5e7eb', // gray-200
+        backgroundColor: theme.colors.canvas.border,
         marginVertical: 16,
     },
     bulletList: {
@@ -296,15 +309,14 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     bullet: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: TEXT_DARK,
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: theme.colors.primary.main,
         marginRight: 8,
-        // list-disc style
     },
     bulletText: {
-        fontSize: 16,
+        fontSize: 15,
         color: TEXT_LIGHT,
         lineHeight: 24,
     },
@@ -312,21 +324,17 @@ const styles = StyleSheet.create({
         padding: 16,
         backgroundColor: BG_LIGHT,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: theme.colors.canvas.border,
         gap: 12,
     },
     shareButton: {
         backgroundColor: SUCCESS_COLOR,
-        borderRadius: 12,
-        height: 52, // slightly smaller than hero button
+        borderRadius: theme.spatial.radii.pill,
+        height: 52,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
+        ...theme.spatial.shadows3d.level2,
     },
     shareButtonText: {
         color: 'white',
@@ -335,15 +343,15 @@ const styles = StyleSheet.create({
     },
     homeButton: {
         backgroundColor: 'transparent',
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         height: 52,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#333333', // Dark border
+        borderColor: theme.colors.canvas.border,
     },
     homeButtonText: {
-        color: '#333333',
+        color: theme.colors.text.primary,
         fontSize: 16,
         fontWeight: 'bold',
     },

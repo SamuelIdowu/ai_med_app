@@ -50,11 +50,11 @@ export const reportService = {
         }
 
         console.error('Backend error:', error.response.status, errorData);
-        throw new Error(`Failed to generate report: ${error.response.status}`);
+        throw new Error(`Failed to generate report: ${error.response.status}`, { cause: error });
       } else if (error.request) {
-        throw new Error('Failed to connect to backend. Please check your connection.');
+        throw new Error('Failed to connect to backend. Please check your connection.', { cause: error });
       } else {
-        throw new Error('Failed to generate report. Please try again.');
+        throw new Error('Failed to generate report. Please try again.', { cause: error });
       }
     }
   },

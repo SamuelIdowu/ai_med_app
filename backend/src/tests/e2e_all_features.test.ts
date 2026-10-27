@@ -20,7 +20,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
 
   beforeAll(async () => {
     supabase = getSupabaseAdmin();
-    testUserEmail = `e2e-patient-${Date.now()}@healthpulse-test.local`;
+    testUserEmail = `e2e-patient-${Date.now()}@laso-test.local`;
 
     // 1. Create a dedicated test user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -47,7 +47,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
     const { createClient } = await import('@supabase/supabase-js');
     const anonClient = createClient(
       process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL!,
-      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
     );
 
     const { data: sessionData, error: sessionError } = await anonClient.auth.signInWithPassword({
@@ -105,7 +105,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
       const res = await request(app).get('/health');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('healthy');
-      expect(res.body.service).toBe('ai-med-app-backend');
+      expect(res.body.service).toBe('laso-backend');
       expect(res.body.timestamp).toBeDefined();
     });
   });
@@ -115,9 +115,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
   // -------------------------------------------------------------
   describe('Feature 2: Authentication & User Check Flow', () => {
     it('POST /api/v1/auth/check confirms existence of existing user', async () => {
-      const res = await request(app)
-        .post('/api/v1/auth/check')
-        .send({ email: testUserEmail });
+      const res = await request(app).post('/api/v1/auth/check').send({ email: testUserEmail });
 
       expect(res.status).toBe(200);
       expect(res.body.exists).toBe(true);
@@ -126,16 +124,14 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
     it('POST /api/v1/auth/check confirms non-existence of unused email', async () => {
       const res = await request(app)
         .post('/api/v1/auth/check')
-        .send({ email: `nonexistent-${Date.now()}@healthpulse-test.local` });
+        .send({ email: `nonexistent-${Date.now()}@laso-test.local` });
 
       expect(res.status).toBe(200);
       expect(res.body.exists).toBe(false);
     });
 
     it('POST /api/v1/auth/check rejects missing email with 400 status', async () => {
-      const res = await request(app)
-        .post('/api/v1/auth/check')
-        .send({});
+      const res = await request(app).post('/api/v1/auth/check').send({});
 
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('Email is required');
@@ -297,7 +293,10 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
       const mockMLClient = {
         streamTriage: jest.fn().mockImplementation(async () => {
           setTimeout(() => {
-            mockStream.emit('data', Buffer.from('data: {"delta": "Apply continuous firm pressure on the wound."}\n\n'));
+            mockStream.emit(
+              'data',
+              Buffer.from('data: {"delta": "Apply continuous firm pressure on the wound."}\n\n'),
+            );
             setTimeout(() => {
               mockStream.emit('end');
             }, 25);
@@ -349,7 +348,17 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
       };
       setMLClient(mockMLClient as any);
 
-      const sampleImageBuffer = Buffer.from('TEST_E2E_WOUND_IMAGE_PAYLOAD');
+      const sharp = require('sharp');
+      const sampleImageBuffer = await sharp({
+        create: {
+          width: 100,
+          height: 100,
+          channels: 3,
+          background: { r: 150, g: 80, b: 80 },
+        },
+      })
+        .jpeg()
+        .toBuffer();
       const res = await request(app)
         .post(`/api/v1/encounters/${createdEncounterId}/wound`)
         .set('Authorization', `Bearer ${testUserToken}`)
@@ -514,7 +523,7 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ token: 'invalid-non-expo-token' });
 
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(400);
       expect(res.body.error).toContain('not a valid Expo push token');
     });
   });
@@ -523,13 +532,11 @@ describe('Comprehensive End-to-End (E2E) System Test Suite', () => {
   // Feature 10: AI First Aid Validation & Rate Limiting
   // -------------------------------------------------------------
   describe('Feature 10: AI First Aid Validation & Rate Limiting Flow', () => {
-    it('POST /api/v1/ai/chat rejects unauthenticated requests', async () => {
-      const res = await request(app)
-        .post('/api/v1/ai/chat')
-        .send({});
+    it('POST /api/v1/ai/chat allows guests but validates the message payload', async () => {
+      const res = await request(app).post('/api/v1/ai/chat').send({});
 
-      expect(res.status).toBe(401);
-      expect(res.body.error).toBeDefined();
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('MISSING_MESSAGE');
     });
 
     it('POST /api/v1/ai/chat rejects request missing message payload', async () => {

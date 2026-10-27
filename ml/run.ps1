@@ -33,7 +33,15 @@ switch ($Action.ToLower()) {
         Write-Host "Running LoRA training pipeline..."
         & $PythonExe cli.py train --epochs 3
     }
+    "train-classical" {
+        Write-Host "Running classical ML training and benchmark..."
+        & $PythonExe cli.py train-classical
+    }
+    "eda" {
+        Write-Host "Running exploratory data analysis..."
+        & $PythonExe cli.py eda
+    }
     default {
-        Write-Host "Usage: .\run.ps1 [test|serve|evaluate|curate|train]"
+        Write-Host "Usage: .\run.ps1 [test|serve|evaluate|curate|train|train-classical|eda]"
     }
 }

@@ -1,19 +1,20 @@
 
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Switch, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabase';
 import { MedicalProfileService } from '../services/medicalProfileService';
+import { theme } from '../theme';
 
-const PRIMARY_COLOR = '#E53734'; // Matching detailed UI color from PermissionsScreen/Welcome
-const BG_LIGHT = '#F8F6F6';
-const TEXT_DARK = '#1B0E0E';
-const TEXT_SECONDARY = '#96504F';
-const BORDER_COLOR = '#E6D1D0';
+const PRIMARY_COLOR = theme.colors.primary.main;
+const BG_LIGHT = theme.colors.canvas.background;
+const TEXT_DARK = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
+const BORDER_COLOR = theme.colors.canvas.border;
 
 export const CreateProfileScreen = () => {
     const navigation = useNavigation<any>();
@@ -134,7 +135,7 @@ export const CreateProfileScreen = () => {
                     }}
                     style={styles.backButton}
                 >
-                    <MaterialIcons name="arrow-back-ios" size={20} color={TEXT_DARK} />
+                    <Icon name="caretLeft" size={20} color={TEXT_DARK} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Create Profile</Text>
                 <View style={{ width: 40 }} />
@@ -264,7 +265,7 @@ export const CreateProfileScreen = () => {
                         {allergies.map((item, i) => (
                             <TouchableOpacity key={i} onPress={() => removeChip(allergies, setAllergies, i)} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <MaterialIcons name="close" size={14} color={PRIMARY_COLOR} />
+                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -277,7 +278,7 @@ export const CreateProfileScreen = () => {
                             onSubmitEditing={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}
                         />
                         <TouchableOpacity onPress={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}>
-                            <MaterialIcons name="add-circle" size={24} color={PRIMARY_COLOR} />
+                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
                         </TouchableOpacity>
                     </View>
 
@@ -287,7 +288,7 @@ export const CreateProfileScreen = () => {
                         {conditions.map((item, i) => (
                             <TouchableOpacity key={i} onPress={() => removeChip(conditions, setConditions, i)} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <MaterialIcons name="close" size={14} color={PRIMARY_COLOR} />
+                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -300,7 +301,7 @@ export const CreateProfileScreen = () => {
                             onSubmitEditing={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}
                         />
                         <TouchableOpacity onPress={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}>
-                            <MaterialIcons name="add-circle" size={24} color={PRIMARY_COLOR} />
+                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
                         </TouchableOpacity>
                     </View>
 
@@ -310,7 +311,7 @@ export const CreateProfileScreen = () => {
                         {medications.map((item, i) => (
                             <TouchableOpacity key={i} onPress={() => removeChip(medications, setMedications, i)} style={styles.chip}>
                                 <Text style={styles.chipText}>{item}</Text>
-                                <MaterialIcons name="close" size={14} color={PRIMARY_COLOR} />
+                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -323,7 +324,7 @@ export const CreateProfileScreen = () => {
                             onSubmitEditing={() => addChip(medications, setMedications, medicationInput, setMedicationInput)}
                         />
                         <TouchableOpacity onPress={() => addChip(medications, setMedications, medicationInput, setMedicationInput)}>
-                            <MaterialIcons name="add-circle" size={24} color={PRIMARY_COLOR} />
+                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -463,15 +464,15 @@ const styles = StyleSheet.create({
     chip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(229, 55, 52, 0.1)',
-        borderRadius: 20,
+        backgroundColor: theme.colors.primary.light,
+        borderRadius: theme.spatial.radii.pill,
         paddingVertical: 6,
         paddingHorizontal: 12,
         gap: 4,
     },
     chipText: {
         color: PRIMARY_COLOR,
-        fontWeight: '500',
+        fontWeight: '600',
         fontSize: 14,
     },
     addInputContainer: {
@@ -490,14 +491,10 @@ const styles = StyleSheet.create({
     primaryButton: {
         backgroundColor: PRIMARY_COLOR,
         height: 56,
-        borderRadius: 12,
+        borderRadius: theme.spatial.radii.pill,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: PRIMARY_COLOR,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        ...theme.spatial.shadows3d.level2,
     },
     disabledButton: {
         opacity: 0.7,

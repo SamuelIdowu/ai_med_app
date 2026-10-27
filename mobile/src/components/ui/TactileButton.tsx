@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import {
   TouchableOpacity,
@@ -8,8 +9,8 @@ import {
   TextStyle,
   View,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
+import type { IconName } from '../../icons';
 
 export type TactileButtonVariant = 'primary' | 'outline' | 'emergency' | 'ghost' | 'secondary';
 export type TactileButtonSize = 'sm' | 'md' | 'lg';
@@ -19,7 +20,7 @@ interface TactileButtonProps {
   onPress: () => void;
   variant?: TactileButtonVariant;
   size?: TactileButtonSize;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon?: IconName;
   iconPosition?: 'left' | 'right';
   loading?: boolean;
   disabled?: boolean;
@@ -48,6 +49,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           container: {
             backgroundColor: theme.colors.status.emergency.primary,
             borderColor: theme.colors.status.emergency.primary,
+            ...theme.spatial.shadows3d.emergencyGlow,
           },
           text: { color: theme.colors.text.inverse },
           iconColor: theme.colors.text.inverse,
@@ -57,6 +59,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           container: {
             backgroundColor: theme.colors.canvas.surface,
             borderColor: theme.colors.canvas.border,
+            ...theme.spatial.shadows.sm,
           },
           text: { color: theme.colors.text.primary },
           iconColor: theme.colors.text.primary,
@@ -87,6 +90,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           container: {
             backgroundColor: theme.colors.primary.main,
             borderColor: theme.colors.primary.main,
+            ...theme.spatial.shadows3d.tactileButton,
           },
           text: { color: theme.colors.text.inverse },
           iconColor: theme.colors.text.inverse,
@@ -155,7 +159,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
       ) : (
         <View style={styles.contentRow}>
           {icon && iconPosition === 'left' && (
-            <MaterialCommunityIcons
+            <Icon
               name={icon}
               size={sizeStyle.iconSize}
               color={variantStyle.iconColor}
@@ -173,7 +177,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
             {label}
           </Text>
           {icon && iconPosition === 'right' && (
-            <MaterialCommunityIcons
+            <Icon
               name={icon}
               size={sizeStyle.iconSize}
               color={variantStyle.iconColor}

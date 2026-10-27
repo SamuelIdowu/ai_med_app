@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, Platform, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StorageService } from '../services/storage';
 import { supabase } from '../services/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
+import { theme } from '../theme';
+import { Illustration } from '../components/Illustration';
 
 const { width } = Dimensions.get('window');
 
@@ -31,10 +33,7 @@ export const SplashScreen = () => {
                 useNativeDriver: true,
             }),
         ]).start();
-
-        // Optional: Trigger exit animation before navigation if needed
-        // For now, we rely on the parent logic to unmount this screen
-    }, []);
+    }, [fadeAnim, scaleAnim, slideAnim]);
 
     const handleReset = async () => {
         try {
@@ -42,7 +41,6 @@ export const SplashScreen = () => {
             await AsyncStorage.clear();
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
-            // AuthContext listener will handle navigation to Welcome
         } catch (error: any) {
             Alert.alert('Reset Failed', error.message);
         }
@@ -50,7 +48,7 @@ export const SplashScreen = () => {
 
     return (
         <LinearGradient
-            colors={['#FF6B6B', '#FF8E53']}
+            colors={[theme.colors.palette.eliteTeal, theme.colors.palette.darkSideMoon]}
             style={styles.container}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -67,12 +65,15 @@ export const SplashScreen = () => {
                     }
                 ]}
             >
-                {/* You can replace this Text with an Image Logo if available */}
                 <View style={styles.iconContainer}>
-                    <Text style={styles.iconText}>+</Text>
+                    <Illustration
+                        name="splashEmblem"
+                        width={72}
+                        height={72}
+                        accessibilityLabel="Laso+ medical emblem"
+                        fallback={<Text style={styles.iconText}>+</Text>}
+                    />
                 </View>
-
-                <Text style={styles.logoText}>First Aid</Text>
                 <Text style={styles.tagline}>Fast. Offline. Reliable.</Text>
             </Animated.View>
 
@@ -90,39 +91,39 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: theme.colors.canvas.background,
     },
     contentContainer: {
         alignItems: 'center',
         justifyContent: 'center',
     },
     iconContainer: {
-        width: 80,
-        height: 80,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        borderRadius: 20,
+        width: 88,
+        height: 88,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.4)',
     },
     iconText: {
-        fontSize: 50,
-        color: '#FFF',
+        fontSize: 54,
+        color: theme.colors.palette.coralCoast,
         fontWeight: 'bold',
     },
     logoText: {
         fontSize: 42,
         fontWeight: 'bold',
-        color: '#FFF',
+        color: '#FFFFFF',
         marginBottom: 8,
-        textShadowColor: 'rgba(0, 0, 0, 0.1)',
+        textShadowColor: 'rgba(0, 0, 0, 0.35)',
         textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 4,
+        textShadowRadius: 6,
+    },
+    logoAccent: {
+        color: theme.colors.palette.coralCoast,
     },
     tagline: {
         fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.9)',
+        color: theme.colors.palette.blissfulBlue,
         letterSpacing: 1,
     },
     resetButton: {
@@ -130,10 +131,10 @@ const styles = StyleSheet.create({
         bottom: 50,
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     resetText: {
         color: '#FFF',

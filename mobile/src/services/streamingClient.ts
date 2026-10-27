@@ -87,7 +87,7 @@ export async function streamTriage(options: StreamTriageOptions): Promise<void> 
     signal,
   } = options;
 
-  const url = `${apiBaseUrl.replace(/\/+$/, '')}/api/encounters/triage/stream`;
+  const url = `${apiBaseUrl.replace(/\/+$/, '')}/encounters/triage/stream`;
 
   try {
     const headers: Record<string, string> = {

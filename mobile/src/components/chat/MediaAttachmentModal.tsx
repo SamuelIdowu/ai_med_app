@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import {
   View,
@@ -7,8 +8,8 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
+import type { IconName } from '../../icons';
 
 export type MediaCaptureAction = 'take_photo' | 'record_video' | 'pick_photo' | 'pick_video';
 
@@ -22,7 +23,7 @@ interface ActionOption {
   id: MediaCaptureAction;
   title: string;
   description: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: IconName;
   badge?: string;
 }
 
@@ -31,26 +32,26 @@ const ACTION_OPTIONS: ActionOption[] = [
     id: 'take_photo',
     title: 'Take Photo',
     description: 'Capture a still picture of the injury or wound',
-    icon: 'camera-outline',
+    icon: 'camera',
   },
   {
     id: 'record_video',
     title: 'Record Video',
     description: 'Record a video clip for motion & bleeding assessment',
-    icon: 'video-outline',
+    icon: 'videoCamera',
     badge: 'NEW',
   },
   {
     id: 'pick_photo',
     title: 'Upload Photo',
     description: 'Choose an existing photo from your library',
-    icon: 'image-outline',
+    icon: 'image',
   },
   {
     id: 'pick_video',
     title: 'Upload Video',
     description: 'Choose a recorded video clip from your library',
-    icon: 'filmstrip',
+    icon: 'filmStrip',
   },
 ];
 
@@ -86,7 +87,7 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                   onPress={onClose}
                   style={styles.closeCircle}
                 >
-                  <MaterialCommunityIcons
+                  <Icon
                     name="close"
                     size={20}
                     color={theme.colors.text.primary}
@@ -107,7 +108,7 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                     }}
                   >
                     <View style={styles.iconCircle}>
-                      <MaterialCommunityIcons
+                      <Icon
                         name={opt.icon}
                         size={24}
                         color="#0F1115"
@@ -126,8 +127,8 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                       <Text style={styles.optionDesc}>{opt.description}</Text>
                     </View>
 
-                    <MaterialCommunityIcons
-                      name="chevron-right"
+                    <Icon
+                      name="caretRight"
                       size={20}
                       color={theme.colors.text.muted}
                     />

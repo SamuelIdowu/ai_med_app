@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
@@ -10,10 +11,10 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RhythmWaveform } from '../charts/RhythmWaveform';
 import { VoiceService } from '../../services/voiceService';
+import { OrganicFluidSphere } from '../ui/OrganicFluidSphere';
 
 interface VoiceWaveformModalProps {
   visible: boolean;
@@ -93,6 +94,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
       VoiceService.stop();
       stopRecognition();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Speech Recognition (Web Speech API for Chrome / Edge / Web & Mobile Web)
@@ -191,7 +193,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
             onPress={handleClose}
             style={styles.closeCircle}
           >
-            <MaterialCommunityIcons name="close" size={20} color="#0F172A" />
+            <Icon name="close" size={20} color="#0F172A" />
           </TouchableOpacity>
 
           <View style={styles.statusPill}>
@@ -207,25 +209,13 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
           </View>
         </View>
 
-        {/* Center Glowing AI Orb & Real-time Transcript */}
+        {/* Center Living Organic Fluid AI Sphere & Real-time Transcript */}
         <View style={styles.centerContainer}>
-          <Animated.View
-            style={[
-              styles.orbWrapper,
-              { transform: [{ scale: pulseAnim }] },
-            ]}
-          >
-            <LinearGradient
-              colors={
-                isAgentSpeaking
-                  ? ['#1E3A8A', '#2563EB', '#60A5FA']
-                  : ['#0F1115', '#1F2937', '#374151']
-              }
-              start={{ x: 0.1, y: 0.1 }}
-              end={{ x: 0.9, y: 0.9 }}
-              style={styles.orb}
-            />
-          </Animated.View>
+          <OrganicFluidSphere
+            state={isAgentSpeaking ? 'thinking' : 'recording'}
+            size={ORB_SIZE * 0.88}
+            style={{ marginBottom: 12 }}
+          />
 
           {isAgentSpeaking ? (
             <Text style={styles.instructionBanner}>{INSTRUCTION_TEXT}</Text>
@@ -259,7 +249,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
               onPress={handleClose}
               style={styles.controlCircle}
             >
-              <MaterialCommunityIcons name="close" size={22} color="#0F172A" />
+              <Icon name="close" size={22} color="#0F172A" />
             </TouchableOpacity>
 
             {/* Send Transcribed Speech Button */}
@@ -271,8 +261,8 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
                 transcript.trim().length > 0 && styles.activeActionCircle,
               ]}
             >
-              <MaterialCommunityIcons
-                name={transcript.trim().length > 0 ? 'arrow-up' : 'microphone'}
+              <Icon
+                name={transcript.trim().length > 0 ? 'arrowUp' : 'microphone'}
                 size={26}
                 color="#FFFFFF"
               />
@@ -290,8 +280,8 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
   );
 };
 
-const { width } = Dimensions.get('window');
-const ORB_SIZE = Math.min(width * 0.52, 210);
+const windowWidth = Dimensions?.get ? (Dimensions.get('window')?.width ?? 375) : 375;
+const ORB_SIZE = Math.min(windowWidth * 0.52, 210);
 
 const styles = StyleSheet.create({
   container: {

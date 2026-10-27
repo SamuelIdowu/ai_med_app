@@ -31,6 +31,61 @@ export interface SyncTriageResult {
   processing_time_ms: number;
 }
 
+export interface VitalsTriagePayload {
+  heart_rate?: number;
+  systolic_bp?: number;
+  diastolic_bp?: number;
+  respiratory_rate?: number;
+  oxygen_saturation?: number;
+  body_temperature?: number;
+  pain_score?: number;
+  severe_bleeding?: number;
+  altered_mental_status?: number;
+  age?: number;
+}
+
+export interface VitalsTriageResult {
+  triage_level: number;
+  triage_label: 'Non-Urgent' | 'Urgent' | 'Emergency' | string;
+  confidence: number;
+  probabilities: Record<string, number>;
+  risk_drivers: string[];
+  is_emergency: boolean;
+  is_urgent: boolean;
+  latency_ms: number;
+}
+
+const DEFAULT_ML_SERVICE_URL = 'http://127.0.0.1:8000';
+
+/**
+ * Render's blueprint `fromService.host` returns a bare hostname (for example
+ * `laso-ml.onrender.com`). Axios requires an absolute URL, so normalize it
+ * here. Explicit protocols are preserved, localhost and host:port values use
+ * HTTP, and public hostnames default to HTTPS.
+ */
+export function normalizeServiceUrl(value?: string): string {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return DEFAULT_ML_SERVICE_URL;
+  }
+
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+
+  if (/^https?:\/\//i.test(withoutTrailingSlash)) {
+    return withoutTrailingSlash;
+  }
+
+  if (
+    /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(withoutTrailingSlash) ||
+    /:\d+$/.test(withoutTrailingSlash)
+  ) {
+    return `http://${withoutTrailingSlash}`;
+  }
+
+  return `https://${withoutTrailingSlash}`;
+}
+
 export class MLClient {
   private baseUrl: string;
   private client: AxiosInstance;
@@ -39,7 +94,7 @@ export class MLClient {
   private readonly HEALTH_CACHE_TTL_MS = 10000;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+    this.baseUrl = normalizeServiceUrl(baseUrl || process.env.ML_SERVICE_URL);
 
     // Configure resilient HTTP agent with keep-alive
     const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 50 });
@@ -81,19 +136,24 @@ export class MLClient {
   /**
    * Streams tokenized emergency triage guidelines and reasoning from Python ML server
    */
-  async streamTriage(query: string, symptoms: string[] = []): Promise<Readable> {
-    const response = await this.client.post(
-      `${this.baseUrl}/v1/ml/triage/stream`,
-      { query, symptoms },
-      {
-        responseType: 'stream',
-        timeout: 15000,
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-        },
-      }
-    );
+  async streamTriage(
+    query: string,
+    symptoms: string[] = [],
+    medicalContext?: string,
+  ): Promise<Readable> {
+    const payload: Record<string, unknown> = { query, symptoms };
+    if (medicalContext?.trim()) {
+      payload.medical_context = medicalContext.trim();
+    }
+
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/stream`, payload, {
+      responseType: 'stream',
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+    });
 
     return response.data as Readable;
   }
@@ -102,7 +162,10 @@ export class MLClient {
    * Synchronously evaluates triage query using the ML engine
    */
   async evaluateTriageSync(query: string, symptoms: string[] = []): Promise<SyncTriageResult> {
-    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/evaluate`, { query, symptoms });
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/evaluate`, {
+      query,
+      symptoms,
+    });
     return response.data as SyncTriageResult;
   }
 
@@ -129,6 +192,16 @@ export class MLClient {
   async embedText(text: string): Promise<number[]> {
     const response = await this.client.post(`${this.baseUrl}/v1/ml/embed`, { text });
     return response.data.embedding;
+  }
+
+  /**
+   * Evaluates patient physiological vitals using Python Classical ML Scikit-Learn service
+   */
+  async evaluateVitalsTriage(vitals: VitalsTriagePayload): Promise<VitalsTriageResult> {
+    const response = await this.client.post(`${this.baseUrl}/v1/ml/triage/vitals`, vitals, {
+      timeout: 5000,
+    });
+    return response.data as VitalsTriageResult;
   }
 
   /**

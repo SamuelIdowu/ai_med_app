@@ -5,7 +5,7 @@
       "id": "cpr",
       "title": "CPR (Cardiopulmonary Resuscitation)",
       "subtitle": "Chest Compressions & Resuscitation",
-      "icon": "heart-pulse",
+      "icon": "cpr",
       "color": "#0F1115",
       "urgency": "Immediate Life Threat",
       "warning": "Call 911 / EMS immediately. Send someone for an AED if available.",
@@ -15,7 +15,7 @@
           "title": "Check Scene Safety & Patient Response",
           "content": "Verify the scene is safe for you and the victim. Tap the shoulders firmly and shout loudly: 'Are you okay?'.",
           "explanation": "Do not enter toxic, electrical, or traffic hazards. If unresponsive and not breathing or only gasping, immediate CPR is required.",
-          "illustration_icon": "account-alert",
+          "illustration_icon": "unconscious",
           "illustration_label": "Check Responsiveness & Scene Safety",
           "caution": "Do not spend more than 10 seconds checking for normal breathing."
         },
@@ -24,7 +24,7 @@
           "title": "Call 911 & Request an AED",
           "content": "Direct a specific person: 'You, call 911 and find an AED!'. If you are alone with a mobile phone, call 911 and put it on speaker.",
           "explanation": "Early defibrillation combined with high-quality chest compressions gives the highest survival probability.",
-          "illustration_icon": "phone-alert",
+          "illustration_icon": "emergencyCall",
           "illustration_label": "Emergency Dispatch & AED Deployment",
           "caution": "Keep dispatcher on speakerphone while starting compressions."
         },
@@ -33,7 +33,7 @@
           "title": "Hand Placement & High-Quality Compressions",
           "content": "Place the heel of one hand in the center of the chest (lower half of breastbone). Interlock fingers of second hand. Lock your elbows.",
           "explanation": "Push hard and fast: 2 inches (5 cm) deep at a rate of 100 to 120 beats per minute (to the rhythm of 'Stayin' Alive').",
-          "illustration_icon": "hand-back-right",
+          "illustration_icon": "handPalm",
           "illustration_label": "Interlocked Hands Centered on Sternum",
           "caution": "Allow complete chest recoil between compressions. Do not lean on chest."
         },
@@ -42,7 +42,7 @@
           "title": "Continuous Compressions & Rescue Breaths",
           "content": "Perform 30 compressions followed by 2 rescue breaths if trained (tilt head, lift chin, pinch nose). If untrained, perform Hands-Only continuous compressions.",
           "explanation": "Hands-Only CPR delivers continuous forward blood flow to the brain and myocardium until paramedics arrive.",
-          "illustration_icon": "heart-pulse",
+          "illustration_icon": "cpr",
           "illustration_label": "30 Compressions : 2 Breaths Cycle",
           "caution": "Switch compressors every 2 minutes if someone else is available to avoid fatigue."
         }
@@ -52,7 +52,7 @@
       "id": "bleeding",
       "title": "Severe Bleeding",
       "subtitle": "Pressure, Hemostasis & Tourniquet",
-      "icon": "water",
+      "icon": "bleeding",
       "color": "#0F1115",
       "urgency": "High Hemorrhage Risk",
       "warning": "Spurting or pooling blood can cause shock within minutes. Act immediately.",
@@ -62,7 +62,7 @@
           "title": "Expose Wound & Apply Direct Firm Pressure",
           "content": "Tear or cut clothing away from the wound. Place clean gauze, cloth, or your gloved hand directly over the bleeding vessel and push with maximum body weight.",
           "explanation": "Direct compression occludes the ruptured lumen and allows platelets to form an initial plug.",
-          "illustration_icon": "bandage",
+          "illustration_icon": "wound",
           "illustration_label": "Firm Direct Pressure with Clean Dressing",
           "caution": "Do not remove pressure to check if bleeding has stopped."
         },
@@ -71,7 +71,7 @@
           "title": "Pack Wound if Deep",
           "content": "If bleeding is in a junction (groin, armpit, neck) or deep muscle cavity, pack gauze deep into the wound cavity until packed tight, then press down firmly.",
           "explanation": "Hemostatic gauze or standard sterile gauze creates internal hydrostatic resistance against the bleeding artery.",
-          "illustration_icon": "medical-bag",
+          "illustration_icon": "firstAidKit",
           "illustration_label": "Wound Packing into Deep Cavity",
           "caution": "Do not pack wounds into the chest or abdomen."
         },
@@ -80,7 +80,7 @@
           "title": "Apply Pressure Bandage or Tourniquet",
           "content": "Wrap tightly with an elastic or roller bandage. For severe extremity arterial spurting, apply a commercial tourniquet 2-3 inches above the wound (not over a joint).",
           "explanation": "Tighten the windlass until bleeding stops completely. Note the exact time of tourniquet application.",
-          "illustration_icon": "needle",
+          "illustration_icon": "syringe",
           "illustration_label": "Secure Pressure Dressing or Tourniquet",
           "caution": "Never loosen or release a tourniquet once applied."
         }
@@ -90,7 +90,7 @@
       "id": "burns",
       "title": "Burns",
       "subtitle": "Thermal, Chemical & Scald Treatment",
-      "icon": "fire",
+      "icon": "burns",
       "color": "#0F1115",
       "urgency": "Tissue Thermal Damage",
       "warning": "Never apply ice, butter, oil, or toothpaste to burns.",
@@ -100,16 +100,16 @@
           "title": "Stop the Burning Source",
           "content": "Safely remove the patient from heat, steam, chemical contact, or electrical power. Extinguish burning clothes (Stop, Drop, and Roll).",
           "explanation": "Arresting heat transfer limits the progression of dermal and subcutaneous necrosis.",
-          "illustration_icon": "fire-alert",
+          "illustration_icon": "burns",
           "illustration_label": "Eliminate Heat & Electrical Sources",
           "caution": "Ensure your own safety before approaching chemical or electrical hazards."
         },
         {
           "step_number": 2,
           "title": "Cool with Running Tap Water for 20 Minutes",
-          "content": "Hold the burned tissue under cool (15-20°C / 59-68°F) running tap water for a full 20 minutes.",
+          "content": "Hold the burned tissue under cool (15-20Â°C / 59-68Â°F) running tap water for a full 20 minutes.",
           "explanation": "Cool running water dissipates heat trapped in dermal collagen and reduces depth of burn injury.",
-          "illustration_icon": "water-outline",
+          "illustration_icon": "drop",
           "illustration_label": "Cool Running Water for 20 Minutes",
           "caution": "Do NOT use ice or freezing water, which induces severe vasoconstriction and hypothermia."
         },
@@ -127,7 +127,7 @@
           "title": "Cover with Clean, Non-Stick Sterile Dressing",
           "content": "Loosely apply clear plastic cling film or a sterile, non-adherent dressing over the burn area. Keep the patient warm.",
           "explanation": "Plastic wrap shields exposed nerve endings from air currents (reducing pain) and prevents bacterial contamination.",
-          "illustration_icon": "shield-check",
+          "illustration_icon": "shieldCheck",
           "illustration_label": "Loose Sterile Film / Dressing",
           "caution": "Do not wrap cling wrap tightly around circumferences of limbs."
         },
@@ -136,7 +136,7 @@
           "title": "Clinical Evaluation & Triage",
           "content": "Seek immediate hospital care if the burn is larger than the palm of a hand, on face, hands, joints, genitals, or caused by chemicals/electricity.",
           "explanation": "Major burns require fluid resuscitation, professional debridement, and tetanus immunization.",
-          "illustration_icon": "hospital-box",
+          "illustration_icon": "hospital",
           "illustration_label": "Emergency Department Assessment",
           "caution": "Never burst blisters; blister roofs protect against infection."
         }
@@ -146,7 +146,7 @@
       "id": "choking",
       "title": "Choking Relief",
       "subtitle": "Airway Obstruction & Heimlich Maneuver",
-      "icon": "weather-windy",
+      "icon": "choking",
       "color": "#0F1115",
       "urgency": "Acute Airway Obstruction",
       "warning": "If the victim becomes unconscious, support them to the ground and start CPR.",
@@ -156,7 +156,7 @@
           "title": "Assess Obstruction & Encourage Coughing",
           "content": "Ask: 'Are you choking?'. If the person can speak, cough forcefully, or breathe, encourage them to continue coughing hard.",
           "explanation": "Spontaneous coughing is the most effective physiological mechanism to clear foreign body airway obstructions.",
-          "illustration_icon": "account-voice",
+          "illustration_icon": "userSound",
           "illustration_label": "Verify Obstruction & Encourage Cough",
           "caution": "Do not interfere with coughing if they can still move air."
         },
@@ -165,7 +165,7 @@
           "title": "Deliver 5 Sharp Back Blows",
           "content": "Stand to the side and slightly behind. Support the victim's chest with one hand and lean them forward. Deliver 5 sharp blows between shoulder blades with heel of hand.",
           "explanation": "Forward leaning directs dislodged debris out through the mouth rather than back down into the trachea.",
-          "illustration_icon": "hand-back-left",
+          "illustration_icon": "handPalm",
           "illustration_label": "5 Back Blows Between Scapulae",
           "caution": "Ensure the victim is leaned forward before delivering blows."
         },
@@ -174,7 +174,7 @@
           "title": "Deliver 5 Abdominal Thrusts (Heimlich)",
           "content": "Stand behind. Place a fist thumb-side in just above the navel. Grasp fist with other hand and pull sharply inward and upward 5 times.",
           "explanation": "Upward diaphragm compression forces residual lung volume upward, generating an artificial cough to expel the object.",
-          "illustration_icon": "human-handsup",
+          "illustration_icon": "handsPraying",
           "illustration_label": "Inward & Upward Abdominal Thrusts",
           "caution": "For pregnant or obese individuals, deliver chest thrusts over center of breastbone."
         }
@@ -184,7 +184,7 @@
       "id": "fractures",
       "title": "Bone Injuries & Fractures",
       "subtitle": "Splinting, Immobilization & Alignment",
-      "icon": "bone",
+      "icon": "fracture",
       "color": "#0F1115",
       "urgency": "Musculoskeletal Trauma",
       "warning": "Never attempt to straighten a deformed bone or push protruding bone back inside.",
@@ -194,7 +194,7 @@
           "title": "Immobilize the Injured Limb",
           "content": "Instruct the patient to remain completely still. Support the limb manually above and below the suspected fracture site.",
           "explanation": "Preventing bone movement stops sharp fragments from severing adjacent arteries, veins, and peripheral nerves.",
-          "illustration_icon": "bone",
+          "illustration_icon": "fracture",
           "illustration_label": "Manual Limb Support Above & Below",
           "caution": "Do not test range of motion or force weight-bearing."
         },
@@ -203,7 +203,7 @@
           "title": "Apply a Rigid or Soft Splint",
           "content": "Apply a rolled magazine, cardboard, or padded splint along the limb. Secure with bandages or cloth ties without compressing circulation.",
           "explanation": "Splinting must immobilize the joint above and the joint below the fracture location.",
-          "illustration_icon": "bandage",
+          "illustration_icon": "wound",
           "illustration_label": "Splint Stabilizing Adjacent Joints",
           "caution": "Verify finger/toe warmth and pulse before and after splinting."
         },
@@ -222,7 +222,7 @@
       "id": "unconsciousness",
       "title": "Unconsciousness",
       "subtitle": "Airway Protection & Recovery Position",
-      "icon": "account-alert",
+      "icon": "unconscious",
       "color": "#0F1115",
       "urgency": "Airway Compromise Risk",
       "warning": "If normal breathing is absent or gasping, begin CPR immediately.",
@@ -232,7 +232,7 @@
           "title": "Assess Airway & Breathing",
           "content": "Gently tilt the head back and lift the chin. Look, listen, and feel for normal rhythmic breathing for up to 10 seconds.",
           "explanation": "In an unconscious patient lying supine, the tongue relaxes and falls against the posterior pharyngeal wall, blocking the trachea.",
-          "illustration_icon": "face-man-profile",
+          "illustration_icon": "user",
           "illustration_label": "Head Tilt & Chin Lift Maneuver",
           "caution": "Do not tilt head if cervical spine injury is suspected; use jaw thrust."
         },
@@ -241,7 +241,7 @@
           "title": "Place into Lateral Recovery Position",
           "content": "Extend nearest arm out. Bring far arm across chest. Bend far leg up at knee. Gently roll patient toward you onto their side.",
           "explanation": "Lateral positioning allows saliva and emesis to drain freely by gravity, preventing fatal aspiration pneumonia.",
-          "illustration_icon": "human-handsdown",
+          "illustration_icon": "handsPraying",
           "illustration_label": "Lateral Stable Recovery Position",
           "caution": "Ensure the mouth stays lowest and airway remains tilted open."
         },
@@ -250,7 +250,7 @@
           "title": "Continuous Vital Sign Monitoring",
           "content": "Stay beside the patient. Constantly verify breathing until emergency medical services take over. Keep them warm with a blanket.",
           "explanation": "Unconscious patients can deteriorate rapidly into respiratory or cardiac arrest.",
-          "illustration_icon": "timer-sand",
+          "illustration_icon": "timer",
           "illustration_label": "Continuous Respiratory Observation",
           "caution": "Be prepared to flip patient to back and start CPR if breathing ceases."
         }
@@ -260,7 +260,7 @@
       "id": "wound",
       "title": "Wound Care & Dressings",
       "subtitle": "Irrigation, Antiseptic & Bandaging",
-      "icon": "bandage",
+      "icon": "wound",
       "color": "#0F1115",
       "urgency": "Infection & Hemostasis",
       "warning": "Seek medical care if wound is deep, gaping, from an animal, or caused by rusty metal.",
@@ -270,7 +270,7 @@
           "title": "Clean Hands & Irrigate Wound",
           "content": "Wash hands. Rinse the wound under gentle running potable water or saline for 5 minutes to flush out dirt and contaminants.",
           "explanation": "Copious gentle irrigation reduces bacterial burden by mechanical washout without causing cellular toxicity.",
-          "illustration_icon": "water",
+          "illustration_icon": "bleeding",
           "illustration_label": "Gentle Saline / Water Irrigation",
           "caution": "Do not scrub open wound tissue or use harsh undiluted alcohol."
         },
@@ -279,7 +279,7 @@
           "title": "Disinfect & Apply Antibiotic Barrier",
           "content": "Pat edges dry with clean sterile gauze. Apply an antiseptic or thin layer of petroleum jelly/antibiotic ointment.",
           "explanation": "Maintaining a moist, sterile wound bed accelerates epithelial migration and reduces scarring.",
-          "illustration_icon": "shield-plus",
+          "illustration_icon": "shieldPlus",
           "illustration_label": "Antiseptic Barrier Application",
           "caution": "Avoid harsh hydrogen peroxide which can inhibit granulation."
         },
@@ -288,7 +288,7 @@
           "title": "Secure with Sterile Dressing",
           "content": "Cover completely with a sterile bandage or adhesive dressing. Change dressing daily or immediately if it becomes wet or dirty.",
           "explanation": "Sterile occlusion protects against external environmental pathogens.",
-          "illustration_icon": "bandage",
+          "illustration_icon": "wound",
           "illustration_label": "Sterile Adhesive Occlusion",
           "caution": "Watch for signs of infection: increasing redness, heat, swelling, or pus."
         }
@@ -298,7 +298,7 @@
       "id": "poisoning",
       "title": "Poisonings & Toxins",
       "subtitle": "Ingestion, Inhalation & Chemical Contact",
-      "icon": "alert-decagram",
+      "icon": "poisoning",
       "color": "#0F1115",
       "urgency": "Toxic Chemical Ingestion",
       "warning": "Do NOT induce vomiting unless specifically directed by Poison Control.",
@@ -308,7 +308,7 @@
           "title": "Identify Substance & Call Poison Control",
           "content": "Determine what was ingested/inhaled, when, and estimated amount. Immediately contact Poison Control (1-800-222-1222 in US) or 911.",
           "explanation": "Poison management depends entirely on chemical class (acid, alkali, hydrocarbon, prescription drug).",
-          "illustration_icon": "phone-classic",
+          "illustration_icon": "phone",
           "illustration_label": "Contact National Poison Help Center",
           "caution": "Do not administer raw milk, activated charcoal, or salt water without orders."
         },
@@ -317,7 +317,7 @@
           "title": "Decontaminate Exposure Route",
           "content": "If inhaled, move to fresh air. If on skin or in eyes, flush with clean water for at least 15 minutes. If conscious and told to, sip water.",
           "explanation": "Diluting external chemicals reduces caustic burn severity to skin and corneas.",
-          "illustration_icon": "eye-outline",
+          "illustration_icon": "eye",
           "illustration_label": "Copious Water Flush (15 Minutes)",
           "caution": "Never induce vomiting after swallowing bleach, gasoline, or strong acids."
         },
@@ -326,7 +326,7 @@
           "title": "Monitor Airway & Retain Container",
           "content": "Place unconscious breathing victim in recovery position. Keep the exact chemical container, pill bottle, or plant sample for paramedics.",
           "explanation": "Physical product packaging confirms exact CAS numbers and formulation concentrations for antidotes.",
-          "illustration_icon": "package-variant",
+          "illustration_icon": "package",
           "illustration_label": "Preserve Original Container for EMS",
           "caution": "Ensure responders are aware of hazardous fumes or skin contamination."
         }
@@ -336,7 +336,7 @@
       "id": "allergic",
       "title": "Allergies & Anaphylaxis",
       "subtitle": "EpiPen Autoinjector & Airway Management",
-      "icon": "shield-alert",
+      "icon": "allergy",
       "color": "#0F1115",
       "urgency": "Severe Allergic Emergency",
       "warning": "Difficulty breathing, throat tightness, or facial swelling requires immediate epinephrine.",
@@ -346,7 +346,7 @@
           "title": "Recognize Anaphylaxis Signs & Call 911",
           "content": "Check for hives, lip/tongue swelling, stridor, wheezing, dizziness, or vomiting. Call emergency services immediately.",
           "explanation": "Anaphylaxis causes systemic vasodilation and bronchial constriction which can occlude airway in minutes.",
-          "illustration_icon": "account-alert",
+          "illustration_icon": "unconscious",
           "illustration_label": "Recognize Respiratory & Dermal Signs",
           "caution": "Do not delay epinephrine to wait for antihistamines like Benadryl."
         },
@@ -355,8 +355,8 @@
           "title": "Administer Epinephrine Autoinjector (EpiPen)",
           "content": "Grip autoinjector. Pull off safety cap. Push orange tip firmly into outer mid-thigh at 90-degree angle until it clicks. Hold firmly for 3 full seconds.",
           "explanation": "Intramuscular epinephrine rapidly reverses bronchospasm, stabilizes mast cells, and raises arterial blood pressure.",
-          "illustration_icon": "needle",
-          "illustration_label": "Outer Thigh 90° Autoinjection (3s Hold)",
+          "illustration_icon": "syringe",
+          "illustration_label": "Outer Thigh 90Â° Autoinjection (3s Hold)",
           "caution": "Can be administered directly through clothing if necessary."
         },
         {
@@ -374,7 +374,7 @@
       "id": "bites",
       "title": "Bites & Stings",
       "subtitle": "Insect Stings, Venom & Animal Bites",
-      "icon": "bug-outline",
+      "icon": "bites",
       "color": "#0F1115",
       "urgency": "Envenomation & Infection",
       "warning": "If breathing difficulty develops after a sting, treat immediately for anaphylaxis.",
@@ -384,7 +384,7 @@
           "title": "Remove Stinger & Wash Area",
           "content": "Scrape bee stingers off with a flat fingernail or credit card edge. Wash animal bites or stings thoroughly with soap and water for 5 minutes.",
           "explanation": "Scraping avoids squeezing the venom sac attached to the stinger barbs.",
-          "illustration_icon": "credit-card-outline",
+          "illustration_icon": "creditCard",
           "illustration_label": "Scrape Stinger Edge-Wise",
           "caution": "Do not squeeze the stinger with tweezers, which injects remaining venom."
         },
@@ -402,7 +402,7 @@
           "title": "Immobilize & Seek Medical Evaluation",
           "content": "For animal/human bites or venomous bites, keep patient calm and quiet. Seek clinical evaluation for antibiotics and tetanus/rabies prophylaxis.",
           "explanation": "Animal saliva contains dense polymicrobial flora (e.g. Pasteurella) causing rapid soft tissue infection.",
-          "illustration_icon": "hospital-marker",
+          "illustration_icon": "hospital",
           "illustration_label": "Clinical Assessment & Tetanus Prophylaxis",
           "caution": "Report wild or unknown animal bites immediately to public health."
         }

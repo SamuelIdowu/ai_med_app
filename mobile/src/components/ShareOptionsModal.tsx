@@ -1,6 +1,6 @@
+import { Icon } from './Icon';
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Image, TouchableWithoutFeedback } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 interface ShareOptionsModalProps {
     visible: boolean;
@@ -45,7 +45,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
                             {/* Header / Content Preview */}
                             <View style={styles.header}>
                                 <View style={styles.fileIconContainer}>
-                                    <MaterialIcons name="description" size={32} color="#E53734" />
+                                    <Icon name="fileText" size={32} color="#E53734" />
                                 </View>
                                 <View style={styles.headerTextContainer}>
                                     <Text style={styles.fileName}>First Aid Incident Report.pdf</Text>
@@ -78,7 +78,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
                             <View style={styles.actionsContainer}>
                                 <TouchableOpacity style={styles.actionRow} onPress={() => handleAction('Copy')}>
                                     <View style={styles.actionIconWidth}>
-                                        <MaterialIcons name="content-copy" size={24} color="#3B82F6" />
+                                        <Icon name="copy" size={24} color="#3B82F6" />
                                     </View>
                                     <Text style={styles.actionText}>Copy</Text>
                                 </TouchableOpacity>
@@ -86,7 +86,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
 
                                 <TouchableOpacity style={styles.actionRow} onPress={() => handleAction('Save to Files')}>
                                     <View style={styles.actionIconWidth}>
-                                        <MaterialIcons name="folder-open" size={24} color="#3B82F6" />
+                                        <Icon name="folderOpen" size={24} color="#3B82F6" />
                                     </View>
                                     <Text style={styles.actionText}>Save to Files</Text>
                                 </TouchableOpacity>
@@ -94,7 +94,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
 
                                 <TouchableOpacity style={styles.actionRow} onPress={() => handleAction('Print')}>
                                     <View style={styles.actionIconWidth}>
-                                        <MaterialIcons name="print" size={24} color="#3B82F6" />
+                                        <Icon name="printer" size={24} color="#3B82F6" />
                                     </View>
                                     <Text style={styles.actionText}>Print</Text>
                                 </TouchableOpacity>

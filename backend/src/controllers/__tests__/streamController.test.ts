@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { Request, Response } from 'express';
 import { EventEmitter } from 'events';
+import sharp from 'sharp';
 import { handleTriageStream, handleWoundUpload, setMLClient } from '../streamController';
 import { getSupabaseAdmin } from '../../db/client';
 
@@ -8,7 +9,7 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
   let supabase: any;
   let testUserId: string;
   let testEncounterId: string;
-  let uploadedPaths: string[] = [];
+  const uploadedPaths: string[] = [];
 
   let statusMock: any;
   let jsonMock: any;
@@ -102,7 +103,10 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       const liveMLFixture = {
         streamTriage: jest.fn().mockImplementation(async () => {
           setTimeout(() => {
-            liveStream.emit('data', Buffer.from('data: {"delta": "Rest, elevate, and apply ice pack."}\n\n'));
+            liveStream.emit(
+              'data',
+              Buffer.from('data: {"delta": "Rest, elevate, and apply ice pack."}\n\n'),
+            );
             setTimeout(() => {
               liveStream.emit('end');
             }, 30);
@@ -141,7 +145,9 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
 
       expect(setHeaderMock).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
       expect(setHeaderMock).toHaveBeenCalledWith('Cache-Control', 'no-cache');
-      expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('Rest, elevate, and apply ice pack.'));
+      expect(writeMock).toHaveBeenCalledWith(
+        expect.stringContaining('Rest, elevate, and apply ice pack.'),
+      );
       expect(endMock).toHaveBeenCalled();
 
       // Verify real rows in live Supabase triage_messages table
@@ -186,7 +192,9 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       await handleTriageStream(req as Request, mockRes as Response);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('Live ML Inference Service Timeout'));
+      expect(writeMock).toHaveBeenCalledWith(
+        expect.stringContaining('Triage service temporarily unavailable'),
+      );
       expect(endMock).toHaveBeenCalled();
     });
   });
@@ -204,13 +212,22 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       };
       setMLClient(liveMLFixture as any);
 
-      const testImageBuffer = Buffer.from('FAKE-JPEG-IMAGE-DATA-FOR-TESTING');
+      const testImageBuffer = await sharp({
+        create: {
+          width: 100,
+          height: 100,
+          channels: 3,
+          background: { r: 180, g: 80, b: 80 },
+        },
+      })
+        .png()
+        .toBuffer();
       const req = {
         user: { id: testUserId },
         params: { id: testEncounterId },
         body: {
           image: testImageBuffer.toString('base64'),
-          fileName: `wound-${Date.now()}.jpg`,
+          fileName: `wound-${Date.now()}.png`,
         },
       } as Partial<Request>;
 
@@ -220,7 +237,7 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       const resPayload = jsonMock.mock.calls[0][0];
       expect(resPayload).toHaveProperty('assessment');
       expect(resPayload.assessment.classification).toBe('abrasion');
-      expect(resPayload.storagePath).toContain(`encounters/${testEncounterId}`);
+      expect(resPayload.storagePath).toContain(`${testUserId}/${testEncounterId}`);
 
       uploadedPaths.push(resPayload.storagePath);
 
@@ -246,7 +263,9 @@ describe('Stream & Wound Controller (Live Integration Fixture)', () => {
       await handleWoundUpload(req as Request, mockRes as Response);
 
       expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ error: 'Image data is required' }));
+      expect(jsonMock).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Image data is required' }),
+      );
     });
   });
 });

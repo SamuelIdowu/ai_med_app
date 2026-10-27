@@ -11,17 +11,24 @@ from app.services.safety_engine import SafetyEngine
 from app.services.vision_engine import WoundVisionEngine
 from app.services.embedding_engine import EmbeddingEngine
 from app.services.triage_engine import TriageEngine
+from app.services.classical_ml_service import ClassicalMLService
 
 app = FastAPI(
     title="AI Med Autonomous ML Engine",
-    description="High-Speed Local Python ML Subsystem for Medical Triage, Emergency Guardrails & Wound Computer Vision",
-    version="1.2.0"
+    description="High-Speed Local Python ML Subsystem for Medical Triage, Emergency Guardrails, Tabular Vitals & Wound Vision",
+    version="1.3.0"
 )
+
+cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+if not cors_origins:
+    cors_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    # Wildcard origins cannot be combined with credentialed requests. Bearer
+    # tokens are sent in the Authorization header, so cookies are unnecessary.
+    allow_credentials="*" not in cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -30,10 +37,24 @@ safety_engine = SafetyEngine(strictness=settings.SAFETY_STRICTNESS)
 vision_engine = WoundVisionEngine()
 embedding_engine = EmbeddingEngine()
 triage_engine = TriageEngine()
+classical_ml_service = ClassicalMLService()
 
 class TriageRequest(BaseModel):
     query: str
     symptoms: Optional[List[str]] = []
+    medical_context: Optional[str] = None
+
+class VitalsTriageRequest(BaseModel):
+    heart_rate: float = 80.0
+    systolic_bp: float = 120.0
+    diastolic_bp: float = 80.0
+    respiratory_rate: float = 16.0
+    oxygen_saturation: float = 98.0
+    body_temperature: float = 37.0
+    pain_score: int = 0
+    severe_bleeding: int = 0
+    altered_mental_status: int = 0
+    age: int = 40
 
 class EmbedRequest(BaseModel):
     text: str
@@ -43,10 +64,11 @@ class EmbedRequest(BaseModel):
 def health() -> Dict[str, Any]:
     return {
         "status": "ok",
-        "service": "ai-med-ml",
-        "version": "1.2.0",
+        "service": "laso-ml",
+        "version": "1.3.0",
         "safety_strictness": settings.SAFETY_STRICTNESS,
-        "embedding_dim": settings.EMBEDDING_DIM
+        "embedding_dim": settings.EMBEDDING_DIM,
+        "classical_ml_available": classical_ml_service.is_model_available()
     }
 
 @app.post("/v1/ml/triage/stream")
@@ -67,6 +89,10 @@ async def stream_triage(req: TriageRequest):
         if contraindications:
             warning_text = "\n⚠️ **CRITICAL SAFETY WARNING:** " + " ".join(contraindications) + "\n\n"
             yield f"data: {json.dumps({'delta': warning_text, 'critical': False})}\n\n"
+
+        if req.medical_context and req.medical_context.strip():
+            profile_text = "\n" + req.medical_context.strip() + "\n\n"
+            yield f"data: {json.dumps({'delta': profile_text, 'critical': False})}\n\n"
 
         async for chunk in triage_engine.stream_protocol_steps(req.query, req.symptoms):
             yield f"data: {json.dumps({'delta': chunk, 'critical': False})}\n\n"
@@ -97,6 +123,21 @@ def evaluate_triage_sync(req: TriageRequest) -> Dict[str, Any]:
         "protocol": guidance,
         "processing_time_ms": round((time.time() - start_time) * 1000, 2)
     }
+
+@app.post("/v1/ml/triage/vitals")
+def evaluate_vitals_triage(req: VitalsTriageRequest) -> Dict[str, Any]:
+    """Evaluates physiological vitals using the trained Scikit-Learn triage model."""
+    start_time = time.time()
+    if not classical_ml_service.is_model_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Classical ML triage model artifacts not loaded. Train the model using `python cli.py train-classical`."
+        )
+
+    vitals_payload = req.model_dump()
+    result = classical_ml_service.predict(vitals_payload)
+    result["latency_ms"] = round((time.time() - start_time) * 1000, 2)
+    return result
 
 @app.post("/v1/ml/vision/analyze")
 async def analyze_wound(file: UploadFile = File(...)) -> Dict[str, Any]:

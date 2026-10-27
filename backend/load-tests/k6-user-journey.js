@@ -38,7 +38,7 @@ export default function () {
     // 2. Authentication verify
     const authCheck = http.post(
       `${BASE_URL}/api/v1/auth/check`,
-      JSON.stringify({ email: `patient-${__VU}@healthpulse.test` }),
+      JSON.stringify({ email: `patient-${__VU}@laso.test` }),
       { headers: { 'Content-Type': 'application/json' } }
     );
     const authOk = check(authCheck, { 'auth lookup passes': (r) => r.status === 200 });

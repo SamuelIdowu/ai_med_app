@@ -1,0 +1,42 @@
+# ml/Dockerfile.micro — Slim runtime profile for low-RAM hosts (Oracle AMD E2.1.Micro: 1 GB RAM)
+#
+# Every production endpoint the backend calls runs WITHOUT PyTorch:
+#   /v1/ml/triage/stream   -> TriageEngine (pure Python/regex)
+#   /v1/ml/triage/evaluate -> TriageEngine
+#   /v1/ml/triage/vitals   -> ClassicalMLService (sklearn joblib, 981 KB)
+#   /v1/ml/vision/analyze  -> WoundVisionEngine (PIL only)
+#
+# The only torch consumer is /v1/ml/embed (sentence-transformers), which no
+# production code path calls — backend seeding generates vectors locally. When
+# the dependency is absent the endpoint returns explicit 503s and the backend
+# already degrades gracefully elsewhere. Adds ~150-250 MB RSS instead of ~1.5 GB.
+FROM python:3.11-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+# Minimal runtime dependencies (no torch, no transformers/peft/accelerate)
+RUN pip install --no-cache-dir \
+    "fastapi>=0.115.0" \
+    "uvicorn>=0.30.0" \
+    "pydantic>=2.8.0" \
+    "pillow>=10.4.0" \
+    "numpy>=1.26.0" \
+    "scikit-learn>=1.5.0" \
+    "joblib>=1.4.0" \
+    "python-multipart>=0.0.9" \
+    "httpx>=0.27.0"
+
+# Copy the package before installing so Hatchling can build it.
+COPY pyproject.toml ./
+COPY app/ ./app/
+RUN pip install --no-cache-dir --no-deps .
+
+COPY models/ ./models/
+COPY data/ ./data/
+
+ENV PYTHONUNBUFFERED=1
+ENV SAFETY_STRICTNESS=high
+EXPOSE 8000
+
+# Renders/hosts may assign PORT dynamically; fall back to 8000 for local runs.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

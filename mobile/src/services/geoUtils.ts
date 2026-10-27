@@ -4,11 +4,69 @@
 import * as Location from 'expo-location';
 import { Provider } from './types';
 
-// Default fallback coordinates (e.g., downtown medical center)
-export const DEFAULT_USER_COORDS = {
-  latitude: 40.7128,
-  longitude: -74.0060,
-};
+export const LOCATION_TIMEOUT_MS = 5000;
+export const MAX_LAST_KNOWN_AGE_MS = 2 * 60 * 1000;
+export const MILES_PER_KILOMETER = 0.621371;
+
+export type LocationPermissionStatus = 'granted' | 'denied' | 'unavailable';
+export type LocationSource = 'current' | 'last-known' | 'none';
+
+export interface UserLocationResult {
+  latitude: number | null;
+  longitude: number | null;
+  status: LocationPermissionStatus;
+  source: LocationSource;
+}
+
+export interface UserLocationOptions {
+  requestPermission?: boolean;
+  timeoutMs?: number;
+}
+
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export type ProviderWithDistance = Provider & { distanceMiles: number | null };
+
+function normalizeCoordinate(value: unknown, min: number, max: number): number | null {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && value.trim() !== ''
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    return null;
+  }
+
+  return parsed;
+}
+
+export function normalizeLatitude(value: unknown): number | null {
+  return normalizeCoordinate(value, -90, 90);
+}
+
+export function normalizeLongitude(value: unknown): number | null {
+  return normalizeCoordinate(value, -180, 180);
+}
+
+export function getValidCoordinates(lat: unknown, lng: unknown): Coordinates | null {
+  const latitude = normalizeLatitude(lat);
+  const longitude = normalizeLongitude(lng);
+
+  if (latitude === null || longitude === null) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
+export function hasValidCoordinates(lat: unknown, lng: unknown): boolean {
+  return getValidCoordinates(lat, lng) !== null;
+}
 
 /**
  * Calculates distance in miles between two coordinate points using the Haversine formula
@@ -17,7 +75,7 @@ export function calculateDistanceMiles(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 3958.8; // Earth radius in miles
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -42,49 +100,182 @@ export function formatDistance(miles: number): string {
   return `${miles.toFixed(1)} mi away`;
 }
 
+export function formatDistanceLabel(miles: number | null | undefined): string | null {
+  if (typeof miles !== 'number' || !Number.isFinite(miles)) {
+    return null;
+  }
+
+  return formatDistance(miles);
+}
+
+export function milesToKilometers(miles: number): number {
+  return miles / MILES_PER_KILOMETER;
+}
+
+export function formatDistanceKilometers(miles: number): string {
+  const kilometers = milesToKilometers(miles);
+  if (kilometers < 0.1) return 'Nearby (<0.1 km away)';
+  return `${kilometers.toFixed(1)} km away`;
+}
+
+export function formatDistanceKilometersLabel(
+  miles: number | null | undefined,
+): string | null {
+  if (typeof miles !== 'number' || !Number.isFinite(miles)) return null;
+  return formatDistanceKilometers(miles);
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Location request timed out'));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 /**
- * Request user location or fallback gracefully
+ * Requests the current location. Coordinates are null whenever the real
+ * device location cannot be determined; no default location is substituted.
  */
-export async function getCurrentUserLocation(): Promise<{ latitude: number; longitude: number }> {
+export async function getUserLocationWithStatus(
+  options: UserLocationOptions = {},
+): Promise<UserLocationResult> {
+  const { requestPermission = true, timeoutMs = LOCATION_TIMEOUT_MS } = options;
+
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      return DEFAULT_USER_COORDS;
+    let permission = await Location.getForegroundPermissionsAsync();
+
+    if (permission.status !== 'granted' && requestPermission) {
+      permission = await Location.requestForegroundPermissionsAsync();
     }
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
+
+    if (permission.status !== 'granted') {
+      return {
+        latitude: null,
+        longitude: null,
+        status: 'denied',
+        source: 'none',
+      };
+    }
+
+    try {
+      const lastKnown = await Location.getLastKnownPositionAsync({
+        maxAge: MAX_LAST_KNOWN_AGE_MS,
+        requiredAccuracy: 1000,
+      });
+      const lastKnownCoords = lastKnown
+        ? getValidCoordinates(lastKnown.coords.latitude, lastKnown.coords.longitude)
+        : null;
+
+      if (lastKnownCoords) {
+        return {
+          ...lastKnownCoords,
+          status: 'granted',
+          source: 'last-known',
+        };
+      }
+    } catch (error) {
+      console.warn('Could not fetch last known GPS position:', error);
+    }
+
+    try {
+      const current = await withTimeout(
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        timeoutMs,
+      );
+      const currentCoords = getValidCoordinates(current.coords.latitude, current.coords.longitude);
+
+      if (currentCoords) {
+        return {
+          ...currentCoords,
+          status: 'granted',
+          source: 'current',
+        };
+      }
+    } catch (error) {
+      console.warn('Could not fetch current GPS position:', error);
+    }
+
     return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+      latitude: null,
+      longitude: null,
+      status: 'unavailable',
+      source: 'none',
     };
   } catch (error) {
-    console.warn('Could not fetch user GPS coordinates, using fallback:', error);
-    return DEFAULT_USER_COORDS;
+    console.warn('Could not determine location permission:', error);
+    return {
+      latitude: null,
+      longitude: null,
+      status: 'unavailable',
+      source: 'none',
+    };
   }
 }
 
 /**
- * Sorts a list of providers by proximity to a given user position
+ * Request user location or return null when no real position is available.
+ */
+export async function getCurrentUserLocation(): Promise<Coordinates | null> {
+  const result = await getUserLocationWithStatus();
+
+  if (result.latitude === null || result.longitude === null) {
+    return null;
+  }
+
+  return {
+    latitude: result.latitude,
+    longitude: result.longitude,
+  };
+}
+
+/**
+ * Sorts providers by proximity to a given user position. Providers without
+ * valid coordinates are kept at the end with distanceMiles set to null.
  */
 export function sortProvidersByProximity(
   providers: Provider[],
-  userCoords: { latitude: number; longitude: number }
-): (Provider & { distanceMiles: number })[] {
+  userCoords: Coordinates | null,
+): ProviderWithDistance[] {
+  const validUserCoords = userCoords
+    ? getValidCoordinates(userCoords.latitude, userCoords.longitude)
+    : null;
+
   return providers
-    .map((p) => {
-      const pLat = p.lat ?? DEFAULT_USER_COORDS.latitude;
-      const pLng = p.lng ?? DEFAULT_USER_COORDS.longitude;
-      const distance = calculateDistanceMiles(
-        userCoords.latitude,
-        userCoords.longitude,
-        pLat,
-        pLng
-      );
+    .map((provider) => {
+      const providerCoords = getValidCoordinates(provider.lat, provider.lng);
+      const distanceMiles =
+        validUserCoords && providerCoords
+          ? calculateDistanceMiles(
+              validUserCoords.latitude,
+              validUserCoords.longitude,
+              providerCoords.latitude,
+              providerCoords.longitude,
+            )
+          : null;
+
       return {
-        ...p,
-        distanceMiles: distance,
+        ...provider,
+        distanceMiles,
       };
     })
-    .sort((a, b) => a.distanceMiles - b.distanceMiles);
+    .sort((a, b) => {
+      if (a.distanceMiles === null && b.distanceMiles === null) {
+        return (a.name ?? '').localeCompare(b.name ?? '');
+      }
+      if (a.distanceMiles === null) return 1;
+      if (b.distanceMiles === null) return -1;
+      return a.distanceMiles - b.distanceMiles;
+    });
 }

@@ -4,7 +4,11 @@
 import request from 'supertest';
 import express from 'express';
 import { EventEmitter } from 'events';
-import { handleTriageStream, handleWoundUpload, setMLClient } from '../controllers/streamController';
+import {
+  handleTriageStream,
+  handleWoundUpload,
+  setMLClient,
+} from '../controllers/streamController';
 import { getSupabaseAdmin } from '../db/client';
 
 const app = express();
@@ -15,7 +19,7 @@ app.post('/api/encounters/:id/wound', handleWoundUpload);
 describe('Full Gateway E2E Validation (Live Integration Fixture)', () => {
   let supabase: any;
   let liveEncounterId: string;
-  let uploadedPaths: string[] = [];
+  const uploadedPaths: string[] = [];
 
   beforeAll(async () => {
     supabase = getSupabaseAdmin();
@@ -48,9 +52,7 @@ describe('Full Gateway E2E Validation (Live Integration Fixture)', () => {
   }, 20000);
 
   it('handles invalid payloads gracefully with 400 status', async () => {
-    const res = await request(app)
-      .post('/api/encounters/triage/stream')
-      .send({ query: '' });
+    const res = await request(app).post('/api/encounters/triage/stream').send({ query: '' });
     expect(res.status).toBe(400);
   });
 
@@ -67,7 +69,10 @@ describe('Full Gateway E2E Validation (Live Integration Fixture)', () => {
     const liveMLFixture = {
       streamTriage: jest.fn().mockImplementation(async () => {
         setTimeout(() => {
-          liveStream.emit('data', Buffer.from('data: {"delta": "Clean wound and apply compression bandage."}\n\n'));
+          liveStream.emit(
+            'data',
+            Buffer.from('data: {"delta": "Clean wound and apply compression bandage."}\n\n'),
+          );
           setTimeout(() => {
             liveStream.emit('end');
           }, 30);
@@ -112,7 +117,17 @@ describe('Full Gateway E2E Validation (Live Integration Fixture)', () => {
     };
     setMLClient(liveMLFixture as any);
 
-    const testImageBytes = Buffer.from('TEST-IMAGE-BINARY-DATA');
+    const sharp = require('sharp');
+    const testImageBytes = await sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: { r: 200, g: 100, b: 100 },
+      },
+    })
+      .jpeg()
+      .toBuffer();
     const res = await request(app)
       .post(`/api/encounters/${liveEncounterId}/wound`)
       .send({

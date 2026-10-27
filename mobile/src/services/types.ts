@@ -81,6 +81,45 @@ export type Database = {
                     },
                 ]
             }
+            vital_readings: {
+                Row: {
+                    created_at: string
+                    encounter_id: string | null
+                    external_id: string
+                    id: string
+                    metric: string
+                    recorded_at: string
+                    source: string
+                    unit: string
+                    user_id: string
+                    value: number
+                }
+                Insert: {
+                    created_at?: string
+                    encounter_id?: string | null
+                    external_id: string
+                    id?: string
+                    metric: string
+                    recorded_at: string
+                    source: string
+                    unit: string
+                    user_id?: string
+                    value: number
+                }
+                Update: {
+                    created_at?: string
+                    encounter_id?: string | null
+                    external_id?: string
+                    id?: string
+                    metric?: string
+                    recorded_at?: string
+                    source?: string
+                    unit?: string
+                    user_id?: string
+                    value?: number
+                }
+                Relationships: []
+            }
             medical_profiles: {
                 Row: {
                     allergies: Json | null
@@ -282,6 +321,20 @@ export type Encounter = {
     user_id?: string | null;
     symptoms?: string[];
     location?: string | null;
+    vitals?: {
+        heart_rate?: number;
+        systolic_bp?: number;
+        diastolic_bp?: number;
+        respiratory_rate?: number;
+        oxygen_saturation?: number;
+        body_temperature?: number;
+        pain_score?: number;
+        severe_bleeding?: number;
+        altered_mental_status?: number;
+        triage_label?: string;
+        triage_level?: number;
+        risk_drivers?: string[];
+    };
 };
 
 export type MedicalProfile = Database['public']['Tables']['medical_profiles']['Row'];

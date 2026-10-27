@@ -10,7 +10,6 @@ import { EmergencyStepScreen } from '../screens/EmergencyStepScreen';
 import { EmergencySummaryScreen } from '../screens/EmergencySummaryScreen';
 import { MedicalProfileScreen } from '../screens/MedicalProfileScreen';
 import { CameraScreen } from '../screens/CameraScreen';
-import { PhotoInstructionsScreen } from '../screens/PhotoInstructionsScreen';
 import { PhotoPreviewScreen } from '../screens/PhotoPreviewScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { PermissionsScreen } from '../screens/PermissionsScreen';
@@ -28,7 +27,6 @@ import { AIChatScreen } from '../screens/AIChatScreen';
 import { AIToolsScreen } from '../screens/AIToolsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { FirstAidListScreen } from '../screens/FirstAidListScreen';
-import { WoundScannerScreen } from '../screens/WoundScannerScreen';
 import { LiveTriageScreen } from '../screens/LiveTriageScreen';
 
 const Stack = createNativeStackNavigator();
@@ -60,7 +58,6 @@ export const AppNavigator = () => {
                         <Stack.Screen name="EmergencySteps" component={EmergencyStepScreen} />
                         <Stack.Screen name="EmergencySummary" component={EmergencySummaryScreen} />
                         <Stack.Screen name="MedicalProfile" component={MedicalProfileScreen} />
-                        <Stack.Screen name="PhotoInstructions" component={PhotoInstructionsScreen} />
                         <Stack.Screen name="Camera" component={CameraScreen} />
                         <Stack.Screen name="ReportPreview" component={ReportPreviewScreen} />
                         <Stack.Screen name="ProviderList" component={ProviderListScreen} />
@@ -73,7 +70,6 @@ export const AppNavigator = () => {
                         <Stack.Screen name="AITools" component={AIToolsScreen} />
                         <Stack.Screen name="Notifications" component={NotificationsScreen} />
                         <Stack.Screen name="FirstAidList" component={FirstAidListScreen} />
-                        <Stack.Screen name="WoundScanner" component={WoundScannerScreen} />
                         <Stack.Screen name="LiveTriage" component={LiveTriageScreen} />
                     </>
                 )}

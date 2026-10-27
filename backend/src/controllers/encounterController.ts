@@ -3,6 +3,7 @@
 
 import { Request, Response } from 'express';
 import * as encounterService from '../services/encounterService';
+import { logAudit } from '../services/auditService';
 
 const VALID_STATUSES = ['active', 'in_progress', 'escalated', 'resolved'];
 const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'];
@@ -20,12 +21,16 @@ export const create = async (req: Request, res: Response): Promise<void> => {
     const { title, severity = 'medium', status = 'active', symptoms = [] } = req.body;
 
     if (severity && !VALID_SEVERITIES.includes(severity)) {
-      res.status(400).json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
+      res
+        .status(400)
+        .json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
       return;
     }
 
     if (status && !VALID_STATUSES.includes(status)) {
-      res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+      res
+        .status(400)
+        .json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
       return;
     }
 
@@ -38,10 +43,21 @@ export const create = async (req: Request, res: Response): Promise<void> => {
     };
 
     const encounter = await encounterService.createEncounter(userId, encounterPayload, token);
+    logAudit({
+      userId,
+      action: 'CREATE_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounter.id,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+      metadata: { severity, status },
+    });
     res.status(201).json(encounter);
   } catch (error: any) {
-    console.error('Error in encounterController.create:', error);
-    res.status(500).json({ error: error.message || 'Failed to create encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.create');
+    }
+    res.status(500).json({ error: 'Failed to create encounter' });
   }
 };
 
@@ -62,10 +78,21 @@ export const getById = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    logAudit({
+      userId,
+      action: 'VIEW_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounterId,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+    });
+
     res.json(encounter);
   } catch (error: any) {
-    console.error('Error in encounterController.getById:', error);
-    res.status(500).json({ error: error.message || 'Failed to retrieve encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.getById');
+    }
+    res.status(500).json({ error: 'Failed to retrieve encounter' });
   }
 };
 
@@ -80,10 +107,20 @@ export const list = async (req: Request, res: Response): Promise<void> => {
     }
 
     const encounters = await encounterService.getEncounters(userId, token);
+    logAudit({
+      userId,
+      action: 'LIST_ENCOUNTERS',
+      resourceType: 'ENCOUNTER',
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+      metadata: { count: encounters.length },
+    });
     res.json(encounters);
   } catch (error: any) {
-    console.error('Error in encounterController.list:', error);
-    res.status(500).json({ error: error.message || 'Failed to list encounters' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.list');
+    }
+    res.status(500).json({ error: 'Failed to list encounters' });
   }
 };
 
@@ -103,7 +140,9 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
 
     if (status !== undefined) {
       if (!VALID_STATUSES.includes(status)) {
-        res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+        res
+          .status(400)
+          .json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
         return;
       }
       updates.status = status;
@@ -111,7 +150,9 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
 
     if (severity !== undefined) {
       if (!VALID_SEVERITIES.includes(severity)) {
-        res.status(400).json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
+        res
+          .status(400)
+          .json({ error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` });
         return;
       }
       updates.severity = severity;
@@ -121,10 +162,21 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
     if (symptoms !== undefined) updates.symptoms = symptoms;
 
     const updated = await encounterService.updateEncounter(encounterId, userId, updates, token);
+    logAudit({
+      userId,
+      action: 'UPDATE_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounterId,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+      metadata: updates,
+    });
     res.json(updated);
   } catch (error: any) {
-    console.error('Error in encounterController.updateStatus:', error);
-    res.status(500).json({ error: error.message || 'Failed to update encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.updateStatus');
+    }
+    res.status(500).json({ error: 'Failed to update encounter' });
   }
 };
 
@@ -140,9 +192,19 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
     }
 
     await encounterService.deleteEncounter(encounterId, userId, token);
+    logAudit({
+      userId,
+      action: 'DELETE_ENCOUNTER',
+      resourceType: 'ENCOUNTER',
+      resourceId: encounterId,
+      ipAddress: req.ip,
+      userAgent: req.get?.('user-agent'),
+    });
     res.status(204).send();
   } catch (error: any) {
-    console.error('Error in encounterController.remove:', error);
-    res.status(500).json({ error: error.message || 'Failed to delete encounter' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in encounterController.remove');
+    }
+    res.status(500).json({ error: 'Failed to delete encounter' });
   }
 };

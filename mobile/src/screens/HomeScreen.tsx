@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
@@ -13,17 +14,20 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { AnalyticsService } from '../services/analyticsService';
+import { theme } from '../theme';
 import firstAidData from '../content/first-aid-content.json';
+import { Illustration } from '../components/Illustration';
+import type { IconName } from '../icons';
 
 // Types for Emergency Protocols
 export interface EmergencyProtocol {
   id: string;
   title: string;
   subtitle: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: IconName;
   categoryId: string; // targets first-aid-content.json category
   categoryGroup: string; // 'Bleedings' | 'Burns' | 'Injuries' | 'Respiratory' | 'Heart problems' | 'Poisonings' | 'Allergies' | 'Bites'
   tags: string[]; // 'Quick' | 'Child' | 'Beginner' | 'Adult' | 'Advanced'
@@ -38,7 +42,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'bone',
     title: 'Bone injuries',
     subtitle: 'Splints & Immobilization',
-    icon: 'bone',
+    icon: 'fracture',
     categoryId: 'fractures',
     categoryGroup: 'Injuries',
     tags: ['Quick', 'Adult', 'Beginner'],
@@ -50,7 +54,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'wound',
     title: 'Wound care',
     subtitle: 'Bandage & Antiseptic',
-    icon: 'bandage',
+    icon: 'wound',
     categoryId: 'wound',
     categoryGroup: 'Bleedings',
     tags: ['Quick', 'Child', 'Adult', 'Beginner'],
@@ -62,7 +66,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'burns',
     title: 'Burns',
     subtitle: 'Cooling & Dressing',
-    icon: 'fire',
+    icon: 'burns',
     categoryId: 'burns',
     categoryGroup: 'Burns',
     tags: ['Quick', 'Child', 'Beginner'],
@@ -74,7 +78,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'choking',
     title: 'Choking relief',
     subtitle: 'Heimlich Maneuver',
-    icon: 'weather-windy',
+    icon: 'choking',
     categoryId: 'choking',
     categoryGroup: 'Respiratory',
     tags: ['Quick', 'Child', 'Adult', 'Advanced'],
@@ -86,7 +90,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'bleeding',
     title: 'Severe bleeding',
     subtitle: 'Direct Pressure & Hemorrhage',
-    icon: 'water',
+    icon: 'bleeding',
     categoryId: 'bleeding',
     categoryGroup: 'Bleedings',
     tags: ['Quick', 'Adult', 'Advanced'],
@@ -98,7 +102,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'cpr',
     title: 'CPR aid',
     subtitle: 'Chest Compressions',
-    icon: 'heart-pulse',
+    icon: 'cpr',
     categoryId: 'cpr',
     categoryGroup: 'Heart problems',
     tags: ['Quick', 'Adult', 'Advanced'],
@@ -110,7 +114,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'poisoning',
     title: 'Poisonings',
     subtitle: 'Chemical Safety & Flush',
-    icon: 'alert-decagram',
+    icon: 'poisoning',
     categoryId: 'poisoning',
     categoryGroup: 'Poisonings',
     tags: ['Adult', 'Child', 'Advanced'],
@@ -122,7 +126,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'allergies',
     title: 'Allergies & Shock',
     subtitle: 'EpiPen & Anaphylaxis',
-    icon: 'shield-alert',
+    icon: 'allergy',
     categoryId: 'allergic',
     categoryGroup: 'Allergies',
     tags: ['Quick', 'Child', 'Beginner'],
@@ -134,7 +138,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'bites',
     title: 'Bites & Stings',
     subtitle: 'Venom & Disinfection',
-    icon: 'bug-outline',
+    icon: 'bites',
     categoryId: 'bites',
     categoryGroup: 'Bites',
     tags: ['Child', 'Adult', 'Beginner'],
@@ -146,7 +150,7 @@ const EMERGENCY_CATALOG: EmergencyProtocol[] = [
     id: 'unconscious',
     title: 'Unconsciousness',
     subtitle: 'Recovery Position',
-    icon: 'account-alert',
+    icon: 'unconscious',
     categoryId: 'unconsciousness',
     categoryGroup: 'Respiratory',
     tags: ['Adult', 'Advanced'],
@@ -331,14 +335,22 @@ export const HomeScreen: React.FC = () => {
         {/* ================================================================= */}
         {/* 1. HERO BANNER: Deep Onyx with iAid Logo + Stay Safe Act Fast     */}
         {/* ================================================================= */}
-        <View style={styles.heroContainer}>
+        <LinearGradient
+          colors={[theme.colors.palette.eliteTeal, theme.colors.palette.darkSideMoon]}
+          style={styles.heroContainer}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          {/* Soft luminous orb echoing the Splash screen emblem treatment */}
+          <View pointerEvents="none" style={styles.heroGlowOrb} />
+
           {/* Top Bar inside Hero */}
           <View style={styles.heroHeaderRow}>
-            {/* Logo: iAid + Shield Icon */}
+            {/* Logo: Laso + Shield Icon */}
             <View style={styles.logoRow}>
-              <Text style={styles.logoText}>iAid</Text>
+              <Text style={styles.logoText}>Laso</Text>
               <View style={styles.logoShieldBadge}>
-                <MaterialCommunityIcons name="shield-cross" size={20} color="#FFFFFF" />
+                <Icon name="shieldPlus" size={20} color="#FFFFFF" />
               </View>
             </View>
 
@@ -350,7 +362,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Medical Profile"
               >
-                <MaterialCommunityIcons name="card-account-details-outline" size={19} color="#FFFFFF" />
+                <Icon name="identificationCard" size={19} color="#FFFFFF" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -359,7 +371,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="AI Clinical Suite"
               >
-                <MaterialCommunityIcons name="creation" size={19} color="#FFFFFF" />
+                <Icon name="sparkle" size={19} color="#FFFFFF" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -368,7 +380,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Notifications"
               >
-                <MaterialCommunityIcons name="bell-outline" size={19} color="#FFFFFF" />
+                <Icon name="bell" size={19} color="#FFFFFF" />
                 <View style={styles.unreadBadgeDot} />
               </TouchableOpacity>
 
@@ -378,27 +390,32 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Settings"
               >
-                <MaterialCommunityIcons name="cog-outline" size={19} color="#FFFFFF" />
+                <Icon name="gear" size={19} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Hero Title & Placeholder Illustration Slot */}
+          {/* Hero Title & 3D Heart Biometric Orb */}
           <View style={styles.heroBodyRow}>
             <View style={styles.heroTextCol}>
               <Text style={styles.heroTitle}>Stay Safe</Text>
               <Text style={styles.heroTitle}>Act Fast!</Text>
             </View>
 
-            {/* Medical Illustration Placeholder in Hero */}
-            <View style={styles.blankImagePlaceholder}>
-              <View style={styles.placeholderInner}>
-                <MaterialCommunityIcons name="medical-bag" size={28} color="#FFFFFF" />
-                <Text style={styles.placeholderLabel}>Emergency</Text>
-              </View>
+            {/* Transparent medical emblem, framed like the Splash screen */}
+            <View style={styles.heroEmblemFrame}>
+              <Illustration
+                name="splashEmblem"
+                width={84}
+                height={84}
+                accessibilityLabel="Laso+ medical emblem"
+                fallback={
+                  <Icon name="shieldPlus" size={44} color="#FFFFFF" />
+                }
+              />
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* ================================================================= */}
         {/* 2. BODY CONTENT - CONTROLS, SEARCH, FILTERS & MINIMAL GRID        */}
@@ -413,8 +430,8 @@ export const HomeScreen: React.FC = () => {
               onPress={() => setIsSortDropdownOpen((prev) => !prev)}
             >
               <Text style={styles.sortButtonText}>{getSortLabel()}</Text>
-              <MaterialCommunityIcons
-                name={isSortDropdownOpen ? 'chevron-up' : 'chevron-down'}
+              <Icon
+                name={isSortDropdownOpen ? 'caretUp' : 'caretDown'}
                 size={18}
                 color="#111827"
               />
@@ -432,8 +449,8 @@ export const HomeScreen: React.FC = () => {
                 onPress={handleOpenFilterModal}
                 accessibilityLabel="Open Filters"
               >
-                <MaterialCommunityIcons
-                  name="tune-variant"
+                <Icon
+                  name="faders"
                   size={19}
                   color={activeFilterCount > 0 ? '#FFFFFF' : '#111827'}
                 />
@@ -454,8 +471,8 @@ export const HomeScreen: React.FC = () => {
                 onPress={handleToggleSearch}
                 accessibilityLabel="Toggle Search"
               >
-                <MaterialCommunityIcons
-                  name="magnify"
+                <Icon
+                  name="search"
                   size={20}
                   color={isSearchActive || searchQuery.length > 0 ? '#FFFFFF' : '#111827'}
                 />
@@ -491,7 +508,7 @@ export const HomeScreen: React.FC = () => {
                       : 'Alphabetical (A - Z)'}
                   </Text>
                   {sortBy === opt && (
-                    <MaterialCommunityIcons name="check" size={16} color="#0F1115" />
+                    <Icon name="check" size={16} color="#0F1115" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -502,8 +519,8 @@ export const HomeScreen: React.FC = () => {
           {(isSearchActive || searchQuery.length > 0) && (
             <View style={styles.searchSection}>
               <View style={styles.searchBarContainer}>
-                <MaterialCommunityIcons
-                  name="magnify"
+                <Icon
+                  name="search"
                   size={20}
                   color="#111827"
                   style={styles.searchIcon}
@@ -523,7 +540,7 @@ export const HomeScreen: React.FC = () => {
                     onPress={() => setSearchQuery('')}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <MaterialCommunityIcons name="close-circle" size={18} color="#888888" />
+                    <Icon name="closeCircle" size={18} color="#888888" />
                   </TouchableOpacity>
                 )}
               </View>
@@ -575,7 +592,7 @@ export const HomeScreen: React.FC = () => {
                       {cat}
                     </Text>
                     {isSelected && (
-                      <MaterialCommunityIcons
+                      <Icon
                         name="close"
                         size={14}
                         color="#FFFFFF"
@@ -601,7 +618,7 @@ export const HomeScreen: React.FC = () => {
                   }
                 >
                   <Text style={styles.activeTagText}>{tag}</Text>
-                  <MaterialCommunityIcons name="close" size={12} color="#FFFFFF" />
+                  <Icon name="close" size={12} color="#FFFFFF" />
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
@@ -649,7 +666,7 @@ export const HomeScreen: React.FC = () => {
                   {/* Top Row: Icon Circle + Step Badge */}
                   <View style={styles.cardHeaderRow}>
                     <View style={styles.iconCircleBadge}>
-                      <MaterialCommunityIcons name={item.icon} size={22} color="#000000" />
+                      <Icon name={item.icon} size={22} color="#000000" />
                     </View>
 
                     <View style={styles.cardStepsBadge}>
@@ -672,7 +689,7 @@ export const HomeScreen: React.FC = () => {
                   {/* Bottom Action Row (Emergency Protocol Link) */}
                   <View style={styles.cardActionRow}>
                     <Text style={styles.cardActionLabel}>Protocol</Text>
-                    <MaterialCommunityIcons name="arrow-right" size={16} color="#0F1115" />
+                    <Icon name="arrowRight" size={16} color="#0F1115" />
                   </View>
                 </TouchableOpacity>
               ))}
@@ -680,8 +697,8 @@ export const HomeScreen: React.FC = () => {
           ) : (
             /* EMPTY FILTER RESULT STATE */
             <View style={styles.emptyStateContainer}>
-              <MaterialCommunityIcons
-                name="clipboard-search-outline"
+              <Icon
+                name="listMagnifyingGlass"
                 size={48}
                 color="#888888"
               />
@@ -712,7 +729,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={styles.viewMoreBannerText}>
                 View all {filteredEmergencies.length} emergency protocols
               </Text>
-              <MaterialCommunityIcons name="arrow-right" size={18} color="#0F1115" />
+              <Icon name="arrowRight" size={18} color="#0F1115" />
             </TouchableOpacity>
           )}
 
@@ -724,7 +741,7 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <MaterialCommunityIcons name="robot" size={24} color="#FFFFFF" />
+                <Icon name="robot" size={24} color="#FFFFFF" />
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>AI Emergency Triage</Text>
@@ -733,7 +750,7 @@ export const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#000000" />
+            <Icon name="caretRight" size={24} color="#000000" />
           </TouchableOpacity>
 
           {/* AI Clinical Suite Hub Card */}
@@ -744,7 +761,7 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <MaterialCommunityIcons name="creation" size={24} color="#FFFFFF" />
+                <Icon name="sparkle" size={24} color="#FFFFFF" />
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>AI Clinical Suite</Text>
@@ -753,7 +770,7 @@ export const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#000000" />
+            <Icon name="caretRight" size={24} color="#000000" />
           </TouchableOpacity>
 
           {/* Nearest Clinics & Live Map Banner */}
@@ -764,7 +781,7 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <MaterialCommunityIcons name="map-marker-radius" size={24} color="#FFFFFF" />
+                <Icon name="mapPin" size={24} color="#FFFFFF" />
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>Nearest Clinics & Live Map</Text>
@@ -773,7 +790,7 @@ export const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#000000" />
+            <Icon name="caretRight" size={24} color="#000000" />
           </TouchableOpacity>
 
           {/* Spacing for floating bottom bar */}
@@ -805,7 +822,7 @@ export const HomeScreen: React.FC = () => {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.modalCloseBtn}
                   >
-                    <MaterialCommunityIcons name="close" size={20} color="#111827" />
+                    <Icon name="close" size={20} color="#111827" />
                   </TouchableOpacity>
                 </View>
 
@@ -834,7 +851,7 @@ export const HomeScreen: React.FC = () => {
                           {cat}
                         </Text>
                         {isSelected && (
-                          <MaterialCommunityIcons
+                          <Icon
                             name="close"
                             size={14}
                             color="#FFFFFF"
@@ -872,7 +889,7 @@ export const HomeScreen: React.FC = () => {
                           {tag}
                         </Text>
                         {isSelected && (
-                          <MaterialCommunityIcons
+                          <Icon
                             name="close"
                             size={14}
                             color="#FFFFFF"
@@ -933,17 +950,26 @@ const styles = StyleSheet.create({
 
   // 1. HERO BANNER
   heroContainer: {
-    backgroundColor: '#0F1115', // Pure deep onyx black
-    paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 20) + 12 : 54,
+    backgroundColor: theme.colors.palette.eliteTeal, // Rich brand Elite Teal
+    paddingTop: Platform.OS === 'android' ? (RNStatusBar.currentHeight || 20) + 6 : 40,
     paddingHorizontal: 20,
     paddingBottom: 28,
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8,
+    overflow: 'hidden',
+    ...theme.spatial.shadows3d.floating3d,
+  },
+  // Luminous orb behind the emblem — mirrors the Splash screen composition
+  heroGlowOrb: {
+    position: 'absolute',
+    top: 44,
+    right: -40,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
   },
   heroHeaderRow: {
     flexDirection: 'row',
@@ -966,11 +992,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#262A33',
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#3D4250',
+    borderColor: 'rgba(255, 255, 255, 0.20)',
   },
   headerActions: {
     flexDirection: 'row',
@@ -981,11 +1007,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#262A33',
+    backgroundColor: theme.colors.palette.petroBlue,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#3D4250',
+    borderColor: 'rgba(255, 255, 255, 0.20)',
     position: 'relative',
   },
   unreadBadgeDot: {
@@ -995,9 +1021,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.colors.status.emergency.primary,
     borderWidth: 1.5,
-    borderColor: '#262A33',
+    borderColor: theme.colors.palette.eliteTeal,
   },
   heroBodyRow: {
     flexDirection: 'row',
@@ -1015,30 +1041,17 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
 
-  // Blank Image Placeholder in Hero
-  blankImagePlaceholder: {
-    width: 90,
-    height: 90,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#333842',
-    backgroundColor: '#181A20',
+  // Transparent medical emblem frame in the Hero (Splash-inspired)
+  heroEmblemFrame: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
   },
-  placeholderInner: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  placeholderLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
   // 2. BODY CONTENT
   bodyContainer: {
     paddingHorizontal: 20,
@@ -1273,19 +1286,15 @@ const styles = StyleSheet.create({
     rowGap: 14,
   },
 
-  // EMERGENCY CARDS (CLEAN EMERGENCY DESIGN - NO PROGRESS/TRAINING)
+  // EMERGENCY CARDS (CLEAN EMERGENCY DESIGN WITH 3D TACTILE DEPTH)
   emergencyCard: {
     width: '48%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#EAECEF',
+    borderColor: theme.colors.canvas.border,
     padding: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...theme.spatial.shadows3d.card3d,
     justifyContent: 'space-between',
     minHeight: 154,
   },
@@ -1299,24 +1308,24 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardStepsBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
   },
   cardStepsBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   emergencyCardTitle: {
     fontSize: 15,
@@ -1407,12 +1416,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.canvas.border,
     padding: 16,
     marginTop: 20,
+    ...theme.spatial.shadows3d.card3d,
   },
   aiTriageLeft: {
     flexDirection: 'row',
@@ -1424,9 +1434,11 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    ...theme.spatial.shadows3d.accentGlow,
   },
   aiTriageTextCol: {
     flex: 1,
@@ -1434,35 +1446,36 @@ const styles = StyleSheet.create({
   aiTriageTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   aiTriageSub: {
     fontSize: 12,
-    color: '#666666',
+    color: theme.colors.text.secondary,
     lineHeight: 16,
   },
 
   // 3. FILTER BOTTOM SHEET MODAL (Screen 3 in mockup)
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: 'rgba(6, 16, 17, 0.55)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     maxHeight: '85%',
+    ...theme.spatial.shadows3d.floating3d,
   },
   modalHandleBar: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.canvas.border,
     alignSelf: 'center',
     marginBottom: 16,
   },
@@ -1475,20 +1488,20 @@ const styles = StyleSheet.create({
   modalHeaderTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   modalCloseBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalSubHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginTop: 20,
     marginBottom: 12,
   },
@@ -1506,19 +1519,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   modalPillInactive: {
-    backgroundColor: '#F3F4F6',
-    borderColor: '#E5E7EB',
+    backgroundColor: theme.colors.canvas.surfaceSubtle,
+    borderColor: theme.colors.canvas.border,
   },
   modalPillActive: {
-    backgroundColor: '#0F1115',
-    borderColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
+    borderColor: theme.colors.primary.main,
+    ...theme.spatial.shadows3d.tactileButton,
   },
   modalPillText: {
     fontSize: 13,
     fontWeight: '600',
   },
   modalPillTextInactive: {
-    color: '#1F2937',
+    color: theme.colors.text.secondary,
   },
   modalPillTextActive: {
     color: '#FFFFFF',
@@ -1531,7 +1545,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: theme.colors.canvas.border,
   },
   modalClearBtn: {
     paddingVertical: 12,
@@ -1540,13 +1554,14 @@ const styles = StyleSheet.create({
   modalClearBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#6B7280',
+    color: theme.colors.text.muted,
   },
   modalApplyBtn: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.primary.main,
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 32,
+    ...theme.spatial.shadows3d.tactileButton,
   },
   modalApplyBtnText: {
     fontSize: 15,

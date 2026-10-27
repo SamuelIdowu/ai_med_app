@@ -1,6 +1,6 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 
 interface CircularDrilldownButtonProps {
@@ -33,8 +33,8 @@ export const CircularDrilldownButton: React.FC<CircularDrilldownButtonProps> = (
         style,
       ]}
     >
-      <MaterialCommunityIcons
-        name="arrow-top-right"
+      <Icon
+        name="arrowUpRight"
         size={Math.round(size * 0.52)}
         color={iconColor}
       />

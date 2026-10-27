@@ -1,9 +1,10 @@
+import { Icon } from '../components/Icon';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { theme } from '../theme';
 
 export const PrivacyPolicyScreen = () => {
     const navigation = useNavigation();
@@ -13,7 +14,7 @@ export const PrivacyPolicyScreen = () => {
             <StatusBar style="dark" />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back-ios" size={24} color="#1c1c1e" />
+                    <Icon name="caretLeft" size={22} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Privacy Policy</Text>
                 <View style={{ width: 40 }} />
@@ -106,7 +107,7 @@ export const PrivacyPolicyScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.background,
     },
     header: {
         flexDirection: 'row',
@@ -114,9 +115,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.surface,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e5e5',
+        borderBottomColor: theme.colors.canvas.border,
     },
     backButton: {
         padding: 8,
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1c1c1e',
+        color: theme.colors.text.primary,
     },
     scrollView: {
         flex: 1,
@@ -136,29 +137,35 @@ const styles = StyleSheet.create({
     },
     lastUpdated: {
         fontSize: 14,
-        color: '#666',
+        color: theme.colors.text.muted,
         marginBottom: 24,
         fontStyle: 'italic',
     },
     section: {
         marginBottom: 24,
+        backgroundColor: theme.colors.canvas.surface,
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1c1c1e',
+        color: theme.colors.text.primary,
         marginBottom: 12,
     },
     subTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1c1c1e',
+        color: theme.colors.text.primary,
         marginTop: 12,
         marginBottom: 8,
     },
     paragraph: {
         fontSize: 15,
-        color: '#444',
+        color: theme.colors.text.secondary,
         lineHeight: 24,
         marginBottom: 8,
     },
@@ -169,21 +176,22 @@ const styles = StyleSheet.create({
     },
     bullet: {
         fontSize: 15,
-        color: '#444',
+        color: theme.colors.primary.main,
         marginRight: 8,
         lineHeight: 24,
+        fontWeight: 'bold',
     },
     bulletText: {
         fontSize: 15,
-        color: '#444',
+        color: theme.colors.text.secondary,
         lineHeight: 24,
         flex: 1,
     },
     footer: {
         fontSize: 14,
-        color: '#666',
+        color: theme.colors.text.muted,
         textAlign: 'center',
-        marginTop: 20,
-        marginBottom: 20,
+        marginTop: 10,
+        marginBottom: 10,
     },
 });

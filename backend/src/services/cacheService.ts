@@ -92,7 +92,9 @@ class CacheService {
     if (this.isRedisConnected && this.redisClient) {
       try {
         await this.redisClient.del(key);
-      } catch (err) {}
+      } catch (err) {
+        // Local memory invalidation already succeeded; Redis is best-effort.
+      }
     }
   }
 

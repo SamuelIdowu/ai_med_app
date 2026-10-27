@@ -1,10 +1,9 @@
-name: HealthPulse CI/CD Pipeline
+name: Laso CI/CD Pipeline
 
 on:
   push:
-    branches: [ master, main ]
   pull_request:
-    branches: [ master, main ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,10 +22,11 @@ jobs:
     env:
       NODE_ENV: test
       PORT: 3000
-      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://hbdsuqbzbnoqfkvnirlc.supabase.co' }}
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '__REMOVED_SUPABASE_ANON_KEY__' }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || '__REMOVED_SUPABASE_SERVICE_ROLE_KEY__' }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || '__REMOVED_GEMINI_API_KEY__' }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co' }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'your-supabase-anon-key' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'your-supabase-service-role-key' }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'your-gemini-api-key' }}
+      SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -44,8 +44,14 @@ jobs:
       - name: Verify TypeScript Compilation
         run: npx tsc --noEmit
 
-      - name: Run Backend Jest Test Suite (67 tests, 10 suites)
+      - name: Lint Backend
+        run: npm run lint --if-present
+
+      - name: Run Backend Jest Test Suite
         run: npm test
+
+      - name: Enforce Backend Coverage Floors
+        run: npm test -- --coverage
 
   # -------------------------------------------------------------
   # Job 2: Autonomous Python ML Subsystem Verification
@@ -71,7 +77,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install . pytest httpx pytest-anyio
 
-      - name: Run ML Pytest Suite & Clinical Safety Benchmark (32 tests)
+      - name: Run ML Pytest Suite & Clinical Safety Benchmark
         run: pytest tests -v
 
   # -------------------------------------------------------------
@@ -95,20 +101,60 @@ jobs:
         working-directory: mobile
         run: npm ci
 
-      - name: Verify Mobile TypeScript Compilation (27+ Screens)
+      - name: Verify Mobile TypeScript Compilation
         working-directory: mobile
         run: npx tsc --noEmit
+
+      - name: Lint Mobile
+        working-directory: mobile
+        run: npm run lint --if-present
 
       - name: Install Backend Dependencies for Mobile Runner
         working-directory: backend
         run: npm ci
 
-      - name: Run Mobile Integration Test Suite (23 tests, 4 suites)
+      - name: Run Mobile Integration Test Suite
         working-directory: backend
         run: npm run test:mobile
 
   # -------------------------------------------------------------
-  # Job 4: Production Container & Compose Validation
+  # Job 4: Optional live Supabase integration suite
+  # Manual only. Requires repository variable RUN_LIVE_E2E=true and a
+  # disposable Supabase project with all migrations applied.
+  # -------------------------------------------------------------
+  live-e2e:
+    name: Live Supabase E2E (manual)
+    if: github.event_name == 'workflow_dispatch' && vars.RUN_LIVE_E2E == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: npm ci
+
+      - name: Run Live Supabase Integration Suite
+        run: npm run test:live
+
+  # -------------------------------------------------------------
+  # Job 5: Production Container & Compose Validation
   # -------------------------------------------------------------
   docker-validation:
     name: Docker Production Stack Validation
@@ -118,4 +164,26 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate Docker Compose Configuration
+        env:
+          REDIS_PASSWORD: ci-redis-password
         run: docker compose -f docker-compose.prod.yml config
+
+  deploy-render:
+    name: Deploy production backend to Render
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend-gateway, ml-subsystem, mobile-client, docker-validation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Render deploy hook is configured
+        env:
+          BACKEND_DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: |
+          test -n "$BACKEND_DEPLOY_HOOK" || { echo "Missing RENDER_BACKEND_DEPLOY_HOOK secret"; exit 1; }
+
+      - name: Trigger backend deployment
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+      # The ML subsystem (laso-ml) deploys to Google Cloud Run via
+      # `gcloud run deploy laso-ml --source ml/` (see docs/deploy-zero-dollar.md);
+      # it is not redeployed from this pipeline.

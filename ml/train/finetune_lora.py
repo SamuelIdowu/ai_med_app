@@ -103,7 +103,7 @@ def run_training_pipeline(
 
     # 3. Save checkpoint metadata & adapter manifest
     manifest = {
-        "model_name": "ai-med-triage-lora",
+        "model_name": "laso-triage-lora",
         "timestamp": time.time(),
         "epochs": epochs,
         "final_loss": current_loss,

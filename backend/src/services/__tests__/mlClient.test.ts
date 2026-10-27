@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Readable } from 'stream';
 import axios from 'axios';
-import { MLClient } from '../mlClient';
+import { MLClient, normalizeServiceUrl } from '../mlClient';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -22,12 +22,31 @@ describe('MLClient Inter-Service Bridge', () => {
     expect(client.getBaseUrl()).toBe('http://custom-ml:8080');
   });
 
+  it('normalizes Render bare hostnames to HTTPS', () => {
+    expect(normalizeServiceUrl('laso-ml.onrender.com')).toBe('https://laso-ml.onrender.com');
+    expect(normalizeServiceUrl('laso-ml.onrender.com/')).toBe('https://laso-ml.onrender.com');
+  });
+
+  it('preserves protocols and uses HTTP for internal host:port values', () => {
+    expect(normalizeServiceUrl('https://laso-ml.example.com')).toBe('https://laso-ml.example.com');
+    expect(normalizeServiceUrl('laso-ml:10000')).toBe('http://laso-ml:10000');
+    expect(normalizeServiceUrl('localhost:8000')).toBe('http://localhost:8000');
+  });
+
+  it('falls back when the configured URL is empty', () => {
+    expect(normalizeServiceUrl()).toBe('http://127.0.0.1:8000');
+    expect(normalizeServiceUrl('   ')).toBe('http://127.0.0.1:8000');
+  });
+
   it('checks health successfully', async () => {
     mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { status: 'healthy' } });
     const client = new MLClient('http://127.0.0.1:8000');
     const isHealthy = await client.checkHealth();
     expect(isHealthy).toBe(true);
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://127.0.0.1:8000/v1/ml/health', expect.any(Object));
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/v1/ml/health',
+      expect.any(Object),
+    );
   });
 
   it('handles health check failure gracefully', async () => {
@@ -57,7 +76,7 @@ describe('MLClient Inter-Service Bridge', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       'http://127.0.0.1:8000/v1/ml/triage/stream',
       { query: 'Severe bleeding on arm', symptoms: ['bleeding', 'pain'] },
-      expect.objectContaining({ responseType: 'stream' })
+      expect.objectContaining({ responseType: 'stream' }),
     );
 
     const chunks: string[] = [];
@@ -65,6 +84,32 @@ describe('MLClient Inter-Service Bridge', () => {
       chunks.push(chunk.toString());
     }
     expect(chunks.join('')).toContain('Apply pressure');
+  });
+
+  it('forwards medical profile context to the triage stream', async () => {
+    const fakeStream = new Readable({
+      read() {
+        this.push(null);
+      },
+    });
+    mockedAxios.post.mockResolvedValueOnce({ status: 200, data: fakeStream });
+
+    const client = new MLClient('http://127.0.0.1:8000');
+    await client.streamTriage(
+      'I have an asthma flare-up',
+      ['wheezing'],
+      'Using medical profile: Age 34; Conditions: Asthma',
+    );
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/v1/ml/triage/stream',
+      {
+        query: 'I have an asthma flare-up',
+        symptoms: ['wheezing'],
+        medical_context: 'Using medical profile: Age 34; Conditions: Asthma',
+      },
+      expect.objectContaining({ responseType: 'stream' }),
+    );
   });
 
   it('analyzes wound image with multipart form upload', async () => {
@@ -91,7 +136,45 @@ describe('MLClient Inter-Service Bridge', () => {
       expect.any(Object),
       expect.objectContaining({
         headers: expect.any(Object),
-      })
+      }),
+    );
+  });
+
+  it('evaluates vitals triage via Python Scikit-Learn microservice', async () => {
+    mockedAxios.post.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        triage_level: 2,
+        triage_label: 'Emergency',
+        confidence: 0.99,
+        probabilities: { 'Non-Urgent': 0.0, Urgent: 0.01, Emergency: 0.99 },
+        risk_drivers: ['Critical Hypoxemia (SpO2 82% < 90%)'],
+        is_emergency: true,
+        is_urgent: true,
+        latency_ms: 1.45,
+      },
+    });
+
+    const client = new MLClient('http://127.0.0.1:8000');
+    const result = await client.evaluateVitalsTriage({
+      heart_rate: 145,
+      oxygen_saturation: 82,
+      systolic_bp: 75,
+      severe_bleeding: 1,
+    });
+
+    expect(result.triage_label).toBe('Emergency');
+    expect(result.is_emergency).toBe(true);
+    expect(result.risk_drivers).toContain('Critical Hypoxemia (SpO2 82% < 90%)');
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/v1/ml/triage/vitals',
+      {
+        heart_rate: 145,
+        oxygen_saturation: 82,
+        systolic_bp: 75,
+        severe_bleeding: 1,
+      },
+      expect.any(Object),
     );
   });
 });

@@ -1,0 +1,15 @@
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.pytest_cache/
+.git
+.gitignore
+tests
+train
+training
+eda
+data/eda
+data/image
+report.json
+test_compare_images.py

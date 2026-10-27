@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+coverage
+.next
+.expo
+android
+ios
+*.log
+backend/node_modules
+mobile/node_modules
+ml

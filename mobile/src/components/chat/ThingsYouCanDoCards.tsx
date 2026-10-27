@@ -1,14 +1,15 @@
+import { Icon } from '../Icon';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { MedicalCard } from '../ui/MedicalCard';
+import type { IconName } from '../../icons';
 
 export interface ActionCardItem {
   id: string;
   title: string;
   description: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: IconName;
   iconBgColor?: string;
   iconColor?: string;
   onPress: () => void;
@@ -39,7 +40,7 @@ export const ThingsYouCanDoCards: React.FC<ThingsYouCanDoCardsProps> = ({
                 { backgroundColor: action.iconBgColor || '#EBF2FF' },
               ]}
             >
-              <MaterialCommunityIcons
+              <Icon
                 name={action.icon}
                 size={22}
                 color={action.iconColor || theme.colors.primary.main}
@@ -49,8 +50,8 @@ export const ThingsYouCanDoCards: React.FC<ThingsYouCanDoCardsProps> = ({
               <Text style={styles.cardTitle}>{action.title}</Text>
               <Text style={styles.cardDesc}>{action.description}</Text>
             </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
+            <Icon
+              name="caretRight"
               size={20}
               color={theme.colors.text.muted}
             />

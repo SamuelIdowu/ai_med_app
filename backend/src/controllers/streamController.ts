@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import path from 'path';
 import { MLClient } from '../services/mlClient';
 import { getSupabaseAdmin } from '../db/client';
+import { getMedicalProfileContext } from '../services/aiContextService';
 
 let mlClientInstance: MLClient | null = null;
 
@@ -48,11 +49,13 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
       return;
     }
 
-    if (encounter.user_id && encounter.user_id !== userId) {
+    if (encounter.user_id !== userId) {
       res.status(403).json({ error: 'Unauthorized access to this encounter' });
       return;
     }
   }
+
+  const medicalContext = await getMedicalProfileContext(userId);
 
   // Setup Server-Sent Events headers
   res.setHeader('Content-Type', 'text/event-stream');
@@ -74,7 +77,11 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
     });
 
     // 2. Stream tokens from Python ML Engine
-    const mlStream = await mlClient.streamTriage(query, symptoms);
+    const mlStream = await mlClient.streamTriage(
+      query,
+      symptoms,
+      medicalContext.display || undefined,
+    );
 
     // Teardown listener for client abort
     req.on('close', () => {
@@ -126,13 +133,17 @@ export async function handleTriageStream(req: Request, res: Response): Promise<v
     });
 
     mlStream.on('error', (err: Error) => {
-      console.error('ML Streaming error:', err);
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('ML Streaming error');
+      }
+      res.write(`data: ${JSON.stringify({ error: 'Triage service temporarily unavailable' })}\n\n`);
       res.end();
     });
   } catch (err: any) {
-    console.error('handleTriageStream exception:', err);
-    res.write(`data: ${JSON.stringify({ error: err.message || 'Stream processing failed' })}\n\n`);
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('handleTriageStream exception');
+    }
+    res.write(`data: ${JSON.stringify({ error: 'Stream processing failed' })}\n\n`);
     res.end();
   }
 }
@@ -166,44 +177,73 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
         return;
       }
 
-      if (encounter.user_id && encounter.user_id !== userId) {
+      if (encounter.user_id !== userId) {
         res.status(403).json({ error: 'Unauthorized access to this encounter' });
         return;
       }
     }
 
     // Convert base64 data URL or raw base64 to Buffer
-    let imageBuffer: Buffer;
+    let rawBuffer: Buffer;
     if (typeof image === 'string') {
       const cleanBase64 = image.includes(';base64,') ? image.split(';base64,')[1] : image;
-      imageBuffer = Buffer.from(cleanBase64, 'base64');
+      rawBuffer = Buffer.from(cleanBase64, 'base64');
     } else if (Buffer.isBuffer(image)) {
-      imageBuffer = image;
+      rawBuffer = image;
     } else {
       res.status(400).json({ error: 'Invalid image format' });
       return;
     }
 
+    const { ImageProcessingService } = require('../services/imageProcessingService');
+    try {
+      const validation = await ImageProcessingService.validateImage(rawBuffer);
+      if (!validation.isValid) {
+        res.status(400).json({ error: validation.errors.join(', ') });
+        return;
+      }
+    } catch {
+      res.status(400).json({ error: 'Invalid image' });
+      return;
+    }
+
+    const processed = await ImageProcessingService.processImage(rawBuffer);
+    const imageBuffer = processed.buffer;
+    const contentType = processed.mimeType;
+
     const mlClient = getMLClient();
     const safeFileName = path.basename(fileName).replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `encounters/${encounterId}/${Date.now()}-${safeFileName}`;
+    const storagePath = userId
+      ? `${userId}/${encounterId}/${Date.now()}-${safeFileName}`
+      : `encounters/${encounterId}/${Date.now()}-${safeFileName}`;
 
     // 1. Upload file to Supabase private medical-images bucket
     const { error: uploadError } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(storagePath, imageBuffer, {
-        contentType: 'image/jpeg',
+        contentType,
         upsert: true,
       });
 
     if (uploadError) {
-      console.error('Supabase storage upload error:', uploadError);
-      res.status(500).json({ error: `Storage upload failed: ${uploadError.message}` });
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Supabase storage upload error');
+      }
+      res.status(500).json({ error: 'Storage upload failed' });
       return;
     }
 
     // 2. Invoke Python ML vision analysis
-    const analysis = await mlClient.analyzeWoundImage(imageBuffer, fileName);
+    let analysis;
+    try {
+      analysis = await mlClient.analyzeWoundImage(imageBuffer, fileName);
+    } catch (err: any) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Wound analysis failed');
+      }
+      res.status(503).json({ error: 'Wound analysis unavailable' });
+      return;
+    }
 
     // 3. Persist wound assessment record in Supabase
     const validSeverityGrades = ['mild', 'moderate', 'severe'];
@@ -225,9 +265,28 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
       .single();
 
     if (dbError) {
-      console.error('Failed to log wound assessment to Supabase:', dbError);
-      res.status(500).json({ error: `Database insert failed: ${dbError.message}` });
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Failed to log wound assessment to Supabase');
+      }
+      res.status(500).json({ error: 'Failed to save assessment' });
       return;
+    }
+
+    try {
+      const { logAudit } = require('../services/auditService');
+      if (userId) {
+        logAudit({
+          userId,
+          action: 'UPLOAD_WOUND_IMAGE',
+          resourceType: 'PHOTO',
+          resourceId: encounterId,
+          ipAddress: req.ip,
+          userAgent: req.get?.('user-agent'),
+          metadata: { storagePath },
+        });
+      }
+    } catch {
+      // Audit logging is best-effort and must not fail the upload.
     }
 
     res.status(201).json({
@@ -236,7 +295,9 @@ export async function handleWoundUpload(req: Request, res: Response): Promise<vo
       storagePath,
     });
   } catch (err: any) {
-    console.error('Error in handleWoundUpload:', err);
-    res.status(500).json({ error: err.message || 'Wound upload and analysis failed' });
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error in handleWoundUpload');
+    }
+    res.status(500).json({ error: 'Wound upload and analysis failed' });
   }
 }

@@ -1,16 +1,16 @@
+import { Icon } from '../components/Icon';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { ActivityIndicator, RefreshControl } from 'react-native';
+import { RefreshControl } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { BottomTabBar } from '../components/BottomTabBar';
+import { theme } from '../theme';
 
-const BG_LIGHT = '#f8f6f6';
-const CARD_LIGHT = '#ffffff';
-const TEXT_LIGHT = '#1b0e0e';
-const TEXT_SECONDARY = '#6b5f5f';
+const BG_LIGHT = theme.colors.canvas.background;
+const CARD_LIGHT = theme.colors.canvas.surface;
+const TEXT_LIGHT = theme.colors.text.primary;
+const TEXT_SECONDARY = theme.colors.text.secondary;
 
 interface Notification {
     id: string;
@@ -30,7 +30,7 @@ export const NotificationsScreen = () => {
     const { session } = useAuth(); // Assuming useAuth is exported from AuthContext
     const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:3000/api/v1';
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = React.useCallback(async () => {
         if (!session?.access_token) return;
         try {
             const response = await fetch(`${backendUrl}/notifications`, {
@@ -45,17 +45,17 @@ export const NotificationsScreen = () => {
         } catch (error) {
             console.error('Error fetching notifications:', error);
         }
-    };
+    }, [session, backendUrl]);
 
     React.useEffect(() => {
         fetchNotifications();
-    }, [session]);
+    }, [fetchNotifications]);
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
         await fetchNotifications();
         setRefreshing(false);
-    }, [session]);
+    }, [fetchNotifications]);
 
     const handleMarkAsRead = async (id: string, read: boolean) => {
         if (read || !session?.access_token) return;
@@ -78,7 +78,7 @@ export const NotificationsScreen = () => {
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-                <MaterialCommunityIcons name="bell-off-outline" size={48} color={TEXT_SECONDARY} />
+                <Icon name="bellSlash" size={48} color={TEXT_SECONDARY} />
             </View>
             <Text style={styles.emptyTitle}>No available notifications</Text>
             <Text style={styles.emptySubtitle}>You're all caught up! Check back later for updates.</Text>
@@ -90,11 +90,11 @@ export const NotificationsScreen = () => {
             style={[styles.card, !item.read && styles.unreadCard]}
             onPress={() => handleMarkAsRead(item.id, item.read)}
         >
-            <View style={[styles.iconContainer, { backgroundColor: item.type === 'alert' ? '#ffe5e5' : '#e3f2fd' }]}>
-                <MaterialCommunityIcons
-                    name={item.type === 'alert' ? 'alert-circle-outline' : 'information-outline'}
+            <View style={[styles.iconContainer, { backgroundColor: item.type === 'alert' ? 'rgba(239, 68, 68, 0.12)' : theme.colors.primary.light }]}>
+                <Icon
+                    name={item.type === 'alert' ? 'warningCircle' : 'info'}
                     size={24}
-                    color={item.type === 'alert' ? '#e53734' : '#1976d2'}
+                    color={item.type === 'alert' ? theme.colors.status.danger : theme.colors.primary.main}
                 />
             </View>
             <View style={styles.textContainer}>
@@ -114,7 +114,7 @@ export const NotificationsScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color={TEXT_LIGHT} />
+                    <Icon name="arrowLeft" size={24} color={TEXT_LIGHT} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Notifications</Text>
                 <View style={{ width: 40 }} />
@@ -135,19 +135,6 @@ export const NotificationsScreen = () => {
                 }
             />
 
-            {/* Bottom Navigation */}
-            {/* Using activeRoute as null or something else since it's not a primary tab, 
-                 but if we want to show the tab bar we can. 
-                 Often secondary screens might hide it or show it. 
-                 HistoryScreen shows it, so I'll show it too. 
-                 I'll pass a dummy activeRoute or handle it in BottomTabBar if needed.
-                 For now let's safely assume it acts as a secondary screen. 
-             */}
-            {/* <BottomTabBar activeRoute="Notifications" /> */}
-            {/* 
-                Explanation: If 'Notifications' is not a defined tab in BottomTabBar, 
-                it might not highlight anything, which is fine.
-            */}
         </View>
     );
 };
@@ -220,16 +207,14 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        borderWidth: 1,
+        borderColor: theme.colors.canvas.border,
+        ...theme.spatial.shadows3d.level1,
     },
     unreadCard: {
-        backgroundColor: '#ffffff',
+        backgroundColor: CARD_LIGHT,
         borderLeftWidth: 4,
-        borderLeftColor: '#e53734',
+        borderLeftColor: theme.colors.status.danger,
     },
     iconContainer: {
         width: 40,

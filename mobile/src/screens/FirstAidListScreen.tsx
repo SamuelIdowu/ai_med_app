@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
 import {
   View,
@@ -11,29 +12,16 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { theme } from '../theme';
+import { resolveIconName } from '../icons';
 import firstAidData from '../content/first-aid-content.json';
-
-const ICON_MAP: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
-  'blood-bag': 'water',
-  fire: 'fire',
-  breathe: 'weather-windy',
-  'heart-pulse': 'heart-pulse',
-  bone: 'bone',
-  'account-alert': 'alert-circle',
-};
 
 export const FirstAidListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [searchQuery, setSearchQuery] = useState('');
-
-  const getIconName = (originalIcon: string): keyof typeof MaterialCommunityIcons.glyphMap => {
-    return ICON_MAP[originalIcon] || 'medical-bag';
-  };
 
   const filteredCategories = firstAidData.categories.filter((cat) =>
     cat.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -45,8 +33,8 @@ export const FirstAidListScreen: React.FC = () => {
       onPress={() => navigation.navigate('EmergencySteps', { categoryId: item.id })}
     >
       <View style={styles.iconCircle}>
-        <MaterialCommunityIcons
-          name={getIconName(item.icon)}
+        <Icon
+          name={resolveIconName(item.icon)}
           size={28}
           color={theme.colors.primary.main}
         />
@@ -71,8 +59,8 @@ export const FirstAidListScreen: React.FC = () => {
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons
-                name="chevron-left"
+              <Icon
+                name="caretLeft"
                 size={26}
                 color={theme.colors.text.primary}
               />
@@ -84,8 +72,8 @@ export const FirstAidListScreen: React.FC = () => {
 
           {/* Search bar */}
           <View style={styles.searchBar}>
-            <MaterialCommunityIcons
-              name="magnify"
+            <Icon
+              name="search"
               size={20}
               color={theme.colors.text.muted}
             />
