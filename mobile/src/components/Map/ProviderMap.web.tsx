@@ -1,46 +1,52 @@
-// mobile/src/components/Map/ProviderMap.web.tsx
-// Interactive web provider map backed by Leaflet + OpenStreetMap.
+// Interactive web provider map using OpenFreeMap vector tiles through MapLibre GL JS.
 
-import React, {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import * as L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { DEFAULT_USER_COORDS } from '../../services/geoUtils';
+import * as maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { theme } from '../../theme';
-import type {
-  MapCoordinate,
-  MapProvider,
-  ProviderMapHandle,
-  ProviderMapProps,
-} from './mapTypes';
+import type { MapCoordinate, MapProvider, ProviderMapHandle, ProviderMapProps } from './mapTypes';
 
-const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+const FIT_PADDING_TOP_LEFT: [number, number] = [56, 110];
+const FIT_PADDING_BOTTOM_RIGHT: [number, number] = [56, 220];
 
-const FIT_PADDING_TOP_LEFT: L.PointExpression = [56, 110];
-const FIT_PADDING_BOTTOM_RIGHT: L.PointExpression = [56, 220];
+type ProviderFeature = {
+  type: 'Feature';
+  id: string;
+  geometry: { type: 'Point'; coordinates: [number, number] };
+  properties: { name: string; type: string; selected: boolean };
+};
 
-function toLatLng(coordinate: MapCoordinate): L.LatLngTuple {
+function toLatLng(coordinate: MapCoordinate): [number, number] {
   return [coordinate.latitude, coordinate.longitude];
 }
 
-function markerColor(provider: MapProvider, selected: boolean): string {
-  if (selected) return theme.colors.primary.hover;
-  if (provider.type?.toLowerCase() === 'hospital') return theme.colors.emergency.primary;
-  if (provider.type?.toLowerCase() === 'pharmacy') return '#4C6FFF';
-  return theme.colors.palette.eliteTeal;
+function providerFeatureCollection(
+  providers: MapProvider[],
+  selectedProviderId?: string | null,
+): GeoJSON.FeatureCollection<GeoJSON.Point, ProviderFeature['properties']> {
+  return {
+    type: 'FeatureCollection',
+    features: providers.map((provider): ProviderFeature => ({
+      type: 'Feature',
+      id: provider.id,
+      geometry: {
+        type: 'Point',
+        coordinates: [provider.coordinate.longitude, provider.coordinate.latitude],
+      },
+      properties: {
+        name: provider.name,
+        type: provider.type ?? '',
+        selected: provider.id === selectedProviderId,
+      },
+    })),
+  };
 }
 
 function buildPopupContent(
   provider: MapProvider,
-  onOpenProvider?: (providerId: string) => void
+  onOpenProvider?: (providerId: string) => void,
 ): HTMLElement {
   const root = document.createElement('div');
   root.style.minWidth = '180px';
@@ -54,7 +60,7 @@ function buildPopupContent(
   title.style.marginBottom = '4px';
   root.appendChild(title);
 
-  const meta = [provider.type, provider.distanceLabel].filter(Boolean).join(' • ');
+  const meta = [provider.type, provider.distanceLabel].filter(Boolean).join(' · ');
   if (meta) {
     const metaLine = document.createElement('div');
     metaLine.textContent = meta;
@@ -105,184 +111,252 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
       onOpenProvider,
       style,
     },
-    ref
+    ref,
   ) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const mapRef = useRef<L.Map | null>(null);
-    const providerLayerRef = useRef<L.LayerGroup | null>(null);
-    const userLayerRef = useRef<L.LayerGroup | null>(null);
-    const initialCenterRef = useRef<MapCoordinate>(
-      userCoordinate ?? providers[0]?.coordinate ?? DEFAULT_USER_COORDS
-    );
+    const mapRef = useRef<maplibregl.Map | null>(null);
+    const providersRef = useRef(providers);
+    const selectedProviderIdRef = useRef(selectedProviderId);
+    const userCoordinateRef = useRef(userCoordinate);
+    const showUserLocationRef = useRef(showUserLocation);
+    const onSelectProviderRef = useRef(onSelectProvider);
+    const onOpenProviderRef = useRef(onOpenProvider);
 
-    const focusProvider = useCallback(
-      (providerId: string, animated = true) => {
-        const map = mapRef.current;
-        const provider = providers.find((item) => item.id === providerId);
-        if (!map || !provider) return;
+    providersRef.current = providers;
+    selectedProviderIdRef.current = selectedProviderId;
+    userCoordinateRef.current = userCoordinate;
+    showUserLocationRef.current = showUserLocation;
+    onSelectProviderRef.current = onSelectProvider;
+    onOpenProviderRef.current = onOpenProvider;
 
-        map.setView(toLatLng(provider.coordinate), Math.max(map.getZoom(), 14), {
-          animate: animated,
-        });
-      },
-      [providers]
-    );
+    const focusProvider = useCallback((providerId: string, animated = true) => {
+      const map = mapRef.current;
+      const provider = providersRef.current.find((item) => item.id === providerId);
+      if (!map || !provider) return;
 
-    const focusUser = useCallback(
-      (animated = true) => {
-        const map = mapRef.current;
-        if (!map || !userCoordinate) return;
+      map.easeTo({
+        center: [provider.coordinate.longitude, provider.coordinate.latitude],
+        zoom: Math.max(map.getZoom(), 15),
+        duration: animated ? 450 : 0,
+      });
+    }, []);
 
-        map.setView(toLatLng(userCoordinate), 13, { animate: animated });
-      },
-      [userCoordinate]
-    );
+    const focusUser = useCallback((animated = true) => {
+      const map = mapRef.current;
+      const coordinate = userCoordinateRef.current;
+      if (!map || !coordinate) return;
 
-    const fitToProviders = useCallback(
-      (animated = true) => {
-        const map = mapRef.current;
-        if (!map) return;
+      map.easeTo({ center: toLatLng(coordinate), zoom: 13, duration: animated ? 450 : 0 });
+    }, []);
 
-        const coordinates = providers.map((provider) => toLatLng(provider.coordinate));
+    const fitToProviders = useCallback((animated = true) => {
+      const map = mapRef.current;
+      if (!map) return;
 
-        if (userCoordinate) {
-          coordinates.push(toLatLng(userCoordinate));
-        }
+      const coordinates = providersRef.current.map((provider) => toLatLng(provider.coordinate));
+      const coordinate = userCoordinateRef.current;
+      if (coordinate) coordinates.push(toLatLng(coordinate));
+      if (coordinates.length === 0) return;
 
-        if (coordinates.length === 0) {
-          return;
-        }
+      if (coordinates.length === 1) {
+        map.easeTo({ center: coordinates[0], zoom: 15, duration: animated ? 450 : 0 });
+        return;
+      }
 
-        if (coordinates.length === 1) {
-          map.setView(coordinates[0], 14, { animate: animated });
-          return;
-        }
+      const bounds = coordinates.reduce(
+        (current, point) => current.extend(point),
+        new maplibregl.LngLatBounds(coordinates[0], coordinates[0]),
+      );
+      map.fitBounds(bounds, {
+        padding: {
+          top: FIT_PADDING_TOP_LEFT[1],
+          left: FIT_PADDING_TOP_LEFT[0],
+          bottom: FIT_PADDING_BOTTOM_RIGHT[1],
+          right: FIT_PADDING_BOTTOM_RIGHT[0],
+        },
+        maxZoom: 15,
+        duration: animated ? 450 : 0,
+      });
+    }, []);
 
-        const bounds = L.latLngBounds(coordinates);
-        map.fitBounds(bounds, {
-          paddingTopLeft: FIT_PADDING_TOP_LEFT,
-          paddingBottomRight: FIT_PADDING_BOTTOM_RIGHT,
-          maxZoom: 15,
-          animate: animated,
-        });
-      },
-      [providers, userCoordinate]
-    );
+    useImperativeHandle(ref, () => ({ fitToProviders, focusProvider, focusUser }), [
+      fitToProviders,
+      focusProvider,
+      focusUser,
+    ]);
 
-    useImperativeHandle(
-      ref,
-      () => ({ fitToProviders, focusProvider, focusUser }),
-      [fitToProviders, focusProvider, focusUser]
-    );
+    const initialCoordinate = userCoordinate ?? providers[0]?.coordinate;
+    const initialLatitude = initialCoordinate?.latitude;
+    const initialLongitude = initialCoordinate?.longitude;
 
     useEffect(() => {
       const container = containerRef.current;
-      if (!container || mapRef.current) return;
+      if (
+        initialLatitude === undefined ||
+        initialLongitude === undefined ||
+        !container ||
+        mapRef.current
+      ) {
+        return;
+      }
 
-      const center = initialCenterRef.current;
-      const map = L.map(container, {
-        center: [center.latitude, center.longitude],
+      const map = new maplibregl.Map({
+        container,
+        style: OPENFREEMAP_STYLE,
+        center: [initialLongitude, initialLatitude],
         zoom: 13,
-        zoomControl: interactive,
-        attributionControl: true,
-        dragging: interactive,
-        touchZoom: interactive,
+        attributionControl: {},
+        dragPan: interactive,
+        touchZoomRotate: interactive,
         doubleClickZoom: interactive,
-        scrollWheelZoom: interactive,
+        scrollZoom: interactive,
         boxZoom: interactive,
         keyboard: interactive,
       });
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
 
-      L.tileLayer(TILE_URL, {
-        maxZoom: 19,
-        attribution: TILE_ATTRIBUTION,
-      }).addTo(map);
+      const handleProviderClick = (event: maplibregl.MapLayerMouseEvent) => {
+        const feature = event.features?.[0];
+        const provider = providersRef.current.find((item) => item.id === String(feature?.id));
+        if (!provider) return;
 
-      providerLayerRef.current = L.layerGroup().addTo(map);
-      userLayerRef.current = L.layerGroup().addTo(map);
-      mapRef.current = map;
+        onSelectProviderRef.current?.(provider.id);
+        map.easeTo({
+          center: [provider.coordinate.longitude, provider.coordinate.latitude],
+          duration: 300,
+        });
+        new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+          .setLngLat([provider.coordinate.longitude, provider.coordinate.latitude])
+          .setDOMContent(
+            buildPopupContent(provider, (providerId) => onOpenProviderRef.current?.(providerId)),
+          )
+          .addTo(map);
+      };
+      const setCursor = () => {
+        map.getCanvas().style.cursor = 'pointer';
+      };
+      const resetCursor = () => {
+        map.getCanvas().style.cursor = '';
+      };
 
-      const resize = () => map.invalidateSize();
-      const observer =
-        typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+      map.on('load', () => {
+        map.addSource('providers', {
+          type: 'geojson',
+          data: providerFeatureCollection(providersRef.current, selectedProviderIdRef.current),
+        });
+        map.addLayer({
+          id: 'provider-points',
+          type: 'circle',
+          source: 'providers',
+          paint: {
+            'circle-radius': ['case', ['get', 'selected'], 11, 8],
+            'circle-color': [
+              'case',
+              ['get', 'selected'],
+              theme.colors.primary.hover,
+              ['==', ['downcase', ['get', 'type']], 'hospital'],
+              theme.colors.emergency.primary,
+              ['==', ['downcase', ['get', 'type']], 'pharmacy'],
+              '#4C6FFF',
+              theme.colors.palette.eliteTeal,
+            ],
+            'circle-stroke-color': theme.colors.canvas.surface,
+            'circle-stroke-width': 2,
+          },
+        });
+        map.addSource('user-location', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features:
+              showUserLocationRef.current && userCoordinateRef.current
+                ? [
+                    {
+                      type: 'Feature' as const,
+                      geometry: {
+                        type: 'Point' as const,
+                        coordinates: [
+                          userCoordinateRef.current.longitude,
+                          userCoordinateRef.current.latitude,
+                        ] as [number, number],
+                      },
+                      properties: {},
+                    },
+                  ]
+                : [],
+          },
+        });
+        map.addLayer({
+          id: 'user-location-point',
+          type: 'circle',
+          source: 'user-location',
+          paint: {
+            'circle-radius': 8,
+            'circle-color': '#2563EB',
+            'circle-stroke-color': theme.colors.canvas.surface,
+            'circle-stroke-width': 3,
+          },
+        });
+        map.on('click', 'provider-points', handleProviderClick);
+        map.on('mouseenter', 'provider-points', setCursor);
+        map.on('mouseleave', 'provider-points', resetCursor);
+      });
+
+      const resize = () => map.resize();
+      const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
       observer?.observe(container);
       const timeout = setTimeout(resize, 50);
+      mapRef.current = map;
 
       return () => {
         clearTimeout(timeout);
         observer?.disconnect();
         map.remove();
         mapRef.current = null;
-        providerLayerRef.current = null;
-        userLayerRef.current = null;
       };
-    }, [interactive]);
+    }, [initialLatitude, initialLongitude, interactive]);
 
     useEffect(() => {
-      const map = mapRef.current;
-      const layer = providerLayerRef.current;
-      if (!map || !layer) return;
+      const source = mapRef.current?.getSource('providers') as maplibregl.GeoJSONSource | undefined;
+      source?.setData(providerFeatureCollection(providers, selectedProviderId));
+    }, [providers, selectedProviderId]);
 
-      layer.clearLayers();
-
-      providers.forEach((provider) => {
-        const isSelected = selectedProviderId === provider.id;
-        const marker = L.circleMarker(toLatLng(provider.coordinate), {
-          radius: isSelected ? 11 : 8,
-          color: theme.colors.canvas.surface,
-          weight: isSelected ? 3 : 2,
-          fillColor: markerColor(provider, isSelected),
-          fillOpacity: 1,
-        });
-
-        marker.addTo(layer);
-        marker.bindTooltip(provider.name, {
-          direction: 'top',
-          offset: [0, -8],
-          opacity: 0.95,
-        });
-        marker.bindPopup(buildPopupContent(provider, onOpenProvider), {
-          closeButton: true,
-          minWidth: 180,
-        });
-        marker.on('click', () => {
-          onSelectProvider?.(provider.id);
-          map.panTo(toLatLng(provider.coordinate));
-        });
+    useEffect(() => {
+      const source = mapRef.current?.getSource('user-location') as
+        maplibregl.GeoJSONSource | undefined;
+      if (!source) return;
+      source.setData({
+        type: 'FeatureCollection',
+        features:
+          showUserLocation && userCoordinate
+            ? [
+                {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [userCoordinate.longitude, userCoordinate.latitude],
+                  },
+                  properties: {},
+                },
+              ]
+            : [],
       });
-    }, [onOpenProvider, onSelectProvider, providers, selectedProviderId]);
-
-    useEffect(() => {
-      const layer = userLayerRef.current;
-      if (!layer) return;
-
-      layer.clearLayers();
-      if (!showUserLocation || !userCoordinate) return;
-
-      L.circleMarker(toLatLng(userCoordinate), {
-        radius: 8,
-        color: theme.colors.canvas.surface,
-        weight: 3,
-        fillColor: '#2563EB',
-        fillOpacity: 1,
-      })
-        .addTo(layer)
-        .bindTooltip('Your location', { direction: 'top', offset: [0, -8] });
     }, [showUserLocation, userCoordinate]);
 
     useEffect(() => {
       if (!mapRef.current) return;
-
       const timeout = setTimeout(() => fitToProviders(true), 200);
       return () => clearTimeout(timeout);
-    }, [fitToProviders]);
+    }, [fitToProviders, providers, userCoordinate]);
+
+    if (!initialCoordinate) return <View style={[styles.container, style]} />;
 
     return (
       <View style={[styles.container, style]}>
         <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       </View>
     );
-  }
+  },
 );
 
 ProviderMap.displayName = 'ProviderMap';

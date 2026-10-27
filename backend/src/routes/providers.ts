@@ -1,11 +1,86 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { authenticateUser } from '../middleware/auth';
 import { getSupabaseAdmin } from '../db/client';
 import { cacheService } from '../services/cacheService';
+import { findGeoapifyProviderPhone, findNearbyProviders } from '../services/nearbyProvidersService';
 
 const router = express.Router();
 const CACHE_KEY_ALL_PROVIDERS = 'providers:all';
 const CACHE_TTL_SECONDS = 300; // 5 minutes
+
+const nearbySearchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Facility data is public. Keep nearby search available to guest users as well.
+router.get('/nearby', nearbySearchLimiter, async (req, res) => {
+  const latitude = typeof req.query.lat === 'string' ? Number(req.query.lat) : NaN;
+  const longitude = typeof req.query.lng === 'string' ? Number(req.query.lng) : NaN;
+  const radiusMeters =
+    req.query.radius === undefined
+      ? 50_000
+      : typeof req.query.radius === 'string'
+        ? Number(req.query.radius)
+        : NaN;
+
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    return res.status(400).json({ error: 'Valid lat and lng query parameters are required' });
+  }
+
+  if (!Number.isFinite(radiusMeters) || radiusMeters < 250 || radiusMeters > 50_000) {
+    return res.status(400).json({ error: 'Radius must be between 250 and 50000 meters' });
+  }
+
+  try {
+    const result = await findNearbyProviders({ latitude, longitude }, radiusMeters);
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    return res.json(result);
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error(
+        'Nearby provider lookup failed:',
+        error instanceof Error ? error.message : 'Unknown upstream error',
+      );
+    }
+    return res.status(502).json({
+      error:
+        'Live map data could not be reached. Check backend internet access or configure OVERPASS_API_URL.',
+      code: 'PROVIDER_DATA_UNAVAILABLE',
+    });
+  }
+});
+
+// Contact enrichment is on demand so the nearby list does not make a details
+// request for every facility. Phone data is returned only when the source has it.
+router.get('/nearby/:providerId/contact', nearbySearchLimiter, async (req, res) => {
+  const prefix = 'geoapify-';
+  if (!req.params.providerId.startsWith(prefix)) {
+    return res.json({ phone: null });
+  }
+  const placeId = req.params.providerId.slice(prefix.length);
+  if (!placeId || placeId.length > 2048) {
+    return res.status(400).json({ error: 'Invalid provider ID' });
+  }
+
+  try {
+    const phone = await findGeoapifyProviderPhone(placeId);
+    res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return res.json({ phone });
+  } catch {
+    return res.status(502).json({ error: 'Facility contact details are temporarily unavailable' });
+  }
+});
 
 router.use(authenticateUser);
 

@@ -3,9 +3,8 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { ActivityIndicator, RefreshControl } from 'react-native';
+import { RefreshControl } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { BottomTabBar } from '../components/BottomTabBar';
 import { theme } from '../theme';
 
 const BG_LIGHT = theme.colors.canvas.background;
@@ -136,19 +135,6 @@ export const NotificationsScreen = () => {
                 }
             />
 
-            {/* Bottom Navigation */}
-            {/* Using activeRoute as null or something else since it's not a primary tab, 
-                 but if we want to show the tab bar we can. 
-                 Often secondary screens might hide it or show it. 
-                 HistoryScreen shows it, so I'll show it too. 
-                 I'll pass a dummy activeRoute or handle it in BottomTabBar if needed.
-                 For now let's safely assume it acts as a secondary screen. 
-             */}
-            {/* <BottomTabBar activeRoute="Notifications" /> */}
-            {/* 
-                Explanation: If 'Notifications' is not a defined tab in BottomTabBar, 
-                it might not highlight anything, which is fine.
-            */}
         </View>
     );
 };

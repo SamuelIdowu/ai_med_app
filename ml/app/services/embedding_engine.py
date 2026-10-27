@@ -1,6 +1,4 @@
 from typing import List, Optional
-import hashlib
-import math
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,8 +8,8 @@ class EmbeddingEngine:
 
     Uses sentence-transformers (all-MiniLM-L6-v2) when available, producing
     unit-normalized 384-dimensional vectors matching Supabase pgvector HNSW index.
-    Falls back gracefully to a deterministic normalized projection if neural
-    dependencies are not installed.
+    Fails explicitly when the configured neural model is unavailable. Synthetic
+    vectors are not valid substitutes for semantic search.
     """
 
     DIMENSION: int = 384
@@ -28,16 +26,14 @@ class EmbeddingEngine:
                 logger.info(f"Loading neural embedding model: {cls.MODEL_NAME}")
                 cls._model = SentenceTransformer(cls.MODEL_NAME)
             except Exception as e:
-                logger.warning(
-                    f"SentenceTransformer not loaded ({e}). Using deterministic projection fallback."
-                )
                 cls._model = None
+                raise RuntimeError("Medical embedding model could not be loaded") from e
         return cls._model
 
     def get_embedding(self, text: str) -> List[float]:
         """Compute normalized 384-dimensional dense vector."""
-        if not text:
-            return [0.0] * self.DIMENSION
+        if not text or not text.strip():
+            raise ValueError("Embedding text must not be empty")
 
         model = self._get_model()
         if model is not None:
@@ -45,18 +41,8 @@ class EmbeddingEngine:
                 embedding = model.encode(text, normalize_embeddings=True)
                 return [round(float(v), 6) for v in embedding.tolist()]
             except Exception as e:
-                logger.error(f"Error encoding with SentenceTransformer: {e}. Falling back.")
+                logger.error("SentenceTransformer encoding failed")
+                raise RuntimeError("Medical embedding generation failed") from e
 
-        # High-entropy deterministic projection into 384-dim unit hypersphere
-        raw_values = []
-        for i in range(self.DIMENSION):
-            h = hashlib.sha256(f"{text}:{i}".encode("utf-8")).hexdigest()
-            val = (int(h[:8], 16) / 0xFFFFFFFF) * 2.0 - 1.0
-            raw_values.append(val)
-
-        # L2 normalize so dot product equals cosine similarity
-        norm = math.sqrt(sum(v * v for v in raw_values))
-        if norm > 0:
-            return [round(v / norm, 6) for v in raw_values]
-        return raw_values
+        raise RuntimeError("Medical embedding model is unavailable")
 

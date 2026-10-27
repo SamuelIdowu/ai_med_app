@@ -81,6 +81,45 @@ export type Database = {
                     },
                 ]
             }
+            vital_readings: {
+                Row: {
+                    created_at: string
+                    encounter_id: string | null
+                    external_id: string
+                    id: string
+                    metric: string
+                    recorded_at: string
+                    source: string
+                    unit: string
+                    user_id: string
+                    value: number
+                }
+                Insert: {
+                    created_at?: string
+                    encounter_id?: string | null
+                    external_id: string
+                    id?: string
+                    metric: string
+                    recorded_at: string
+                    source: string
+                    unit: string
+                    user_id?: string
+                    value: number
+                }
+                Update: {
+                    created_at?: string
+                    encounter_id?: string | null
+                    external_id?: string
+                    id?: string
+                    metric?: string
+                    recorded_at?: string
+                    source?: string
+                    unit?: string
+                    user_id?: string
+                    value?: number
+                }
+                Relationships: []
+            }
             medical_profiles: {
                 Row: {
                     allergies: Json | null

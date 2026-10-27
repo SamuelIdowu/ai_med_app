@@ -73,13 +73,13 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
   const [offlineGuides, setOfflineGuides] = useState<OfflineGuide[]>([]);
 
   // Vitals State
-  const [hr, setHr] = useState('80');
-  const [sysBp, setSysBp] = useState('120');
-  const [diaBp, setDiaBp] = useState('80');
-  const [spo2, setSpo2] = useState('98');
-  const [rr, setRr] = useState('16');
-  const [temp, setTemp] = useState('37.0');
-  const [pain, setPain] = useState('0');
+  const [hr, setHr] = useState('');
+  const [sysBp, setSysBp] = useState('');
+  const [diaBp, setDiaBp] = useState('');
+  const [spo2, setSpo2] = useState('');
+  const [rr, setRr] = useState('');
+  const [temp, setTemp] = useState('');
+  const [vitalsInputError, setVitalsInputError] = useState('');
   const [bleeding, setBleeding] = useState(false);
   const [altered, setAltered] = useState(false);
   const [vitalsResult, setVitalsResult] = useState<VitalsTriageResponse | null>(null);
@@ -224,16 +224,21 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
   };
 
   const handleEvaluateVitals = async () => {
+    const measurements = [hr, sysBp, diaBp, spo2, rr, temp];
+    if (measurements.some((measurement) => !measurement.trim() || !Number.isFinite(Number(measurement)))) {
+      setVitalsInputError('Enter each measured vital sign before requesting triage.');
+      return;
+    }
+    setVitalsInputError('');
     setEvaluatingVitals(true);
     try {
       const result = await VitalsService.evaluateVitalsTriage({
-        heart_rate: parseFloat(hr) || 80,
-        systolic_bp: parseFloat(sysBp) || 120,
-        diastolic_bp: parseFloat(diaBp) || 80,
-        oxygen_saturation: parseFloat(spo2) || 98,
-        respiratory_rate: parseFloat(rr) || 16,
-        body_temperature: parseFloat(temp) || 37.0,
-        pain_score: parseInt(pain, 10) || 0,
+        heart_rate: Number(hr),
+        systolic_bp: Number(sysBp),
+        diastolic_bp: Number(diaBp),
+        oxygen_saturation: Number(spo2),
+        respiratory_rate: Number(rr),
+        body_temperature: Number(temp),
         severe_bleeding: bleeding ? 1 : 0,
         altered_mental_status: altered ? 1 : 0,
       });
@@ -252,13 +257,12 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     if (!vitalsResult) return;
     try {
       const vitalsPayload = {
-        heart_rate: parseFloat(hr) || 80,
-        systolic_bp: parseFloat(sysBp) || 120,
-        diastolic_bp: parseFloat(diaBp) || 80,
-        oxygen_saturation: parseFloat(spo2) || 98,
-        respiratory_rate: parseFloat(rr) || 16,
-        body_temperature: parseFloat(temp) || 37.0,
-        pain_score: parseInt(pain, 10) || 0,
+        heart_rate: Number(hr),
+        systolic_bp: Number(sysBp),
+        diastolic_bp: Number(diaBp),
+        oxygen_saturation: Number(spo2),
+        respiratory_rate: Number(rr),
+        body_temperature: Number(temp),
         severe_bleeding: bleeding ? 1 : 0,
         altered_mental_status: altered ? 1 : 0,
         triage_label: vitalsResult.triage_label,
@@ -276,6 +280,27 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
         [],
         vitalsPayload
       );
+
+      if (result.backendEncounter?.id) {
+        const recordedAt = new Date().toISOString();
+        await VitalsService.recordReadings(
+          Object.entries({
+            heart_rate: Number(hr),
+            systolic_bp: Number(sysBp),
+            diastolic_bp: Number(diaBp),
+            oxygen_saturation: Number(spo2),
+            respiratory_rate: Number(rr),
+            body_temperature: Number(temp),
+          }).map(([metric, value]) => ({
+            metric: metric as 'heart_rate' | 'systolic_bp' | 'diastolic_bp' | 'oxygen_saturation' | 'respiratory_rate' | 'body_temperature',
+            value,
+            recordedAt,
+            source: 'manual' as const,
+            externalId: `triage-${result.backendEncounter.id}-${metric}`,
+            encounterId: result.backendEncounter.id,
+          }))
+        );
+      }
 
       const reportId = result.backendEncounter?.id || result.localId;
       navigation.navigate('ReportPreview', { encounterId: reportId });
@@ -444,7 +469,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     value={hr}
                     onChangeText={setHr}
                     keyboardType="numeric"
-                    placeholder="80"
+                    placeholder="Required"
                   />
                 </View>
 
@@ -455,7 +480,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     value={spo2}
                     onChangeText={setSpo2}
                     keyboardType="numeric"
-                    placeholder="98"
+                    placeholder="Required"
                   />
                 </View>
 
@@ -466,7 +491,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     value={sysBp}
                     onChangeText={setSysBp}
                     keyboardType="numeric"
-                    placeholder="120"
+                    placeholder="Required"
                   />
                 </View>
 
@@ -477,7 +502,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     value={diaBp}
                     onChangeText={setDiaBp}
                     keyboardType="numeric"
-                    placeholder="80"
+                    placeholder="Required"
                   />
                 </View>
 
@@ -488,7 +513,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     value={rr}
                     onChangeText={setRr}
                     keyboardType="numeric"
-                    placeholder="16"
+                    placeholder="Required"
                   />
                 </View>
 
@@ -499,10 +524,11 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     value={temp}
                     onChangeText={setTemp}
                     keyboardType="numeric"
-                    placeholder="37.0"
+                    placeholder="Required"
                   />
                 </View>
               </View>
+              {vitalsInputError ? <Text style={styles.vitalsInputError}>{vitalsInputError}</Text> : null}
 
               {/* Acute Observation Toggles */}
               <Text style={[styles.sectionHeader, { marginTop: 12 }]}>Acute Clinical Red Flags</Text>
@@ -925,6 +951,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  vitalsInputError: {
+    color: theme.colors.status.danger,
+    fontSize: 13,
+    marginTop: 8,
   },
   vitalInputBox: {
     width: '48%',

@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '../db/client';
 export interface AuditLogEntry {
   userId?: string;
   action: string;
-  resourceType: 'PROFILE' | 'ENCOUNTER' | 'PHOTO' | 'REPORT' | 'AUTH' | 'TRIAGE';
+  resourceType: 'PROFILE' | 'ENCOUNTER' | 'PHOTO' | 'REPORT' | 'AUTH' | 'TRIAGE' | 'VITAL_READINGS';
   resourceId?: string;
   ipAddress?: string;
   userAgent?: string;

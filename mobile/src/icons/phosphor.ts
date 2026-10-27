@@ -22,7 +22,9 @@ import CaretDown from 'phosphor-react-native/lib/module/icons/CaretDown';
 import CaretLeft from 'phosphor-react-native/lib/module/icons/CaretLeft';
 import CaretRight from 'phosphor-react-native/lib/module/icons/CaretRight';
 import CaretUp from 'phosphor-react-native/lib/module/icons/CaretUp';
+import ChartBar from 'phosphor-react-native/lib/module/icons/ChartBar';
 import ChatCircle from 'phosphor-react-native/lib/module/icons/ChatCircle';
+import ChatDots from 'phosphor-react-native/lib/module/icons/ChatDots';
 import Check from 'phosphor-react-native/lib/module/icons/Check';
 import CheckCircle from 'phosphor-react-native/lib/module/icons/CheckCircle';
 import ClipboardText from 'phosphor-react-native/lib/module/icons/ClipboardText';
@@ -145,7 +147,9 @@ export const PHOSPHOR_ICONS = {
   caretLeft: CaretLeft,
   caretRight: CaretRight,
   caretUp: CaretUp,
+  chartBar: ChartBar,
   chatCircle: ChatCircle,
+  chatDots: ChatDots,
   check: Check,
   checkCircle: CheckCircle,
   clipboardText: ClipboardText,

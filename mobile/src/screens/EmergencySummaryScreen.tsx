@@ -127,7 +127,7 @@ export const EmergencySummaryScreen = () => {
                             />
                             <View>
                                 <Text style={styles.label}>Incident</Text>
-                                <Text style={styles.value}>{category ? category.title : 'Emergency'}</Text>
+                            <Text style={styles.value}>{category ? category.title : 'Unknown incident'}</Text>
                             </View>
                         </View>
 
@@ -136,9 +136,9 @@ export const EmergencySummaryScreen = () => {
                             <View>
                                 <Text style={styles.label}>Date & Time</Text>
                                 <Text style={styles.value}>
-                                    {new Date(encounter?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    {", "}
-                                    {new Date(encounter?.created_at || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                    {encounter?.created_at
+                                        ? new Date(encounter.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+                                        : 'Unavailable'}
                                 </Text>
                             </View>
                         </View>
@@ -168,7 +168,6 @@ export const EmergencySummaryScreen = () => {
                     <View style={[styles.cardSection, { marginTop: 16 }]}>
                         <Text style={[styles.label, { marginBottom: 8 }]}>Actions Taken</Text>
                         <View style={styles.bulletList}>
-                            {/* Dynamic steps from category if available, otherwise sample */}
                             {category ? category.steps.slice(0, 3).map((step, idx) => (
                                 <View key={idx} style={styles.bulletItem}>
                                     <View style={styles.bullet} />
@@ -177,7 +176,7 @@ export const EmergencySummaryScreen = () => {
                             )) : (
                                 <View style={styles.bulletItem}>
                                     <View style={styles.bullet} />
-                                    <Text style={styles.bulletText}>Completed emergency procedure</Text>
+                                    <Text style={styles.bulletText}>No actions recorded</Text>
                                 </View>
                             )}
                         </View>

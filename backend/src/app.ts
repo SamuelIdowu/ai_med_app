@@ -11,6 +11,7 @@ import authRoutes from './routes/auth';
 import aiRoutes from './routes/ai';
 import notificationRoutes from './routes/notifications';
 import analyticsRoutes from './routes/analytics';
+import { globalApiRateLimiter } from './middleware/rateLimiter';
 
 const app = express();
 
@@ -65,6 +66,9 @@ app.get('/health', (req, res) => {
     service: 'laso-backend',
   });
 });
+
+// Baseline rate limit for all API routes (scoped limiters tighten further).
+app.use('/api/v1', globalApiRateLimiter);
 
 // API Routes
 app.use('/api/v1/profile', profileRoutes);

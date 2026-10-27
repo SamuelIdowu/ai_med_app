@@ -18,6 +18,7 @@ All Supabase/PostgreSQL migrations live in `backend/src/db/migrations/` and are 
 | 007 | `007_user_sync_trigger.sql` | `handle_new_user()` trigger + backfill from `auth.users` |
 | 008 | `008_emergency_directives.sql` | Adds `medical_directives` (jsonb) and `emergency_notes` to `medical_profiles` |
 | 009 | `009_reconcile_core_schema.sql` | Reconciles schema drift: adds `encounters` fields (`title`, `severity`, `status`, `symptoms`, `started_at`, `updated_at`), fixes `audit_logs` columns, creates/reconciles `notifications` (including `data`) and `users.push_token` |
+| 010 | `010_vital_readings.sql` | Stores timestamped per-user vital readings, enables row-level security, and publishes inserts to Supabase Realtime |
 
 \* `001` creates a `profiles` table that the application code no longer reads (the app uses `medical_profiles` from `000`). Kept for now because `002` attaches RLS to it; consider dropping both in a future migration once verified against production.
 

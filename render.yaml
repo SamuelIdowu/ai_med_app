@@ -16,7 +16,8 @@ services:
     plan: free
     region: oregon
     healthCheckPath: /health
-    autoDeploy: true
+    # GitHub Actions triggers deployment after the full CI matrix passes.
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
@@ -30,33 +31,13 @@ services:
         sync: false # Required by createAuthenticatedClient for user-scoped queries
       - key: GEMINI_API_KEY
         sync: false # Set via Render dashboard
+      - key: GEOAPIFY_API_KEY
+        sync: false # Optional Places fallback for nearby healthcare facilities
       - key: ALLOWED_ORIGINS
         sync: false # Comma-separated production web origins; native clients send no Origin
       - key: REDIS_URL
         sync: false # Optional; backend falls back to in-memory cache when unset
+      - key: OVERPASS_API_URL
+        value: https://overpass-api.de/api/interpreter
       - key: ML_SERVICE_URL
-        fromService:
-          type: web
-          name: laso-ml
-          property: host
-
-  # ---------------------------------------------------------------------------
-  # 2. Laso Python FastAPI ML Subsystem (Triage, Safety, Vitals & Wound Vision)
-  # Render Free provides 512 MB RAM. PyTorch may exceed this at runtime; use a
-  # Hugging Face Docker Space or a paid Render plan for reliable ML inference.
-  # ---------------------------------------------------------------------------
-  - type: web
-    name: laso-ml
-    runtime: docker
-    rootDir: ml
-    dockerfilePath: Dockerfile
-    dockerContext: .
-    plan: free
-    region: oregon
-    healthCheckPath: /health
-    autoDeploy: true
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      - key: SAFETY_STRICTNESS
-        value: "high"
+        sync: false # Hosted on Google Cloud Run (Render Free lacks RAM for PyTorch)

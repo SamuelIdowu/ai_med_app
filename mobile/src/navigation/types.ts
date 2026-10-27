@@ -1,4 +1,5 @@
 import { PhotoAnalysisMode } from '../types/photoAnalysis';
+import type { Provider } from '../services/types';
 
 export type RootStackParamList = {
     Splash: undefined;
@@ -16,7 +17,7 @@ export type RootStackParamList = {
     PhotoPreview: { photoUri: string; stepId?: string };
     ReportPreview: { encounterId: string };
     ProviderList: undefined;
-    ProviderDetail: { providerId: string };
+    ProviderDetail: { providerId: string; provider?: Provider };
     Settings: undefined;
     PrivacyPolicy: undefined;
     AITools: undefined;

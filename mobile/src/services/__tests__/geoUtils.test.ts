@@ -6,6 +6,9 @@ import {
   calculateDistanceMiles,
   formatDistance,
   formatDistanceLabel,
+  formatDistanceKilometers,
+  formatDistanceKilometersLabel,
+  milesToKilometers,
   getValidCoordinates,
   getUserLocationWithStatus,
   normalizeLatitude,
@@ -109,6 +112,19 @@ describe('Geolocation & Clinic Proximity Utilities', () => {
     });
   });
 
+  describe('metric provider distances', () => {
+    it('converts miles to kilometers for distance filters', () => {
+      expect(milesToKilometers(5)).toBeCloseTo(8.047, 2);
+    });
+
+    it('formats facility distances in kilometers and handles missing values', () => {
+      expect(formatDistanceKilometers(1)).toBe('1.6 km away');
+      expect(formatDistanceKilometers(0.02)).toBe('Nearby (<0.1 km away)');
+      expect(formatDistanceKilometersLabel(null)).toBeNull();
+      expect(formatDistanceKilometersLabel(Number.NaN)).toBeNull();
+    });
+  });
+
   describe('coordinate validation', () => {
     it('accepts valid numeric and numeric-string coordinates', () => {
       expect(normalizeLatitude(40.7128)).toBeCloseTo(40.7128);
@@ -139,7 +155,7 @@ describe('Geolocation & Clinic Proximity Utilities', () => {
         status: 'granted',
         source: 'current',
       });
-      expect(getPosition).toHaveBeenCalledWith({ accuracy: 4 });
+      expect(getPosition).toHaveBeenCalledWith({ accuracy: 3 });
     });
 
     it('returns denied without coordinates and does not call GPS when permission is refused', async () => {

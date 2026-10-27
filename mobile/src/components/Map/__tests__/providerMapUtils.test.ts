@@ -38,9 +38,9 @@ describe('buildProviderMarkers', () => {
       type: 'Clinic',
       address: '10 Main St',
       coordinate: { latitude: 40.7128, longitude: -74.006 },
-      distanceLabel: '1.2 mi away',
+      distanceLabel: '2.0 km away',
     });
-    expect(markers[1].distanceLabel).toBe('Nearby (<0.1 mi away)');
+    expect(markers[1].distanceLabel).toBe('Nearby (<0.1 km away)');
   });
 
   it('drops providers without usable coordinates', () => {

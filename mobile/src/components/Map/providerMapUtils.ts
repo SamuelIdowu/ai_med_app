@@ -1,6 +1,6 @@
 // mobile/src/components/Map/providerMapUtils.ts
 
-import { formatDistanceLabel, getValidCoordinates } from '../../services/geoUtils';
+import { formatDistanceKilometersLabel, getValidCoordinates } from '../../services/geoUtils';
 import type { Provider } from '../../services/types';
 import type { MapProvider } from './mapTypes';
 
@@ -21,7 +21,7 @@ export function buildProviderMarkers(providers: ProviderWithDistance[]): MapProv
         type: provider.type,
         address: provider.address,
         coordinate,
-        distanceLabel: formatDistanceLabel(provider.distanceMiles) ?? undefined,
+        distanceLabel: formatDistanceKilometersLabel(provider.distanceMiles) ?? undefined,
       },
     ];
   });

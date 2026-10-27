@@ -36,7 +36,7 @@ AI flows through the backend only (Gemini via `backend/src/services/geminiServic
 - **Live vitals triage** — HR/Spo2/BP → Emergency / Urgent / Non-Urgent (SSE streaming)
 - **Encrypted medical profile** — blood type, allergies, medications, chronic conditions, directives, emergency contacts; AES-256 offline PHI vault
 - **Emergency report** — guided capture → PDF share (expo-print / pdf-lib)
-- **Provider directory** — clinics/hospitals from Supabase with 5-min Redis cache
+- **Provider directory** - GPS-based nearby healthcare search through Overpass with a Geoapify Places fallback
 - **Clinical safety layer** — ML safety engine intercepts 10 red-flag conditions with `SAFETY_STRICTNESS=high`
 
 ## Quick start (development)
@@ -56,6 +56,7 @@ Key variables (see `.env.example` for the full list):
 | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | backend, mobile | Supabase client |
 | `SUPABASE_SERVICE_ROLE_KEY` | backend | Admin DB access (never ships to the app) |
 | `GEMINI_API_KEY` | backend | Gemini chat + vision |
+| `GEOAPIFY_API_KEY` | backend | Optional nearby healthcare Places fallback; never shipped to the mobile app |
 | `ML_SERVICE_URL` | backend | FastAPI ML endpoint |
 | `REDIS_URL`, `REDIS_PASSWORD` | backend | Rate-limit / provider cache (prod) |
 | `ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
@@ -134,6 +135,8 @@ Full reference: [ml/README.md](ml/README.md).
 
 ## Deployment
 
+Provider maps use OpenFreeMap styles through MapLibre on web and native mobile. Native builds must be rebuilt after the MapLibre Expo plugin is added.
+
 Before deploying, validate the environment and cloud resources:
 
 ```powershell
@@ -141,11 +144,13 @@ cd backend
 npm run preflight:deploy
 ```
 
-- [render.yaml](render.yaml) — Render blueprint: `laso-backend` + `laso-ml` Docker services, Oregon, `/health` checks
+- [render.yaml](render.yaml) — Render blueprint: `laso-backend` Docker service, Oregon, `/health` checks (ML runs on Google Cloud Run — see [docs/deploy-zero-dollar.md](docs/deploy-zero-dollar.md))
 - [docker-compose.prod.yml](docker-compose.prod.yml) — full stack incl. Redis (password required via `REDIS_PASSWORD`)
-- Secrets are configured in the Render dashboard / GitHub Actions secrets — never in the repo
+- Production Render deployments are triggered by `.github/workflows/ci.yml` after backend, mobile, ML, and Docker checks pass on `main`. Set the Render deploy hook URL as GitHub Actions secret `RENDER_BACKEND_DEPLOY_HOOK`; automatic Render deploys are disabled in the blueprint to keep deployments behind CI.
+- Runtime secrets are configured in the Render dashboard / GitHub Actions secrets — never in the repo
+- Nearby facilities are searched around device GPS coordinates using Overpass, with Geoapify Places as an optional fallback when Overpass is unavailable or returns no nearby facilities. Set `GEOAPIFY_API_KEY` in the backend environment to enable it. Facility completeness depends on source coverage.
 - Production EAS builds require `EXPO_PUBLIC_BACKEND_URL`, `EXPO_PUBLIC_SUPABASE_URL`, and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; see [docs/setup.md](docs/setup.md#9-production-deployment)
-- Render Free's 512 MB ML container may be too small for PyTorch; use a Hugging Face Docker Space or a paid Render plan if it fails
+- The ML subsystem deploys to Google Cloud Run (Render Free's 512 MB is too small for PyTorch); see [docs/deploy-zero-dollar.md](docs/deploy-zero-dollar.md)
 
 ## Documentation
 

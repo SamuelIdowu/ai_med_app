@@ -22,7 +22,7 @@ import { Provider } from '../services/types';
 import { ProviderService } from '../services/providerService';
 import {
   calculateDistanceMiles,
-  formatDistance,
+  formatDistanceKilometers,
   getUserLocationWithStatus,
 } from '../services/geoUtils';
 import { callPhone, openDirections } from '../services/mapLinks';
@@ -47,8 +47,19 @@ export const ProviderDetailScreen: React.FC = () => {
   const loadProvider = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await ProviderService.getProviderById(providerId);
+      const data = route.params.provider ?? (await ProviderService.getProviderById(providerId));
       setProvider(data || null);
+      setLoading(false);
+
+      if (data && !data.phone && data.id.startsWith('geoapify-')) {
+        // Fetch contact data only for the facility the user opened; don't delay
+        // rendering the details screen or enrich every result in the list.
+        void ProviderService.getProviderContact(data.id)
+          .then((phone) => {
+            if (phone) setProvider((current) => (current ? { ...current, phone } : current));
+          })
+          .catch(() => undefined);
+      }
 
       if (!data) return;
 
@@ -67,7 +78,7 @@ export const ProviderDetailScreen: React.FC = () => {
             data.lat,
             data.lng,
           );
-          setDistanceText(formatDistance(miles));
+          setDistanceText(formatDistanceKilometers(miles));
         } else {
           setDistanceText('');
         }
@@ -81,7 +92,7 @@ export const ProviderDetailScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [providerId]);
+  }, [providerId, route.params.provider]);
 
   useEffect(() => {
     loadProvider();

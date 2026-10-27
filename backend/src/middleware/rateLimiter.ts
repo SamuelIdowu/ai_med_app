@@ -2,6 +2,29 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const rateLimitKey = (req: { ip?: string }) => ipKeyGenerator(req.ip ?? 'unknown');
 
+// Baseline limiter for all authenticated / general API routes that don't have
+// a scoped limiter of their own (profile, encounters, reports, notifications,
+// analytics). Applied globally in app.ts before the per-route limiters.
+export const globalApiRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: {
+    error: 'Too many requests',
+    code: 'RATE_LIMIT_EXCEEDED',
+    userMessage: 'Too many requests. Please wait a moment before trying again.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => rateLimitKey(req),
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many requests',
+      code: 'RATE_LIMIT_EXCEEDED',
+      userMessage: 'Too many requests. Please wait a moment before trying again.',
+    });
+  },
+});
+
 // Stricter limiter for unauthenticated (guest) AI chat access.
 // Applied after optional auth so signed-in users only hit aiRateLimiter.
 export const guestAiRateLimiter = rateLimit({

@@ -26,6 +26,7 @@ jobs:
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'your-supabase-anon-key' }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'your-supabase-service-role-key' }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'your-gemini-api-key' }}
+      SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -48,6 +49,9 @@ jobs:
 
       - name: Run Backend Jest Test Suite
         run: npm test
+
+      - name: Enforce Backend Coverage Floors
+        run: npm test -- --coverage
 
   # -------------------------------------------------------------
   # Job 2: Autonomous Python ML Subsystem Verification
@@ -163,3 +167,23 @@ jobs:
         env:
           REDIS_PASSWORD: ci-redis-password
         run: docker compose -f docker-compose.prod.yml config
+
+  deploy-render:
+    name: Deploy production backend to Render
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend-gateway, ml-subsystem, mobile-client, docker-validation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Render deploy hook is configured
+        env:
+          BACKEND_DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: |
+          test -n "$BACKEND_DEPLOY_HOOK" || { echo "Missing RENDER_BACKEND_DEPLOY_HOOK secret"; exit 1; }
+
+      - name: Trigger backend deployment
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
+      # The ML subsystem (laso-ml) deploys to Google Cloud Run via
+      # `gcloud run deploy laso-ml --source ml/` (see docs/deploy-zero-dollar.md);
+      # it is not redeployed from this pipeline.

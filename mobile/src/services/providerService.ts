@@ -2,6 +2,13 @@ import { Provider } from './types';
 import { api } from './api';
 import { supabase } from './supabase';
 import { normalizeLatitude, normalizeLongitude } from './geoUtils';
+import type { Coordinates } from './geoUtils';
+
+export type NearbyProvidersResponse = {
+    providers: Provider[];
+    source: 'OpenStreetMap' | 'Geoapify';
+    sourceTimestamp: string | null;
+};
 
 const normalizeProvider = (provider: Provider): Provider => ({
     ...provider,
@@ -10,28 +17,28 @@ const normalizeProvider = (provider: Provider): Provider => ({
 });
 
 export const ProviderService = {
-    getProviders: async (): Promise<Provider[]> => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) {
-            console.log('[ProviderService] No session — returning empty providers (guest mode).');
-            return [];
-        }
-        try {
-            console.log('Fetching providers from:', api.defaults.baseURL + '/providers');
-            const timeoutPromise = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Request timed out')), 5000)
-            );
+    getProviders: async (coordinates: Coordinates): Promise<NearbyProvidersResponse> => {
+        const response = await api.get<NearbyProvidersResponse>('/providers/nearby', {
+            params: {
+                lat: coordinates.latitude,
+                lng: coordinates.longitude,
+                radius: 50_000,
+            },
+            timeout: 30_000,
+        });
 
-            const response = await Promise.race([
-                api.get('/providers'),
-                timeoutPromise
-            ]) as any;
+        return {
+            ...response.data,
+            providers: (response.data.providers || []).map(normalizeProvider),
+        };
+    },
 
-            return ((response.data || []) as Provider[]).map(normalizeProvider);
-        } catch (e) {
-            console.error('Failed to fetch providers', e);
-            throw e;
-        }
+    getProviderContact: async (providerId: string): Promise<string | null> => {
+        const response = await api.get<{ phone: string | null }>(
+            `/providers/nearby/${encodeURIComponent(providerId)}/contact`,
+            { timeout: 8_000 },
+        );
+        return response.data.phone;
     },
 
     searchProviders: async (query: string): Promise<Provider[]> => {

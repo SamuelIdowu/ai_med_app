@@ -39,7 +39,12 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_BLOOD_PRESSURE",
+        "android.permission.health.READ_OXYGEN_SATURATION",
+        "android.permission.health.READ_RESPIRATORY_RATE",
+        "android.permission.health.READ_BODY_TEMPERATURE"
       ]
     },
     "web": {
@@ -50,6 +55,22 @@
       "expo-font",
       "expo-sqlite",
       "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "Laso reads selected vital signs from Apple Health to display your measurements.",
+          "healthUpdatePermission": "Laso does not write health data to Apple Health."
+        }
+      ],
+      "react-native-health-connect",
       [
         "expo-camera",
         {

@@ -15,4 +15,8 @@ module.exports = {
   verbose: true,
   forceExit: true,
   clearMocks: true,
+  // Only enforced when coverage is collected (CI gates with `--coverage`)
+  coverageThreshold: {
+    global: { statements: 40, branches: 25, functions: 35, lines: 45 },
+  },
 };

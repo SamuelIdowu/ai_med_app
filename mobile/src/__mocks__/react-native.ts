@@ -27,7 +27,12 @@ export const View = 'View';
 export const Text = 'Text';
 export const TouchableOpacity = 'TouchableOpacity';
 export const ScrollView = 'ScrollView';
-export const Image = 'Image';
+const MockImage = () => null;
+export const Image = Object.assign(MockImage, {
+  getSize: jest.fn((_uri: string, onSuccess: (width: number, height: number) => void) => {
+    onSuccess(1920, 1080);
+  }),
+});
 export const TextInput = 'TextInput';
 export const ActivityIndicator = 'ActivityIndicator';
 
@@ -62,4 +67,3 @@ export const Animated = {
   })),
   View: 'Animated.View',
 };
-

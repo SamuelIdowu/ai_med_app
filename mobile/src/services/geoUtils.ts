@@ -4,15 +4,9 @@
 import * as Location from 'expo-location';
 import { Provider } from './types';
 
-export const FALLBACK_MAP_CENTER: Coordinates = {
-  latitude: 40.7128,
-  longitude: -74.006,
-};
-
-export const DEFAULT_USER_COORDS: Coordinates = FALLBACK_MAP_CENTER;
-
-export const LOCATION_TIMEOUT_MS = 10000;
+export const LOCATION_TIMEOUT_MS = 5000;
 export const MAX_LAST_KNOWN_AGE_MS = 2 * 60 * 1000;
+export const MILES_PER_KILOMETER = 0.621371;
 
 export type LocationPermissionStatus = 'granted' | 'denied' | 'unavailable';
 export type LocationSource = 'current' | 'last-known' | 'none';
@@ -114,6 +108,23 @@ export function formatDistanceLabel(miles: number | null | undefined): string | 
   return formatDistance(miles);
 }
 
+export function milesToKilometers(miles: number): number {
+  return miles / MILES_PER_KILOMETER;
+}
+
+export function formatDistanceKilometers(miles: number): string {
+  const kilometers = milesToKilometers(miles);
+  if (kilometers < 0.1) return 'Nearby (<0.1 km away)';
+  return `${kilometers.toFixed(1)} km away`;
+}
+
+export function formatDistanceKilometersLabel(
+  miles: number | null | undefined,
+): string | null {
+  if (typeof miles !== 'number' || !Number.isFinite(miles)) return null;
+  return formatDistanceKilometers(miles);
+}
+
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -159,24 +170,6 @@ export async function getUserLocationWithStatus(
     }
 
     try {
-      const current = await withTimeout(
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
-        timeoutMs,
-      );
-      const currentCoords = getValidCoordinates(current.coords.latitude, current.coords.longitude);
-
-      if (currentCoords) {
-        return {
-          ...currentCoords,
-          status: 'granted',
-          source: 'current',
-        };
-      }
-    } catch (error) {
-      console.warn('Could not fetch current GPS position:', error);
-    }
-
-    try {
       const lastKnown = await Location.getLastKnownPositionAsync({
         maxAge: MAX_LAST_KNOWN_AGE_MS,
         requiredAccuracy: 1000,
@@ -194,6 +187,24 @@ export async function getUserLocationWithStatus(
       }
     } catch (error) {
       console.warn('Could not fetch last known GPS position:', error);
+    }
+
+    try {
+      const current = await withTimeout(
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        timeoutMs,
+      );
+      const currentCoords = getValidCoordinates(current.coords.latitude, current.coords.longitude);
+
+      if (currentCoords) {
+        return {
+          ...currentCoords,
+          status: 'granted',
+          source: 'current',
+        };
+      }
+    } catch (error) {
+      console.warn('Could not fetch current GPS position:', error);
     }
 
     return {

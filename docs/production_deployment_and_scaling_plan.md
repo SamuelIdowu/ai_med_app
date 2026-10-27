@@ -10,7 +10,7 @@
 This document defines the operational launch and scaling blueprint for **Laso** (named after the Greek goddess of healing and recuperation). It maps the transition from local development through a **$0/month Free Cloud Tier** into a multi-region, high-availability architecture capable of supporting **1,000,000+ patients**.
 
 It establishes:
-1. **Pre-Deployment Automated Verification Gates** (161 automated tests across Node.js, Mobile, and Python).
+1. **Pre-Deployment Automated Verification Gates** (backend, mobile, ML, type-check, lint, and container configuration checks in GitHub Actions).
 2. **Phase 0: Zero-Cost Bootstrap Architecture** (Supabase Free + Render + Hugging Face Spaces).
 3. **Phased Enterprise Migration Roadmap** (Free Tier $\rightarrow$ 25K $\rightarrow$ 100K $\rightarrow$ 500K $\rightarrow$ 1M+ users).
 4. **Comprehensive Update Strategy**:
@@ -24,7 +24,7 @@ It establishes:
 
 ## 2. Pre-Deployment Automated Verification Gates
 
-Before any deployment candidate is promoted, it must satisfy all 5 automated quality gates:
+Before production promotion, the code checks below must pass. The environment-dependent k6 smoke test should be run against a deployed staging service; it is not part of the hermetic GitHub Actions jobs.
 
 ```
 [ Code Commit ]
@@ -41,14 +41,14 @@ Before any deployment candidate is promoted, it must satisfy all 5 automated qua
 ┌────────────────────────────────────────────────────────┐
 │ Gate 2: Backend Unit & Integration Tests (Jest)        │
 │ Command: `npm --prefix backend test`                   │
-│ Requirement: 11/11 suites passed, 71/71 tests passing  │
+│ Latest local run: 11/11 suites, 66/66 tests passed    │
 └────────────────────────────────────────────────────────┘
       │
       ▼
 ┌────────────────────────────────────────────────────────┐
 │ Gate 3: Mobile Services & Theme Verification (Jest)    │
 │ Command: `npm --prefix backend run test:mobile`        │
-│ Requirement: 8/8 suites passed, 51/51 tests passing    │
+│ Latest local run: 19/19 suites, 97/97 tests passed   │
 │ (SQLite, Haversine, SSE parser, Vitals, Image Pipeline)│
 └────────────────────────────────────────────────────────┘
       │
@@ -56,15 +56,15 @@ Before any deployment candidate is promoted, it must satisfy all 5 automated qua
 ┌────────────────────────────────────────────────────────┐
 │ Gate 4: Local Python ML & Safety Benchmark (Pytest)   │
 │ Command: `.\ml\.venv\Scripts\pytest -v`                │
-│ Requirement: 39/39 tests passed, 100% emergency        │
+│ Latest local run: 40/40 tests passed; benchmark passed │
 │              scenario sensitivity                      │
 └────────────────────────────────────────────────────────┘
       │
       ▼
 ┌────────────────────────────────────────────────────────┐
-│ Gate 5: Automated Smoke & Load Concurrency Check       │
+│ Staging Smoke: Smoke & Load Concurrency Check          │
 │ Command: `npm --prefix backend run test:load:smoke`    │
-│ Requirement: 100% check success, 0.00% error rate      │
+│ Run after staging deploy; requires k6 and live services │
 └────────────────────────────────────────────────────────┘
       │
       ▼
@@ -206,5 +206,5 @@ To ensure zero downtime, rapid bug fixes, and seamless patient access, updates a
 2. [x] **Network Sanitization**: Removed hardcoded local Wi-Fi IPs in `api.ts`.
 3. [x] **1-Click Blueprint**: Created [render.yaml](file:///c:/Users/USER/Desktop/saas%20projects/ai-med-app/render.yaml) for zero-cost deployment.
 4. [x] **Baked-in ML Artifacts**: Updated [ml/Dockerfile](file:///c:/Users/USER/Desktop/saas%20projects/ai-med-app/ml/Dockerfile) to bundle Scikit-learn models and protocol datasets.
-5. [x] **Verification**: 161/161 automated tests passing across backend, mobile, and ML.
+5. [x] **Verification**: latest local run passed backend (66), mobile (97), and ML (40) tests, with backend/mobile lint and TypeScript checks passing.
 6. [ ] **Push & Deploy**: Commit git changes, push to GitHub, and link repository to Render and Supabase.

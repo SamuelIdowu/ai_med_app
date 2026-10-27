@@ -28,7 +28,8 @@ import { ProviderService } from '../services/providerService';
 import {
   getUserLocationWithStatus,
   sortProvidersByProximity,
-  formatDistanceLabel,
+  formatDistanceKilometersLabel,
+  milesToKilometers,
   type Coordinates,
   type LocationPermissionStatus,
   type ProviderWithDistance,
@@ -40,8 +41,20 @@ import { theme } from '../theme';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FILTERS = ['All', 'Hospital', 'Clinic', 'Pharmacy'];
+const DISTANCE_FILTERS = [
+  { label: 'Up to 50 km', maxKm: null },
+  { label: '5 km', maxKm: 5 },
+  { label: '10 km', maxKm: 10 },
+  { label: '25 km', maxKm: 25 },
+];
 
 type EnrichedProvider = ProviderWithDistance;
+
+function getProviderMeta(provider: EnrichedProvider): string {
+  return [provider.type, formatDistanceKilometersLabel(provider.distanceMiles)]
+    .filter((value): value is string => Boolean(value))
+    .join(' · ');
+}
 
 export const ProviderListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -53,10 +66,27 @@ export const ProviderListScreen: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [maxDistanceKm, setMaxDistanceKm] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [userCoords, setUserCoords] = useState<Coordinates | null>(null);
   const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<EnrichedProvider | null>(null);
+  const [sourceTimestamp, setSourceTimestamp] = useState<string | null>(null);
+  const [providerSource, setProviderSource] = useState<'OpenStreetMap' | 'Geoapify'>('OpenStreetMap');
+
+  const loadNearbyProviders = useCallback(async (coords: Coordinates | null) => {
+    if (!coords) {
+      setProviders([]);
+      setSourceTimestamp(null);
+      setProviderSource('OpenStreetMap');
+      return;
+    }
+
+    const result = await ProviderService.getProviders(coords);
+    setProviderSource(result.source);
+    setSourceTimestamp(result.sourceTimestamp);
+    setProviders(sortProvidersByProximity(result.providers, coords));
+  }, []);
 
   const initScreenData = useCallback(async () => {
     try {
@@ -71,18 +101,16 @@ export const ProviderListScreen: React.FC = () => {
       setUserCoords(coords);
       setLocationStatus(location.status);
 
-      const rawData = await ProviderService.getProviders();
-      const sorted = sortProvidersByProximity(rawData, coords);
-      setProviders(sorted);
+      await loadNearbyProviders(coords);
     } catch (error) {
       console.error('Failed to load providers:', error);
       setLoadError(
-        'Could not load nearby medical facilities. Check your connection and try again.',
+        'Could not reach live facility data. Check the backend connection and try again.',
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadNearbyProviders]);
 
   const filterData = useCallback(() => {
     let result = providers;
@@ -101,8 +129,16 @@ export const ProviderListScreen: React.FC = () => {
       result = result.filter((p) => p.type?.toLowerCase() === activeFilter.toLowerCase());
     }
 
+    if (maxDistanceKm !== null) {
+      result = result.filter(
+        (provider) =>
+          provider.distanceMiles !== null &&
+          milesToKilometers(provider.distanceMiles) <= maxDistanceKm,
+      );
+    }
+
     setFilteredProviders(result);
-  }, [activeFilter, providers, searchQuery]);
+  }, [activeFilter, maxDistanceKm, providers, searchQuery]);
 
   const mapProviders = useMemo(() => buildProviderMarkers(filteredProviders), [filteredProviders]);
 
@@ -137,12 +173,23 @@ export const ProviderListScreen: React.FC = () => {
 
     setUserCoords(coords);
     setLocationStatus(location.status);
-    setProviders((current) => sortProvidersByProximity(current, coords));
+    try {
+      setLoading(true);
+      setLoadError(null);
+      await loadNearbyProviders(coords);
+    } catch (error) {
+      console.error('Failed to refresh nearby providers:', error);
+      setLoadError(
+        'Could not reach live facility data. Check the backend connection and try again.',
+      );
+    } finally {
+      setLoading(false);
+    }
 
     if (location.status === 'granted') {
       setTimeout(() => mapRef.current?.focusUser(), 0);
     }
-  }, []);
+  }, [loadNearbyProviders]);
 
   const handleLocationPress = useCallback(() => {
     if (locationStatus === 'denied' && Platform.OS !== 'web') {
@@ -167,9 +214,12 @@ export const ProviderListScreen: React.FC = () => {
 
   const handleOpenProvider = useCallback(
     (providerId: string) => {
-      navigation.navigate('ProviderDetail', { providerId });
+      const provider = filteredProviders.find((item) => item.id === providerId);
+      if (provider) {
+        navigation.navigate('ProviderDetail', { providerId, provider });
+      }
     },
-    [navigation],
+    [filteredProviders, navigation],
   );
 
   const handleCall = (phone?: string | null) => {
@@ -205,19 +255,20 @@ export const ProviderListScreen: React.FC = () => {
   const handleResetFilters = () => {
     setSearchQuery('');
     setActiveFilter('All');
+    setMaxDistanceKm(null);
   };
 
   const renderItem = ({ item }: { item: EnrichedProvider }) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.85}
-      onPress={() => navigation.navigate('ProviderDetail', { providerId: item.id })}
+      onPress={() => navigation.navigate('ProviderDetail', { providerId: item.id, provider: item })}
     >
       <View style={styles.cardHeader}>
         <View style={styles.cardContent}>
           <Text style={styles.providerName}>{item.name}</Text>
           <Text style={styles.providerDistance}>
-            {formatDistanceLabel(item.distanceMiles) ?? 'Distance unavailable'}
+            {formatDistanceKilometersLabel(item.distanceMiles) ?? 'Distance unavailable'}
           </Text>
           {item.address ? (
             <Text style={styles.providerAddress} numberOfLines={1}>
@@ -239,6 +290,7 @@ export const ProviderListScreen: React.FC = () => {
           <Icon name="phoneCall" size={20} color={theme.colors.text.inverse} />
         </TouchableOpacity>
       </View>
+
     </TouchableOpacity>
   );
 
@@ -313,6 +365,57 @@ export const ProviderListScreen: React.FC = () => {
         />
       </View>
 
+      <View style={styles.filterContainer}>
+        <FlatList
+          horizontal
+          data={DISTANCE_FILTERS}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterList}
+          keyExtractor={(item) => item.label}
+          renderItem={({ item }) => {
+            const isActive = maxDistanceKm === item.maxKm;
+            return (
+              <TouchableOpacity
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
+                onPress={() => setMaxDistanceKm(item.maxKm)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`Filter providers within ${item.label}`}
+              >
+                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
+
+      <View style={styles.attributionContainer}>
+        <Text style={styles.attributionText}>
+          Nearby facilities from {providerSource}
+          {sourceTimestamp && Number.isFinite(Date.parse(sourceTimestamp))
+            ? ` · Data as of ${new Date(sourceTimestamp).toLocaleString()}`
+            : ''}
+        </Text>
+        <TouchableOpacity
+          onPress={() => Linking.openURL('https://www.openstreetmap.org/copyright')}
+          accessibilityRole="link"
+          accessibilityLabel="OpenStreetMap contributors and license"
+        >
+          <Text style={styles.attributionLink}>© OpenStreetMap contributors</Text>
+        </TouchableOpacity>
+        {providerSource === 'Geoapify' ? (
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://www.geoapify.com/')}
+            accessibilityRole="link"
+            accessibilityLabel="Powered by Geoapify"
+          >
+            <Text style={styles.attributionLink}>Powered by Geoapify</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
       {/* Content Body: List vs Map View */}
       {loadError ? (
         <View style={styles.centerContainer}>
@@ -347,10 +450,13 @@ export const ProviderListScreen: React.FC = () => {
               <Text style={styles.emptyTitle}>No Providers Found</Text>
               <Text style={styles.emptySubtitle}>
                 {providers.length === 0
-                  ? 'Sign in to load nearby medical facilities.'
-                  : 'Try adjusting your search query or filters.'}
+                  ? userCoords
+                    ? 'No mapped facilities were returned within 50 km. Try refreshing or checking nearby towns.'
+                    : 'Enable location access to find medical facilities near you.'
+                  : 'Try adjusting your search, category, or distance filters.'}
               </Text>
-              {providers.length > 0 && (searchQuery || activeFilter !== 'All') ? (
+              {providers.length > 0 &&
+              (searchQuery || activeFilter !== 'All' || maxDistanceKm !== null) ? (
                 <TouchableOpacity style={styles.emptyResetBtn} onPress={handleResetFilters}>
                   <Text style={styles.emptyResetText}>Clear filters</Text>
                 </TouchableOpacity>
@@ -397,12 +503,14 @@ export const ProviderListScreen: React.FC = () => {
                 <Text style={styles.mapEmptyTitle}>No mapped facilities</Text>
                 <Text style={styles.mapEmptyText}>
                   {providers.length === 0
-                    ? 'Sign in to load nearby medical facilities.'
+                    ? userCoords
+                      ? 'No mapped facilities were returned within 50 km. Try refreshing or checking nearby towns.'
+                      : 'Enable location access to find medical facilities near you.'
                     : filteredProviders.length === 0
-                      ? 'No facilities match your search or filters.'
+                      ? 'No facilities match your search, category, or distance filters.'
                       : 'The matching facilities do not have map coordinates.'}
                 </Text>
-                {searchQuery || activeFilter !== 'All' ? (
+                {searchQuery || activeFilter !== 'All' || maxDistanceKm !== null ? (
                   <TouchableOpacity style={styles.emptyResetBtn} onPress={handleResetFilters}>
                     <Text style={styles.emptyResetText}>Clear filters</Text>
                   </TouchableOpacity>
@@ -460,11 +568,7 @@ export const ProviderListScreen: React.FC = () => {
                   <Text style={styles.bottomCardTitle} numberOfLines={1}>
                     {selectedProvider.name}
                   </Text>
-                  <Text style={styles.bottomCardMeta}>
-                    {[selectedProvider.type, formatDistanceLabel(selectedProvider.distanceMiles)]
-                      .filter(Boolean)
-                      .join(' • ')}
-                  </Text>
+                  <Text style={styles.bottomCardMeta}>{getProviderMeta(selectedProvider)}</Text>
                   {selectedProvider.address ? (
                     <Text style={styles.bottomCardAddress} numberOfLines={1}>
                       {selectedProvider.address}
@@ -494,6 +598,7 @@ export const ProviderListScreen: React.FC = () => {
                     onPress={() =>
                       navigation.navigate('ProviderDetail', {
                         providerId: selectedProvider.id,
+                        provider: selectedProvider,
                       })
                     }
                   >
@@ -575,6 +680,22 @@ const styles = StyleSheet.create({
   filterContainer: {
     paddingVertical: 8,
     backgroundColor: theme.colors.canvas.background,
+  },
+  attributionContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    backgroundColor: theme.colors.canvas.background,
+  },
+  attributionText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: theme.colors.text.muted,
+  },
+  attributionLink: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: theme.colors.primary.hover,
+    textDecorationLine: 'underline',
   },
   filterList: {
     paddingHorizontal: 16,
