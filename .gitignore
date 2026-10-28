@@ -33,3 +33,9 @@ venv/
 
 # Illustration optimizer backups (regenerable from source JPEGs)
 mobile/assets/illustrations/transparent_full/
+
+# SSH keys and secrets — never commit
+ssh_key*
+ssh_key_rsa*
+*.pem
+deploy/keys/

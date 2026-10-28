@@ -135,23 +135,32 @@ Full reference: [ml/README.md](ml/README.md).
 
 ## Deployment
 
-Provider maps use OpenFreeMap styles through MapLibre on web and native mobile. Native builds must be rebuilt after the MapLibre Expo plugin is added.
+Backend and ML both run on the Oracle VPS as Docker containers, deployed automatically by GitHub Actions. Full runbook: [docs/deployment-guide.md](docs/deployment-guide.md).
 
-Before deploying, validate the environment and cloud resources:
+Pipeline (`.github/workflows/ci.yml`, triggers on every push/PR):
 
-```powershell
-cd backend
-npm run preflight:deploy
-```
+1. **CI matrix** — backend Jest + coverage floors, ML pytest + safety benchmark, mobile TS + integration tests, Docker compose validation
+2. **Build & push** — `ghcr.io/<owner>/laso-backend` and `ghcr.io/<owner>/laso-ml` (slim torch-free profile) tagged `sha-<commit>` + `latest`; main pushes push to GHCR, PRs build only
+3. **Deploy** (main only) — applies Supabase migrations via psql (tracked in `ci_cd.migration_history`), writes the VPS `.env` from GitHub secrets, `docker compose pull && up -d`, health-gates backend + ML, and **auto-rolls back** to the previous tag on failure
 
-- [render.yaml](render.yaml) — Render blueprint: `laso-backend` Docker service, Oregon, `/health` checks (ML runs on Google Cloud Run — see [docs/deploy-zero-dollar.md](docs/deploy-zero-dollar.md))
-- [docker-compose.prod.yml](docker-compose.prod.yml) — full stack incl. Redis (password required via `REDIS_PASSWORD`)
-- [docs/deployment-guide.md](docs/deployment-guide.md) — step-by-step $0 deployment runbook (Supabase + Render + Oracle VPS ML + EAS local builds)
-- Production Render deployments are triggered by `.github/workflows/ci.yml` after backend, mobile, ML, and Docker checks pass on `main`. Set the Render deploy hook URL as GitHub Actions secret `RENDER_BACKEND_DEPLOY_HOOK`; automatic Render deploys are disabled in the blueprint to keep deployments behind CI.
-- Runtime secrets are configured in the Render dashboard / GitHub Actions secrets — never in the repo
-- Nearby facilities are searched around device GPS coordinates using Overpass, with Geoapify Places as an optional fallback when Overpass is unavailable or returns no nearby facilities. Set `GEOAPIFY_API_KEY` in the backend environment to enable it. Facility completeness depends on source coverage.
-- Production EAS builds require `EXPO_PUBLIC_BACKEND_URL`, `EXPO_PUBLIC_SUPABASE_URL`, and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; see [docs/setup.md](docs/setup.md#9-production-deployment)
-- The ML subsystem deploys to Google Cloud Run (Render Free's 512 MB is too small for PyTorch); see [docs/deploy-zero-dollar.md](docs/deploy-zero-dollar.md)
+Required GitHub configuration:
+
+| Type | Name | Purpose |
+|---|---|---|
+| secret | `VPS_HOST`, `VPS_USER` | SSH target (e.g. `1.2.3.4`, `ubuntu`) |
+| secret | `VPS_SSH_PRIVATE_KEY` | Dedicated ed25519 deploy key (not your login key) |
+| secret | `VPS_SSH_HOST_KEY` | `ssh-keyscan -H <host>` output (pins known_hosts) |
+| secret | `SUPABASE_DB_URL` | Supabase session-pooler DB URL for migrations |
+| secret | `REDIS_PASSWORD`, `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `GEOAPIFY_API_KEY` | Routed into the VPS `.env` each deploy |
+| secret | `GHCR_TOKEN` | PAT with `read:packages` for VPS image pulls |
+| variable | `SUPABASE_MIGRATIONS_ADOPT_UNTIL` | One-time: `010_vital_readings.sql` (marks already-applied migrations; remove after first deploy) |
+| variable | `COMPOSE_PROFILES`, `CADDY_DOMAIN`, `BACKEND_BIND`, `ALLOWED_ORIGINS`, `PUBLIC_BACKEND_URL` | Optional TLS/origin tuning (see deployment guide) |
+
+TLS options: raw-IP (default) exposes backend on port 3000; set `COMPOSE_PROFILES=caddy` + `CADDY_DOMAIN` + `BACKEND_BIND=127.0.0.1` to front everything with auto-HTTPS Caddy.
+
+Before deploying, validate the environment and cloud resources: `cd backend && npm run preflight:deploy`
+
+Mobile: production EAS builds need `EXPO_PUBLIC_BACKEND_URL`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`; see [docs/setup.md](docs/setup.md#9-production-deployment). OTA for JS-only changes: `npx eas-cli update --branch production`.
 
 ## Documentation
 

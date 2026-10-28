@@ -1,0 +1,6 @@
+# Force LF for all shell/YAML/docker assets executed by CI or on the VPS
+*.sh text eol=lf
+Caddyfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf

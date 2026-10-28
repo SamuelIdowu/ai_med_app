@@ -1,5 +1,7 @@
 # Laso — Zero-Dollar Deployment Plan
 
+> **SUPERSEDED.** Backend and ML now deploy to the Oracle VPS via the GitHub Actions pipeline. See [deployment-guide.md](deployment-guide.md) for the current runbook. This doc is kept only for its Oracle/free-tier notes and historical context.
+
 Target: $0/month total cost across all services. Owner is responsible only for one-time environment setup (gcloud CLI, Render/Supabase accounts).
 
 ## Architecture
