@@ -14,13 +14,15 @@ FROM python:3.11-slim
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
-# Minimal runtime dependencies (no torch, no transformers/peft/accelerate)
+# Minimal runtime dependencies (no torch, no transformers/peft/accelerate).
+# pandas is required by app/services/classical_ml_service.py at import time.
 RUN pip install --no-cache-dir \
     "fastapi>=0.115.0" \
     "uvicorn>=0.30.0" \
     "pydantic>=2.8.0" \
     "pillow>=10.4.0" \
     "numpy>=1.26.0" \
+    "pandas>=2.0.0" \
     "scikit-learn>=1.5.0" \
     "joblib>=1.4.0" \
     "python-multipart>=0.0.9" \
