@@ -1,0 +1,9 @@
+# Laso TLS front (VPS). Requires CADDY_DOMAIN env in the caddy container.
+# Backend public API + optional public ML endpoint.
+{$CADDY_DOMAIN} {
+	reverse_proxy backend:3000
+}
+
+ml.{$CADDY_DOMAIN} {
+	reverse_proxy ml-engine:8000
+}

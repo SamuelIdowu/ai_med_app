@@ -168,22 +168,155 @@ jobs:
           REDIS_PASSWORD: ci-redis-password
         run: docker compose -f docker-compose.prod.yml config
 
-  deploy-render:
-    name: Deploy production backend to Render
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  # -------------------------------------------------------------
+  # Job 6: Build & push container images to GHCR
+  #   main pushes  -> tests green here, then images are pushed and
+  #                   the deploy-vps job rolls them out to the VPS.
+  #   pull requests -> build-only validation of both Dockerfiles.
+  # -------------------------------------------------------------
+  build-push:
+    name: Build & Push Images (GHCR)
     needs: [backend-gateway, ml-subsystem, mobile-client, docker-validation]
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      owner: ${{ steps.meta.outputs.owner }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Compute image coordinates
+        id: meta
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "tag=sha-$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.owner }}/laso-backend:${{ steps.meta.outputs.tag }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/laso-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build ML image (slim production profile)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ml
+          file: ./ml/Dockerfile.micro
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.owner }}/laso-ml:${{ steps.meta.outputs.tag }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/laso-ml:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # -------------------------------------------------------------
+  # Job 7: VPS deployment
+  #   Applies Supabase migrations, syncs runtime secrets, pulls the
+  #   freshly built images on the VPS, health-gates, and rolls back
+  #   to the previous tag if anything is unhealthy.
+  # -------------------------------------------------------------
+  deploy-vps:
+    name: Deploy to VPS (backend + ML)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-push
     runs-on: ubuntu-latest
     steps:
-      - name: Verify Render deploy hook is configured
-        env:
-          BACKEND_DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
-        run: |
-          test -n "$BACKEND_DEPLOY_HOOK" || { echo "Missing RENDER_BACKEND_DEPLOY_HOOK secret"; exit 1; }
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Trigger backend deployment
+      - name: Verify deploy configuration
         env:
-          DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
-        run: curl --fail --silent --show-error --request POST "$DEPLOY_HOOK"
-      # The ML subsystem (laso-ml) deploys to Google Cloud Run via
-      # `gcloud run deploy laso-ml --source ml/` (see docs/deploy-zero-dollar.md);
-      # it is not redeployed from this pipeline.
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          missing=0
+          for v in VPS_HOST VPS_USER VPS_SSH_PRIVATE_KEY; do
+            if [ -z "${!v}" ]; then echo "::error::Missing required secret: $v"; missing=1; fi
+          done
+          exit $missing
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Apply Supabase migrations
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_MIGRATIONS_ADOPT_UNTIL: ${{ vars.SUPABASE_MIGRATIONS_ADOPT_UNTIL }}
+        run: bash deploy/apply-migrations.sh backend/src/db/migrations
+
+      - name: Set up SSH
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_HOST_KEY: ${{ secrets.VPS_SSH_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          if [ -n "$VPS_SSH_HOST_KEY" ]; then
+            printf '%s\n' "$VPS_SSH_HOST_KEY" >> ~/.ssh/known_hosts
+          else
+            ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          fi
+
+      - name: Upload deploy assets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh "${VPS_USER}@${VPS_HOST}" "mkdir -p ~/laso"
+          scp docker-compose.prod.yml deploy/Caddyfile "${VPS_USER}@${VPS_HOST}:~/laso/"
+
+      - name: Sync env, pull images, health-gate, deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          BACKEND_IMAGE: ghcr.io/${{ needs.build-push.outputs.owner }}/laso-backend
+          ML_IMAGE: ghcr.io/${{ needs.build-push.outputs.owner }}/laso-ml
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          COMPOSE_PROFILES: ${{ vars.VPS_COMPOSE_PROFILES }}
+          CADDY_DOMAIN: ${{ vars.CADDY_DOMAIN }}
+          BACKEND_BIND: ${{ vars.BACKEND_BIND }}
+          PUBLIC_BACKEND_URL: ${{ vars.PUBLIC_BACKEND_URL }}
+          DEPLOY_TAG: ${{ needs.build-push.outputs.tag }}
+        run: bash deploy/run-deploy.sh "${VPS_USER}@${VPS_HOST}"
+
+      - name: Post-deploy smoke test (public URL)
+        if: vars.PUBLIC_BACKEND_URL != ''
+        run: |
+          for _ in $(seq 1 15); do
+            if curl -fsS --max-time 10 "${{ vars.PUBLIC_BACKEND_URL }}"; then
+              echo "Public endpoint healthy"; exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::Public backend URL failed health check after deploy"
+          exit 1

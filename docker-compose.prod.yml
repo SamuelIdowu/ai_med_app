@@ -7,7 +7,9 @@ services:
     image: redis:7-alpine
     container_name: laso-redis
     restart: unless-stopped
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    # 64 MB cap: the box shares 1 GB RAM with the Telegram bot, ML, and backend.
+    # Redis is only rate-limit / cache here — allkeys-lru evicts on pressure.
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}", "--appendonly", "yes", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
     expose:
       - "6379"
     volumes:
@@ -19,17 +21,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 96m
 
   ml-engine:
-    build:
-      context: ./ml
-      dockerfile: Dockerfile
+    image: ${ML_IMAGE:-ghcr.io/example/laso-ml}:${ML_TAG:-latest}
     container_name: laso-ml
     restart: unless-stopped
     expose:
       - "8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - PORT=8000
+      - SAFETY_STRICTNESS=high
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
     networks:
       - laso-network
     healthcheck:
@@ -37,15 +44,18 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 450m
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-ghcr.io/example/laso-backend}:${BACKEND_TAG:-latest}
     container_name: laso-backend
     restart: unless-stopped
+    # BACKEND_BIND=127.0.0.1 when Caddy/Tunnel fronts it; 0.0.0.0 for direct-IP mode.
     ports:
-      - "3000:3000"
+      - "${BACKEND_BIND:-0.0.0.0}:3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -55,6 +65,9 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - EXPO_PUBLIC_SUPABASE_ANON_KEY=${EXPO_PUBLIC_SUPABASE_ANON_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEOAPIFY_API_KEY=${GEOAPIFY_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
+      - OVERPASS_API_URL=https://overpass-api.de/api/interpreter
     networks:
       - laso-network
     depends_on:
@@ -67,6 +80,41 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 250m
+
+  # Optional TLS front. Enabled by setting COMPOSE_PROFILES=caddy (and
+  # CADDY_DOMAIN) in ~/laso/.env on the VPS.
+  caddy:
+    image: caddy:2-alpine
+    container_name: laso-caddy
+    restart: unless-stopped
+    profiles:
+      - caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Guarded in deploy/vps-deploy.sh (compose profiles don't skip interpolation),
+      # so the default here is an inert placeholder.
+      - CADDY_DOMAIN=${CADDY_DOMAIN:-tls-disabled.invalid}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - laso-network
+    depends_on:
+      - backend
+      - ml-engine
+    deploy:
+      resources:
+        limits:
+          memory: 128m
 
 volumes:
   redis_data:
+  caddy_data:
+  caddy_config:

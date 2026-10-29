@@ -1,171 +1,124 @@
-# Laso — Step-by-Step Deployment Guide ($0)
+# Laso — VPS Deployment Guide (backend + ML on one Oracle server)
 
-Concrete ordered runbook for the chosen stack. Companion doc: [deploy-zero-dollar.md](deploy-zero-dollar.md) (architecture, trade-offs, cost table).
+Backend (Node/Express) **and** ML (FastAPI) both run on the Oracle E2.1.Micro VPS as versioned Docker images, deployed automatically by GitHub Actions. Supabase stays the database/auth/storage provider; the mobile app ships via EAS local builds.
 
-Chosen stack:
-- **Database/Auth/Storage:** Supabase Free
-- **Backend (Node/Express):** Render Free (`render.yaml`)
-- **ML (FastAPI):** existing Oracle Cloud E2.1.Micro VPS (shared with a Telegram bot), slim torch-free image `ml/Dockerfile.micro`
-- **Mobile:** EAS local builds + OTA updates (`eas.json`), Android APK sideload
-- **AI:** Gemini API free tier
+Pipeline flow (`.github/workflows/ci.yml`):
 
----
-
-## Step 0 — Prerequisites
-
-- [ ] Supabase account (done — migrations 000–010 already applied)
-- [ ] GitHub repo + push access: `github.com/SamuelIdowu/ai_med_app`
-- [ ] Render account (free, no card)
-- [ ] SSH access to the Oracle VPS (`ubuntu@instance-20260416-0927`) — docker installed (it hosts the Telegram bot)
-- [ ] Gemini API key from https://aistudio.google.com/apikey
-- [ ] Expo account for EAS (`npx eas-cli login`)
+```
+push main → CI green → build & push GHCR images (sha-<tag>)
+        → apply Supabase migrations (psql, tracked)
+        → SSH to VPS → write .env from secrets → compose pull → up -d
+        → health-gate backend + ML → auto-rollback to last good tag on failure
+```
 
 ---
 
-## Step 1 — Oracle VPS: deploy slim ML service
+## GitHub Actions configuration
+
+### Secrets (repo → Settings → Secrets and variables → Actions)
+
+| Secret | Value |
+|---|---|
+| `VPS_HOST` | VPS public IP (e.g. `140.238.x.x`) |
+| `VPS_USER` | SSH user, e.g. `ubuntu` |
+| `VPS_SSH_PRIVATE_KEY` | **Dedicated deploy key**, not your daily key (see Step 1) |
+| `VPS_SSH_HOST_KEY` | Output of `ssh-keyscan -H <VPS_HOST>` (pins known_hosts; strongly recommended) |
+| `SUPABASE_DB_URL` | Supabase → Connect → Database (session pooler) connection string |
+| `REDIS_PASSWORD` | Long random string — required by prod compose |
+| `SUPABASE_SERVICE_ROLE_KEY` | From Supabase dashboard (`sb_secret` / service_role) |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `GEMINI_API_KEY` | https://aistudio.google.com/apikey |
+| `GEOAPIFY_API_KEY` | Optional Places fallback (`https://myprojects.geoapify.com/`) |
+| `GHCR_TOKEN` | GitHub PAT with **read:packages** — used on the VPS to `docker login ghcr.io` and pull the images |
+
+### Variables
+
+| Variable | When to set |
+|---|---|
+| `SUPABASE_MIGRATIONS_ADOPT_UNTIL` | **On first deploy only**: `010_vital_readings.sql`. Marks migrations 000–010 as applied (schema was provisioned manually) without re-executing them. Delete after first successful deploy. |
+| `COMPOSE_PROFILES` | Set to `caddy` once you enable TLS via Caddy |
+| `CADDY_DOMAIN` | Your domain when using the Caddy profile |
+| `BACKEND_BIND` | `127.0.0.1` with Caddy/Tunnel; leave unset for raw-IP |
+| `ALLOWED_ORIGINS` | Comma-separated web origins; leave for native-only |
+| `PUBLIC_BACKEND_URL` | Optional post-deploy smoke target (e.g. `https://api.example.com`) |
+
+---
+
+## Step 1 — One-time VPS bootstrap
 
 ```bash
-ssh ubuntu@<oracle-vps>
+# On your machine: create a dedicated CI deploy key (Ed25519, no passphrase)
+ssh-keygen -t ed25519 -C "laso-ci-deploy" -f ~/.ssh/laso_deploy_key -N ""
 
-# 1. Clone
-cd ~
-git clone https://github.com/SamuelIdowu/ai_med_app.git laso
-cd laso/ml
+# On the VPS: authorize it
+ssh ubuntu@<VPS_HOST> 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys' < ~/.ssh/laso_deploy_key.pub
 
-# 2. Build slim image (no torch; ~200-300 MB RSS)
-docker build -f Dockerfile.micro -t laso-ml:slim .
+# Install Docker if not already present
+ssh ubuntu@<VPS_HOST> 'curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker ubuntu'
 
-# 3. Swap protection (1 GB host RAM is shared with the bot)
-sudo fallocate -l 1G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
+# Pin the host key for the CI known_hosts (recommended, MITM-proof)
+ssh-keyscan -H <VPS_HOST>        # paste output into VPS_SSH_HOST_KEY secret
 
-# 4. Run with hard memory cap so ML can never OOM the bot
-docker run -d --name laso-ml \
-  --memory 500m --memory-swap 1g \
-  --restart unless-stopped \
-  -p 127.0.0.1:8001:8000 \
-  -e SAFETY_STRICTNESS=high \
-  -e CORS_ORIGINS='*' \
-  -e PORT=8000 \
-  laso-ml:slim
-
-# 5. Smoke test
-curl http://127.0.0.1:8001/health
-curl -X POST http://127.0.0.1:8001/v1/ml/triage/vitals \
-  -H 'Content-Type: application/json' \
-  -d '{"heart_rate":130,"systolic_bp":90,"oxygen_saturation":94}'
+# Swap (1 GB box shared with the Telegram bot) — if not already done
+ssh ubuntu@<VPS_HOST> 'test -f /swapfile || (sudo fallocate -l 1G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile)'
 ```
 
-### Step 1b — Expose ML over TLS
+Private key contents → `VPS_SSH_PRIVATE_KEY` secret. Keep it out of the repo (`ssh_key*` is gitignored, but this key never belongs on disk in the project).
 
-Preferred: front it with the same Caddy/Nginx that serves the bot:
+## Step 2 — Service layout on the VPS
 
-```caddyfile
-# Caddyfile
-ml.<your-domain> {
-    reverse_proxy 127.0.0.1:8001
-}
+`~/laso/` holds only deploy assets, maintained by CI:
+
+```
+~/laso/
+├── docker-compose.prod.yml   # scp'd fresh every deploy
+├── Caddyfile                 # scp'd fresh every deploy
+├── .env                      # 0600, rewritten every deploy from GitHub secrets
+└── .last-good-tag            # rollback anchor, written on healthy deploys
 ```
 
-Alternative ($0, no domain): Cloudflare Tunnel on the VPS:
-```bash
-cloudflared tunnel create laso-ml
-cloudflared tunnel route dns laso-ml ml.<your-cf-domain>
-cloudflared tunnel run --url http://127.0.0.1:8001 laso-ml &
-sudo systemctl enable --now cloudflared
-```
+Runtime registry access: `GHCR_TOKEN` is injected per-deploy by `deploy/vps-deploy.sh` (`docker login ghcr.io`) — nothing auth-related persists on the VPS besides `.env` (0600).
 
-Record for Step 3: `ML_EXPOSED_URL` = `https://ml.<your-domain>` or the tunnel URL.
+No repo clone is needed on the VPS; images come from GHCR.
 
-> If neither proxy/domain is available yet, temporarily use `http://<oracle-public-ip>:8001`
-> with an Oracle `iptables` rule (Security List in the console) — payloads are
-> non-PHI JSON, but upgrade to TLS when possible.
+## Step 3 — TLS options (decide early, switch anytime)
 
----
+| Mode | Setting | Notes |
+|---|---|---|
+| Raw IP (default) | nothing | Backend on `:3000` plain HTTP — fine for development, upgrade ASAP for auth traffic |
+| Caddy on VPS | `COMPOSE_PROFILES=caddy`, `CADDY_DOMAIN=api.yourdomain.com`, `BACKEND_BIND=127.0.0.1` | Point the domain's A record at the VPS; Caddy issues Let's Encrypt certs automatically. ML is also proxied at `ml.<domain>`. |
+| Cloudflare Tunnel | Install `cloudflared` on the VPS, point it at `http://127.0.0.1:3000` with the same compose + `BACKEND_BIND=127.0.0.1` (keep `COMPOSE_PROFILES` unset) | No open ports; be aware the Oracle box is behind no ports with tunnel |
 
-## Step 2 — Supabase: verify & seed
+After switching to Caddy/Tunnel, update the mobile `EXPO_PUBLIC_BACKEND_URL` to the HTTPS URL and rebuild/release via EAS (or OTA).
 
-1. Open the Supabase dashboard: confirm migrations 000–010 are applied (SQL editor → check `select * from migrations` style or the tables exist).
-> Already done via MCP: `010_vital_readings` applied and RLS-verified.
-2. Run the seed script once from your machine:
+## Step 4 — First deploy
+
+1. Push to `main` (or merge your feature branch).
+2. Watch the run: Actions → "Laso CI/CD Pipeline" → jobs `build-push` → `deploy-vps`.
+3. Confirm on the VPS:
    ```bash
-   cd backend
-   npx ts-node src/db/seeds/seedGuidelines.ts
+   ssh ubuntu@<VPS_HOST> 'cat ~/laso/.last-good-tag && docker ps --format "table {{.Names}}\t{{.Status}}"'
+   curl http://<VPS_HOST>:3000/health      # raw-IP mode
    ```
-   (populate `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` in `backend/.env` first — check that script's own convention if different.)
-3. Security Advisor → confirm zero RLS advisories.
+4. Remove the `SUPABASE_MIGRATIONS_ADOPT_UNTIL` repository variable so future migrations actually execute.
 
----
+## Rollback & redeploys
 
-## Step 3 — Render: deploy backend
+- **Automatic**: unhealthy deploy → previous tag is restarted (see `deploy/vps-deploy.sh`). The job fails so you see it in Slack/email.
+- **Manual**: on the VPS `sed -i "s/^BACKEND_TAG=.*/BACKEND_TAG=sha-<old>/" ~/laso/.env` (same for `ML_TAG=`) and `docker compose -f ~/laso/docker-compose.prod.yml up -d`.
+- **Anything broken**: re-run `deploy-vps` via Actions → "Run workflow" (covers transient Supabase/network errors too).
 
-1. Push to GitHub with updated `render.yaml` (only `laso-backend`, ML URL as `sync: false`).
-2. Render dashboard → **New → Blueprint** → pick the repo.
-3. Fill env vars (dashboard → `laso-backend` → Environment):
+## Post-deploy hygiene
 
-| Key | Value |
-| --- | --- |
-| `SUPABASE_URL` | from Supabase (already in `.env.example` style) |
-| `SUPABASE_SERVICE_ROLE_KEY` | service-role / `sb_secret` key |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | anon key |
-| `GEMINI_API_KEY` | free-tier Gemini key |
-| `ALLOWED_ORIGINS` | prod web origins (leave `unset`/localhost if mobile-only for now) |
-| `ML_SERVICE_URL` | `ML_EXPOSED_URL` from Step 1b |
+- [ ] Supabase Security Advisor after each migration run (RLS advisories)
+- [ ] `docker stats` on the VPS when the bot/ML fight for RAM — ml is capped at 450 MB, backend 250 MB, redis 64 MB
+- [ ] Keep `ssh_key*` out of git (`.gitignore` already covers it; never `git add -f`)
+- [ ] ML model updates: commit new `.joblib` files under `ml/models/` — next deploy rebuilds the image automatically
 
-4. Verify: `curl https://laso-backend.onrender.com/health` → `{"status":"healthy"...}`.
-5. Optional: set GitHub secret `RENDER_BACKEND_DEPLOY_HOOK` (Render → Settings → Deploy hook) so `.github/workflows/ci.yml` auto-deploys on `main` pushes.
+## What changed vs the old docs
 
-Free-tier note: service sleeps after 15 min idle; first request wakes it in ~1 min. SSE keeps it warm while connected.
-
----
-
-## Step 4 — Mobile app
-
-1. Set `mobile/.env`:
-   ```
-   EXPO_PUBLIC_BACKEND_URL=https://laso-backend.onrender.com/api/v1
-   EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=   # optional
-   ```
-   (`app.config.js` throws on production builds if any value points at localhost / isn't HTTPS / anon key missing — keep that guard happy.)
-2. OTA for JS changes only:
-   ```bash
-   cd mobile && npx eas-cli update --branch production
-   ```
-3. Build APK on your machine (no EAS build quota used):
-   ```bash
-   npx eas-cli build --profile production-apk --local -p android
-   ```
-4. Distribute APK by direct download (Drive/Telegram/sideload).
-
----
-
-## Step 5 — End-to-end smoke test
-
-Live flows, in order:
-1. Signup → Supabase Auth → profile sync.
-2. Guest mode → offline first-aid protocol (no backend).
-3. AI chat with SSE streaming (idle-dependent: allow up to 1 min wake).
-4. Live triage → ML vitals → red-flag interception (safety engine).
-5. Wound photo → vision analysis.
-6. Vitals entry → `vital_readings` row + realtime.
-7. PDF report + nearby provider lookup.
-
-## Step 6 — Post-deploy hygiene
-
-- [ ] Re-run Supabase Security Advisor after every migration.
-- [ ] `git check-ignore .env` before any push (already validated; keep it that way).
-- [ ] Don't add extra free-tier Render services (750 h/mo is workspace-shared).
-- [ ] VPS: `docker stats laso-ml` if the bot ever fights for RAM; raise swap before memory.
-- [ ] Oracle reclamation: bot's steady traffic prevents reclaim; don't pin sustained 100% CPU.
-- [ ] Update this file's URLs (supabase project, render service) after first deploy.
-
-## Recovery / redeploys
-
-- **Backend code change:** push `main` (or click Clear cache & deploy in Render).
-- **ML update:** `cd laso && git pull && docker build -f Dockerfile.micro -t laso-ml:slim .` → `docker rm -f laso-ml` → re-run `docker run` from Step 1.
-- **Supabase paused:** Studio → Resume project (data intact, 1-year window).
-- **Rollback:** Render → Deploys → older commit.
+- `render.yaml` deleted; Render backend + deploy hook replaced by the VPS pipeline
+- ML no longer needs Cloud Run — `ml/Dockerfile.micro` runs on the same VPS
+- Migrations are applied by CI (`deploy/apply-migrations.sh`) instead of manual/MCP application
+- [docs/deploy-zero-dollar.md](deploy-zero-dollar.md) is superseded by this guide (kept only for its Oracle/VPS notes)
