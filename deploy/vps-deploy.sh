@@ -35,10 +35,13 @@ CADDY_DOMAIN=$CADDY_DOMAIN
 EOF
 chmod 600 .env
 
+# Docker on this box is snap-managed (root-only socket); every docker
+# command runs under sudo (ubuntu has passwordless sudo on Oracle images).
 if [ -n "${GHCR_TOKEN:-}" ]; then
-  echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR:-deploy}" --password-stdin
+  echo "${GHCR_TOKEN}" | sudo docker login ghcr.io -u "${GITHUB_ACTOR:-deploy}" --password-stdin >/dev/null 2>&1 \
+    || echo "GHCR login failed; assuming images are public."
 else
-  echo "GHCR_TOKEN unset; assuming images are public or already authenticated."
+  echo "GHCR_TOKEN unset; assuming images are public."
 fi
 
 if printf '%s' "${COMPOSE_PROFILES:-}" | grep -qw caddy; then
@@ -48,9 +51,14 @@ if printf '%s' "${COMPOSE_PROFILES:-}" | grep -qw caddy; then
   fi
 fi
 
+# Name conflicts with any legacy/manual containers (e.g. pre-pipeline runs
+# built from the deployment-guide) — bind-mount protected named volumes
+# (redis_data) are untouched.
+sudo docker rm -f laso-backend laso-ml laso-redis laso-caddy 2>/dev/null || true
+
 echo "Pulling images for $DEPLOY_TAG ..."
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
+sudo docker compose -f docker-compose.prod.yml pull
+sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
 backend_ok=0
 for _ in $(seq 1 30); do
@@ -63,7 +71,7 @@ done
 
 ml_ok=0
 if [ "$backend_ok" = "1" ]; then
-  if docker compose -f docker-compose.prod.yml exec -T backend wget -qO- http://ml-engine:8000/health >/dev/null 2>&1; then
+  if sudo docker compose -f docker-compose.prod.yml exec -T backend wget -qO- http://ml-engine:8000/health >/dev/null 2>&1; then
     ml_ok=1
   fi
 fi
@@ -80,7 +88,7 @@ if [ -f .last-good-tag ]; then
   echo "Rolling back to $OLD_TAG ..."
   sed -i "s/^BACKEND_TAG=.*/BACKEND_TAG=$OLD_TAG/" .env
   sed -i "s/^ML_TAG=.*/ML_TAG=$OLD_TAG/" .env
-  docker compose -f docker-compose.prod.yml up -d
+  sudo docker compose -f docker-compose.prod.yml up -d
   curl -fsS --max-time 5 http://127.0.0.1:3000/health \
     && echo "Rollback to $OLD_TAG complete; VPS serving last known-good build." \
     || echo "::error::Rollback $OLD_TAG also unhealthy — manual intervention required."
