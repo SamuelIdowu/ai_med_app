@@ -116,6 +116,7 @@ def run_training_pipeline(
 
     checkpoint_file = os.path.join(output_dir, "adapter_checkpoint.json")
     with open(checkpoint_file, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
+        # default=str: PEFT's LoraConfig.to_dict() can contain Path/numpy types.
+        json.dump(manifest, f, indent=2, default=str)
 
     return manifest
