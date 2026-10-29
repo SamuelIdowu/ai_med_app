@@ -237,7 +237,7 @@ jobs:
   # -------------------------------------------------------------
   deploy-vps:
     name: Deploy to VPS (backend + ML)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     needs: build-push
     runs-on: ubuntu-latest
     steps:
@@ -286,6 +286,7 @@ jobs:
         run: |
           ssh "${VPS_USER}@${VPS_HOST}" "mkdir -p ~/laso"
           scp docker-compose.prod.yml deploy/Caddyfile "${VPS_USER}@${VPS_HOST}:~/laso/"
+          scp deploy/vps-deploy.sh "${VPS_USER}@${VPS_HOST}:~/laso/"
 
       - name: Sync env, pull images, health-gate, deploy
         env:

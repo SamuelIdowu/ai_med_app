@@ -40,7 +40,7 @@ services:
     networks:
       - laso-network
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8000/health\")' || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -77,7 +77,9 @@ services:
       ml-engine:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      # 127.0.0.1, not localhost: busybox wget resolves localhost to ::1 first
+      # and the Node server listens on IPv4 only -> permanent false unhealthy.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/health"]
       interval: 15s
       timeout: 5s
       retries: 3

@@ -33,5 +33,9 @@ done
 
 ENVPAY=$(printf '%s' "$payload" | base64 -w0)
 
+# IMPORTANT: vps-deploy.sh is executed as a file (scp'd in the previous CI
+# step), never via `ssh ... bash -s`. Interactive-ish remote commands (docker
+# compose up) can consume the rest of a stdin-piped script and silently end
+# the deploy early while still exiting 0.
 set -e
-ssh "$DEST" "umask 077 && echo $ENVPAY | base64 -d > ~/.laso_deploy_env && source ~/.laso_deploy_env && rm -f ~/.laso_deploy_env && bash -s" < "$(dirname "$0")/vps-deploy.sh"
+ssh "$DEST" "umask 077 && echo $ENVPAY | base64 -d > ~/.laso_deploy_env && source ~/.laso_deploy_env && rm -f ~/.laso_deploy_env && bash ~/laso/vps-deploy.sh"
