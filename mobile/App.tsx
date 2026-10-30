@@ -86,10 +86,7 @@ export default function App() {
     const isDark = theme.colors.canvas.background === '#061011' || theme.colors.canvas.background === '#0B0F19';
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.canvas.background }]}>
-        <StatusBar
-          barStyle={isDark ? 'light-content' : 'dark-content'}
-          backgroundColor={theme.colors.canvas.background}
-        />
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
         <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );

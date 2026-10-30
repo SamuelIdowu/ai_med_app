@@ -1,3 +1,7 @@
+const path = require('path');
+
+const repoRoot = path.resolve(__dirname, '..');
+
 module.exports = {
   testEnvironment: 'node',
   rootDir: '..',
@@ -9,6 +13,9 @@ module.exports = {
   verbose: true,
   forceExit: true,
   clearMocks: true,
+  globals: {
+    __DEV__: true,
+  },
   transform: {
     '^.+\\.tsx?$': [require.resolve('ts-jest'), {
       tsconfig: {
@@ -18,16 +25,31 @@ module.exports = {
         allowSyntheticDefaultImports: true,
         resolveJsonModule: true,
         skipLibCheck: true,
+        paths: {
+          'phosphor-react-native/src/icons/*': [
+            path.join(repoRoot, 'mobile/src/types/phosphor-icon.d.ts'),
+          ],
+        },
       },
     }],
+    '^.+\\.jsx?$': [require.resolve('babel-jest'), {
+      babelrc: false,
+      configFile: false,
+      presets: [
+        [require.resolve('@babel/preset-env'), { targets: { node: 'current' } }],
+      ],
+    }],
   },
+  transformIgnorePatterns: [
+    '[\\\\/]node_modules[\\\\/](?!(?:@noble[\\\\/](?:ciphers|hashes))[\\\\/])',
+  ],
   moduleNameMapper: {
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/mobile/src/__mocks__/fileMock.ts',
     '^expo-linear-gradient$': '<rootDir>/mobile/src/__mocks__/expo-linear-gradient.ts',
     '^expo-speech$': '<rootDir>/mobile/src/__mocks__/expo-speech.ts',
     '^react-native-svg$': '<rootDir>/mobile/src/__mocks__/react-native-svg.ts',
     '^phosphor-react-native$': '<rootDir>/mobile/src/__mocks__/phosphor-react-native.ts',
-    '^phosphor-react-native/lib/module/icons/(.*)$': '<rootDir>/mobile/src/__mocks__/phosphor-icon.ts',
+    '^phosphor-react-native/src/icons/(.*)$': '<rootDir>/mobile/src/__mocks__/phosphor-icon.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/mobile/src/__mocks__/asyncStorage.ts',
     '^expo-secure-store$': '<rootDir>/mobile/src/__mocks__/expo-secure-store.ts',
     '^expo-crypto$': '<rootDir>/mobile/src/__mocks__/expo-crypto.ts',

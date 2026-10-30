@@ -46,15 +46,15 @@ export const Animated = {
     interpolate: jest.fn(() => 0),
   })),
   timing: jest.fn(() => ({
-    start: jest.fn((cb) => cb && cb()),
+    start: jest.fn((cb?: () => void) => cb && cb()),
     stop: jest.fn(),
   })),
   sequence: jest.fn(() => ({
-    start: jest.fn((cb) => cb && cb()),
+    start: jest.fn((cb?: () => void) => cb && cb()),
     stop: jest.fn(),
   })),
   parallel: jest.fn(() => ({
-    start: jest.fn((cb) => cb && cb()),
+    start: jest.fn((cb?: () => void) => cb && cb()),
     stop: jest.fn(),
   })),
   loop: jest.fn(() => ({
@@ -62,7 +62,7 @@ export const Animated = {
     stop: jest.fn(),
   })),
   delay: jest.fn(() => ({
-    start: jest.fn((cb) => cb && cb()),
+    start: jest.fn((cb?: () => void) => cb && cb()),
     stop: jest.fn(),
   })),
   View: 'Animated.View',

@@ -10,7 +10,7 @@ overview and deployment notes, see the repository [README](../README.md).
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22.13+
 - Python 3.12 (ML subsystem)
 - Docker (optional, for the full stack)
 - A Supabase project (Postgres, Auth, Storage)

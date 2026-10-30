@@ -84,7 +84,7 @@ export const EmergencySummaryScreen = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar style="dark" backgroundColor={BG_LIGHT} />
+            <StatusBar style="dark" />
 
             {/* Top App Bar */}
             <View style={styles.header}>

@@ -475,7 +475,7 @@ export const ProviderListScreen: React.FC = () => {
             interactive
             onSelectProvider={handleSelectProvider}
             onOpenProvider={handleOpenProvider}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
 
           {locationStatus && locationStatus !== 'granted' ? (
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
   },
   mapEmptyOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

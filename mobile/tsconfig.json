@@ -3,10 +3,10 @@
   "compilerOptions": {
     "jsx": "react",
     "strict": true,
-    "baseUrl": ".",
+    "types": ["jest", "node"],
     "paths": {
       "phosphor-react-native": ["./node_modules/phosphor-react-native/lib/typescript/index.d.ts"],
-      "phosphor-react-native/lib/module/icons/*": ["./src/types/phosphor-icon.d.ts"]
+      "phosphor-react-native/src/icons/*": ["./src/types/phosphor-icon.d.ts"]
     }
   },
   "exclude": [

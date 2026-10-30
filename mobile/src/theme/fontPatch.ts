@@ -61,9 +61,7 @@ const resolveFontFamily = (style: any): any => {
 
 const originalCreate = StyleSheet.create;
 
-StyleSheet.create = function <T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
-  styles: T | StyleSheet.NamedStyles<T>
-): T {
+(StyleSheet as any).create = function (styles: any): any {
   if (!styles || typeof styles !== 'object') {
     return originalCreate(styles) as any;
   }

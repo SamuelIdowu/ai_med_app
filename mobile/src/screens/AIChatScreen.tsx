@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
 } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,7 +57,7 @@ const QUICK_SUGGESTIONS: { label: string; icon: IconName; prompt: string }[] = [
 export const AIChatScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { isGuest } = useAuth();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);

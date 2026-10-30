@@ -22,7 +22,7 @@ export const WelcomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" />
 
       <View style={styles.content}>
         {/* Top Logo */}

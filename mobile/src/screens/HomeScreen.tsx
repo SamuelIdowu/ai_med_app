@@ -12,6 +12,7 @@ import {
   StatusBar as RNStatusBar,
   TouchableWithoutFeedback,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -179,7 +180,7 @@ type SortOption = 'popular' | 'quickest' | 'alphabetical';
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const searchInputRef = useRef<TextInput>(null);
+  const searchInputRef = useRef<TextInputInstance>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');

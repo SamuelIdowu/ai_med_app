@@ -32,18 +32,29 @@ module.exports = ({ config }) => {
 
   const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
   const plugins = config.plugins || [];
+  // Required by SDK 58 (expo install --fix): datetimepicker, sharing and
+  // status-bar must be registered as config plugins.
+  const requiredPlugins = [
+    '@react-native-community/datetimepicker',
+    'expo-sharing',
+    'expo-status-bar',
+  ];
   const mapLibrePlugin = '@maplibre/maplibre-react-native';
   const pluginsWithMapLibre = plugins.includes(mapLibrePlugin)
     ? plugins
     : [...plugins, mapLibrePlugin];
+  const finalPlugins = [
+    ...pluginsWithMapLibre,
+    ...requiredPlugins.filter((plugin) => !pluginsWithMapLibre.includes(plugin)),
+  ];
 
   if (!googleMapsApiKey) {
-    return { ...config, plugins: pluginsWithMapLibre };
+    return { ...config, plugins: finalPlugins };
   }
 
   return {
     ...config,
-    plugins: pluginsWithMapLibre,
+    plugins: finalPlugins,
     android: {
       ...config.android,
       config: {

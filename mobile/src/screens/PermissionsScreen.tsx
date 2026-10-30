@@ -19,7 +19,7 @@ export const PermissionsScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor={theme.colors.canvas.background} />
+            <StatusBar barStyle="dark-content" />
 
             {/* Top App Bar */}
             <View style={styles.header}>

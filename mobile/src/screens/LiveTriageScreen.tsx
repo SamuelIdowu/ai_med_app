@@ -12,6 +12,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -85,7 +86,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
   const [vitalsResult, setVitalsResult] = useState<VitalsTriageResponse | null>(null);
   const [evaluatingVitals, setEvaluatingVitals] = useState(false);
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
 
   useEffect(() => {
     if (streamedText) {
