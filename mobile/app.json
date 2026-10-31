@@ -82,6 +82,12 @@
           "locationWhenInUsePermission": "Allow Laso to locate nearby healthcare clinics and emergency rooms."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "32377372-5260-4454-9bbb-2c91f0afe418"
+      }
+    },
+    "owner": "thanasis_6"
   }
 }
