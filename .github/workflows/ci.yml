@@ -284,8 +284,9 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          ssh "${VPS_USER}@${VPS_HOST}" "mkdir -p ~/laso"
-          scp docker-compose.prod.yml deploy/Caddyfile "${VPS_USER}@${VPS_HOST}:~/laso/"
+          ssh "${VPS_USER}@${VPS_HOST}" "mkdir -p ~/laso/deploy"
+          scp docker-compose.prod.yml "${VPS_USER}@${VPS_HOST}:~/laso/"
+          scp deploy/Caddyfile "${VPS_USER}@${VPS_HOST}:~/laso/deploy/"
           scp deploy/vps-deploy.sh "${VPS_USER}@${VPS_HOST}:~/laso/"
 
       - name: Sync env, pull images, health-gate, deploy

@@ -73,7 +73,8 @@ Private key contents → `VPS_SSH_PRIVATE_KEY` secret. Keep it out of the repo (
 ```
 ~/laso/
 ├── docker-compose.prod.yml   # scp'd fresh every deploy
-├── Caddyfile                 # scp'd fresh every deploy
+├── deploy/
+│   └── Caddyfile             # scp'd fresh every deploy
 ├── .env                      # 0600, rewritten every deploy from GitHub secrets
 └── .last-good-tag            # rollback anchor, written on healthy deploys
 ```
@@ -113,8 +114,22 @@ After switching to Caddy/Tunnel, update the mobile `EXPO_PUBLIC_BACKEND_URL` to 
 
 - [ ] Supabase Security Advisor after each migration run (RLS advisories)
 - [ ] `docker stats` on the VPS when the bot/ML fight for RAM — ml is capped at 450 MB, backend 250 MB, redis 64 MB
-- [ ] Keep `ssh_key*` out of git (`.gitignore` already covers it; never `git add -f`)
+- [ ] Keep `ssh_key*` out of git (ssh keys now live in `deploy/keys/`, gitignored; never move them back)
 - [ ] ML model updates: commit new `.joblib` files under `ml/models/` — next deploy rebuilds the image automatically
+
+## Automated ops — `.github/workflows/ops.yml`
+
+- **Nightly Supabase backup** (02:00 UTC): `pg_dump` (custom format) of the DB referenced by
+  `SUPABASE_DB_URL`, uploaded as the `laso-db-backup` artifact with 30-day retention
+  (`overwrite: true` keeps one rolling dump). Restore with
+  `pg_restore -d <connection_url> dump`. Also runnable on demand via Actions → "Run workflow".
+  On paid Supabase tiers, prefer enabling dashboard backups/PITR in addition.
+- **Public uptime check** (every 15 min): pings `PUBLIC_BACKEND_URL/health`. Unhealthy →
+  one "Uptime: backend health degraded" issue is opened (no duplicates while unhealthy);
+  the issue auto-closes when health returns 200. Requires the `PUBLIC_BACKEND_URL`
+  repository variable.
+  Consider a dedicated external monitor (e.g. UptimeRobot on the same URL) as a second
+  signal — GitHub schedules can lag.
 
 ## What changed vs the old docs
 

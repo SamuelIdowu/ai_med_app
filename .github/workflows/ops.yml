@@ -1,0 +1,105 @@
+name: Ops (backups + uptime)
+
+on:
+  schedule:
+    # Nightly DB backup at 02:00 UTC
+    - cron: "0 2 * * *"
+    # Uptime ping every 15 minutes
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  # -------------------------------------------------------------
+  # Nightly Supabase backup
+  #   pg_dump (custom format) uploaded as a repo artifact with
+  #   30-day retention. Restore with: pg_restore -d "$DB_URL" dump
+  # -------------------------------------------------------------
+  db-backup:
+    name: Nightly Supabase backup
+    if: >-
+      github.event_name == 'schedule' && github.event.schedule == '0 2 * * *' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required secret
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Missing required secret: SUPABASE_DB_URL"
+            exit 1
+          fi
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Dump database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          pg_dump -v --no-owner --no-privileges -Fc \
+            --file=laso-db-$(date -u +%Y%m%d).dump "$SUPABASE_DB_URL"
+          ls -lh laso-db-*.dump
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: laso-db-backup
+          path: laso-db-*.dump
+          retention-days: 30
+          overwrite: true
+
+  # -------------------------------------------------------------
+  # Public uptime check
+  #   Pings PUBLIC_BACKEND_URL/health every 15 min. On failure:
+  #   retries once, then opens a GitHub issue if none is open
+  #   already (no spam). Auto-closes the issue once healthy again.
+  #   Requires the PUBLIC_BACKEND_URL repository variable.
+  # -------------------------------------------------------------
+  uptime-check:
+    name: Public uptime check
+    if: >-
+      github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check backend /health
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BE_URL: ${{ vars.PUBLIC_BACKEND_URL }}
+        run: |
+          if [ -z "$BE_URL" ]; then
+            echo "::notice::PUBLIC_BACKEND_URL variable not set; skipping uptime check."
+            exit 0
+          fi
+          BASE="${BE_URL%/}"
+          TITLE="Uptime: backend health degraded"
+          first=$(curl -sS --max-time 20 --retry 2 --retry-delay 5 -o /dev/null -w '%{http_code}' "$BASE/health" || echo 000)
+          echo "First attempt: $first"
+
+          if [ "$first" = "200" ]; then
+            open=$(gh api "repos/${{ github.repository }}/issues?state=open&per_page=50" \
+              --jq 'map(.title) | index("'"$TITLE"'") != null')
+            if [ "$open" = "true" ]; then
+              n=$(gh api "repos/${{ github.repository }}/issues?state=open&per_page=50" \
+                --jq '[.[] | select(.title == "'"$TITLE"'") | .number] | add // empty')
+              echo "Backend healthy again — closing alert issue #$n"
+              gh issue close "$n" --comment "Health check returned $first — auto-resolved."
+            fi
+            exit 0
+          fi
+
+          echo "::error::Backend unhealthy ($first)."
+          open=$(gh api "repos/${{ github.repository }}/issues?state=open&per_page=50" \
+            --jq 'map(.title) | index("'"$TITLE"'") != null')
+          if [ "$open" = "true" ]; then
+            echo "Alert issue already open; not spamming a new one."
+            exit 0
+          fi
+          last=$(date -u +'UTC %Y-%m-%d %H:%M')
+          gh issue create --title "$TITLE" \
+            --body "> Auto-opened by the \`Ops (backups + uptime)\` workflow. It will auto-close once healthy. Backend \`$BASE/health\` failed at **$last** (response: \`$first\`)."
