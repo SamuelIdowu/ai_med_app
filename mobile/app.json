@@ -31,8 +31,6 @@
         "RECORD_AUDIO",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
         "android.permission.health.READ_HEART_RATE",
         "android.permission.health.READ_BLOOD_PRESSURE",
         "android.permission.health.READ_OXYGEN_SATURATION",
