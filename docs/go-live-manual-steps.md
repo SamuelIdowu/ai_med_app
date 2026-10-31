@@ -8,6 +8,11 @@ This document remains as the reference for: how each secret/variable is provisio
 key recovery, the TLS architecture actually in place, ops-workflow verification, and a
 failure-lookup table. Steps below are written so they can be repeated if values rotate.
 
+> Update (same day): manual dispatch deploys now work — Actions → *Laso CI/CD Pipeline*
+> → **Run workflow** with the `tag` input (`sha-<short>` from `~/laso/.last-good-tag`,
+> or `latest`) skips the build jobs and rolls out the named tag (`docs/deployment-guide.md`
+> § Rollback & redeploys).
+
 ---
 
 ## 0. Where things go — map
@@ -137,6 +142,7 @@ BACKEND_BIND       = 127.0.0.1
 | compose: `REDIS_PASSWORD must be set` | `REDIS_PASSWORD` secret missing/expired |
 | `GHCR login failed; assuming images are public` | no `GHCR_TOKEN` (or bad scope) — deploys still OK if images are public |
 | Backend unhealthy, rollback message in deploy log | check Supabase keys/Gemini (`GEMINI_API_KEY` is a hard gate), then Actions logs |
+| Slash re-deploy a known tag | Actions → *Laso CI/CD Pipeline* → *Run workflow* → `tag` input (`sha-<short>` or `latest`) — build jobs skip, deploy-vps runs |
 | `wallet...: docker.sock permission denied` on raw docker | `docker` on this box is root-only for `ubuntu` → **use `sudo docker`** |
 
 ## 7. Routine validation checklist

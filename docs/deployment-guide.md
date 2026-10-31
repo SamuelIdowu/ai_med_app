@@ -37,7 +37,7 @@ push main → CI green → build & push GHCR images (sha-<tag>)
 | Variable | When to set |
 |---|---|
 | `SUPABASE_MIGRATIONS_ADOPT_UNTIL` | **On first deploy only**: `010_vital_readings.sql`. Marks migrations 000–010 as applied (schema was provisioned manually) without re-executing them. Delete after first successful deploy. |
-| `COMPOSE_PROFILES` | Set to `caddy` once you enable TLS via Caddy |
+| `VPS_COMPOSE_PROFILES` | Set to `caddy` once you enable TLS via Caddy (ci.yml reads this name and maps it into compose `COMPOSE_PROFILES`) |
 | `CADDY_DOMAIN` | Your domain when using the Caddy profile |
 | `BACKEND_BIND` | `127.0.0.1` with Caddy/Tunnel; leave unset for raw-IP |
 | `ALLOWED_ORIGINS` | Comma-separated web origins; leave for native-only |
@@ -88,8 +88,8 @@ No repo clone is needed on the VPS; images come from GHCR.
 | Mode | Setting | Notes |
 |---|---|---|
 | Raw IP (default) | nothing | Backend on `:3000` plain HTTP — fine for development, upgrade ASAP for auth traffic |
-| Caddy on VPS | `COMPOSE_PROFILES=caddy`, `CADDY_DOMAIN=api.yourdomain.com`, `BACKEND_BIND=127.0.0.1` | Point the domain's A record at the VPS; Caddy issues Let's Encrypt certs automatically. ML is also proxied at `ml.<domain>`. |
-| Cloudflare Tunnel | Install `cloudflared` on the VPS, point it at `http://127.0.0.1:3000` with the same compose + `BACKEND_BIND=127.0.0.1` (keep `COMPOSE_PROFILES` unset) | No open ports; be aware the Oracle box is behind no ports with tunnel |
+| Caddy on VPS | repo variable `VPS_COMPOSE_PROFILES=caddy`, `CADDY_DOMAIN=api.yourdomain.com`, `BACKEND_BIND=127.0.0.1` | Point the domain's A record at the VPS; Caddy issues Let's Encrypt certs automatically. ML is also proxied at `ml.<domain>`. |
+| Cloudflare Tunnel | Install `cloudflared` on the VPS, point it at `http://127.0.0.1:3000` with the same compose + `BACKEND_BIND=127.0.0.1` (keep `VPS_COMPOSE_PROFILES` unset) | No open ports; be aware the Oracle box is behind no ports with tunnel |
 
 After switching to Caddy/Tunnel, update the mobile `EXPO_PUBLIC_BACKEND_URL` to the HTTPS URL and rebuild/release via EAS (or OTA).
 
@@ -108,7 +108,8 @@ After switching to Caddy/Tunnel, update the mobile `EXPO_PUBLIC_BACKEND_URL` to 
 
 - **Automatic**: unhealthy deploy → previous tag is restarted (see `deploy/vps-deploy.sh`). The job fails so you see it in Slack/email.
 - **Manual**: on the VPS `sed -i "s/^BACKEND_TAG=.*/BACKEND_TAG=sha-<old>/" ~/laso/.env` (same for `ML_TAG=`) and `docker compose -f ~/laso/docker-compose.prod.yml up -d`.
-- **Anything broken**: re-run `deploy-vps` via Actions → "Run workflow" (covers transient Supabase/network errors too).
+- **Anything broken / re-deploy an existing tag**: Actions → "Laso CI/CD Pipeline" → **Run workflow** →
+  set `tag` (e.g. `sha-<old>` from `~/laso/.last-good-tag`, or `latest`). This skips the build jobs and rolls out the tag you name.
 
 ## Post-deploy hygiene
 

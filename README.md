@@ -141,7 +141,7 @@ Pipeline (`.github/workflows/ci.yml`, triggers on every push/PR):
 
 1. **CI matrix** — backend Jest + coverage floors, ML pytest + safety benchmark, mobile TS + integration tests, Docker compose validation
 2. **Build & push** — `ghcr.io/<owner>/laso-backend` and `ghcr.io/<owner>/laso-ml` (slim torch-free profile) tagged `sha-<commit>` + `latest`; main pushes push to GHCR, PRs build only
-3. **Deploy** (main only) — applies Supabase migrations via psql (tracked in `ci_cd.migration_history`), writes the VPS `.env` from GitHub secrets, `docker compose pull && up -d`, health-gates backend + ML, and **auto-rolls back** to the previous tag on failure
+3. **Deploy** (main pushes + manual `workflow_dispatch`) — applies Supabase migrations via psql (tracked in `ci_cd.migration_history`), writes the VPS `.env` from GitHub secrets, `docker compose pull && up -d`, health-gates backend + ML, and **auto-rolls back** to the previous tag on failure. Manual dispatch deploys an existing tag: set the `tag` input (default `latest`) — build jobs are skipped.
 
 Required GitHub configuration:
 
@@ -154,9 +154,9 @@ Required GitHub configuration:
 | secret | `REDIS_PASSWORD`, `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `GEOAPIFY_API_KEY` | Routed into the VPS `.env` each deploy |
 | secret | `GHCR_TOKEN` | PAT with `read:packages` for VPS image pulls |
 | variable | `SUPABASE_MIGRATIONS_ADOPT_UNTIL` | One-time: `010_vital_readings.sql` (marks already-applied migrations; remove after first deploy) |
-| variable | `COMPOSE_PROFILES`, `CADDY_DOMAIN`, `BACKEND_BIND`, `ALLOWED_ORIGINS`, `PUBLIC_BACKEND_URL` | Optional TLS/origin tuning (see deployment guide) |
+| variable | `VPS_COMPOSE_PROFILES`, `CADDY_DOMAIN`, `BACKEND_BIND`, `ALLOWED_ORIGINS`, `PUBLIC_BACKEND_URL` | Optional TLS/origin tuning (see deployment guide) |
 
-TLS options: raw-IP (default) exposes backend on port 3000; set `COMPOSE_PROFILES=caddy` + `CADDY_DOMAIN` + `BACKEND_BIND=127.0.0.1` to front everything with auto-HTTPS Caddy.
+TLS options: raw-IP (default) exposes backend on port 3000; set `VPS_COMPOSE_PROFILES=caddy` + `CADDY_DOMAIN` + `BACKEND_BIND=127.0.0.1` to front everything with auto-HTTPS Caddy.
 
 Before deploying, validate the environment and cloud resources: `cd backend && npm run preflight:deploy`
 

@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag to deploy (sha-xxxxxxx or latest). Ignored on push/PR events.'
+        required: false
+        default: 'latest'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -173,6 +178,7 @@ jobs:
   #   main pushes  -> tests green here, then images are pushed and
   #                   the deploy-vps job rolls them out to the VPS.
   #   pull requests -> build-only validation of both Dockerfiles.
+  #   manual dispatch -> skipped; deploy-vps redeploys an existing tag.
   # -------------------------------------------------------------
   build-push:
     name: Build & Push Images (GHCR)
@@ -237,12 +243,28 @@ jobs:
   # -------------------------------------------------------------
   deploy-vps:
     name: Deploy to VPS (backend + ML)
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    # main pushes deploy the freshly built images. Manual deploys skip
+    # build-push (a skipped dependency would normally skip this job too,
+    # hence always()) and roll out an existing image tag instead.
+    if: |
+      always() &&
+      (((github.event_name == 'push' && github.ref == 'refs/heads/main') && needs.build-push.result == 'success') ||
+       github.event_name == 'workflow_dispatch')
     needs: build-push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Resolve deploy coordinates
+        id: meta
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ needs.build-push.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Verify deploy configuration
         env:
@@ -293,8 +315,8 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
-          BACKEND_IMAGE: ghcr.io/${{ needs.build-push.outputs.owner }}/laso-backend
-          ML_IMAGE: ghcr.io/${{ needs.build-push.outputs.owner }}/laso-ml
+          BACKEND_IMAGE: ghcr.io/${{ steps.meta.outputs.owner }}/laso-backend
+          ML_IMAGE: ghcr.io/${{ steps.meta.outputs.owner }}/laso-ml
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.EXPO_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -308,7 +330,7 @@ jobs:
           CADDY_DOMAIN: ${{ vars.CADDY_DOMAIN }}
           BACKEND_BIND: ${{ vars.BACKEND_BIND }}
           PUBLIC_BACKEND_URL: ${{ vars.PUBLIC_BACKEND_URL }}
-          DEPLOY_TAG: ${{ needs.build-push.outputs.tag }}
+          DEPLOY_TAG: ${{ steps.meta.outputs.tag }}
         run: bash deploy/run-deploy.sh "${VPS_USER}@${VPS_HOST}"
 
       - name: Post-deploy smoke test (public URL)
