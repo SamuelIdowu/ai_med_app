@@ -50,7 +50,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Lint Backend
-        run: npm run lint --if-present
+        run: npm run lint
 
       - name: Run Backend Jest Test Suite
         run: npm test
@@ -112,7 +112,7 @@ jobs:
 
       - name: Lint Mobile
         working-directory: mobile
-        run: npm run lint --if-present
+        run: npm run lint
 
       - name: Install Backend Dependencies for Mobile Runner
         working-directory: backend

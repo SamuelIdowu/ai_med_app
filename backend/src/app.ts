@@ -27,8 +27,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow mobile applications / server-to-server (no origin) or allowed domains
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      // Allow mobile applications / server-to-server (no origin) or allowed domains.
+      // Origin checks apply in every environment; there is no dev wildcard bypass.
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by CORS policy'));

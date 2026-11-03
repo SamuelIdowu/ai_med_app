@@ -21,7 +21,9 @@ app = FastAPI(
 
 cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
 if not cors_origins:
-    cors_origins = ["*"]
+    # Internal subsystem default: only the backend gateway origin (local dev
+    # and the in-network Docker service name). Never default to a wildcard.
+    cors_origins = ["http://localhost:3000", "http://backend:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,13 +64,12 @@ class EmbedRequest(BaseModel):
 @app.get("/health")
 @app.get("/v1/ml/health")
 def health() -> Dict[str, Any]:
+    # Deliberately minimal: no configuration details (strictness, model
+    # availability, embedding dims) on an unauthenticated endpoint.
     return {
         "status": "ok",
         "service": "laso-ml",
         "version": "1.3.0",
-        "safety_strictness": settings.SAFETY_STRICTNESS,
-        "embedding_dim": settings.EMBEDDING_DIM,
-        "classical_ml_available": classical_ml_service.is_model_available()
     }
 
 @app.post("/v1/ml/triage/stream")

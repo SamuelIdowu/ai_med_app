@@ -6,6 +6,7 @@ import * as encounterController from '../controllers/encounterController';
 import { handleTriageStream, handleWoundUpload } from '../controllers/streamController';
 import { getUploadUrl } from '../services/storageService';
 import { authenticateUser } from '../middleware/auth';
+import { validateUuidParam } from '../validation/index';
 
 import { getEncounter } from '../services/encounterService';
 
@@ -28,12 +29,16 @@ router.delete('/:id', encounterController.remove);
 router.post('/:id/wound', handleWoundUpload);
 router.post('/:id/photos', async (req, res) => {
   try {
+    const uuidResult = validateUuidParam(req.params.id);
+    if (!uuidResult.ok) {
+      return res.status(400).json({ error: uuidResult.error });
+    }
     const { fileName } = req.body;
-    if (!fileName) {
-      return res.status(400).json({ error: 'fileName is required' });
+    if (!fileName || typeof fileName !== 'string' || fileName.length > 255) {
+      return res.status(400).json({ error: 'Valid fileName is required' });
     }
     const token = req.headers.authorization?.split(' ')[1] || '';
-    const encounterRecord = await getEncounter(req.params.id, req.user.id, token);
+    const encounterRecord = await getEncounter(uuidResult.value, req.user.id, token);
     if (!encounterRecord) {
       return res.status(404).json({ error: 'Encounter not found' });
     }

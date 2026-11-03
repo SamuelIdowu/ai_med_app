@@ -4,9 +4,15 @@
 import { Request, Response } from 'express';
 import * as encounterService from '../services/encounterService';
 import { logAudit } from '../services/auditService';
+import { validateUuidParam } from '../validation/index';
 
 const VALID_STATUSES = ['active', 'in_progress', 'escalated', 'resolved'];
 const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'];
+
+const readEncounterId = (req: Request): string | null => {
+  const result = validateUuidParam(req.params.id);
+  return result.ok ? result.value : null;
+};
 
 export const create = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -65,10 +71,15 @@ export const getById = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
     const token = req.headers.authorization?.split(' ')[1] || '';
-    const encounterId = req.params.id;
 
     if (!userId) {
       res.status(401).json({ error: 'User must be authenticated' });
+      return;
+    }
+
+    const encounterId = readEncounterId(req);
+    if (!encounterId) {
+      res.status(400).json({ error: 'Invalid encounter id' });
       return;
     }
 
@@ -128,10 +139,15 @@ export const updateStatus = async (req: Request, res: Response): Promise<void> =
   try {
     const userId = req.user?.id;
     const token = req.headers.authorization?.split(' ')[1] || '';
-    const encounterId = req.params.id;
 
     if (!userId) {
       res.status(401).json({ error: 'User must be authenticated' });
+      return;
+    }
+
+    const encounterId = readEncounterId(req);
+    if (!encounterId) {
+      res.status(400).json({ error: 'Invalid encounter id' });
       return;
     }
 
@@ -184,10 +200,15 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
     const token = req.headers.authorization?.split(' ')[1] || '';
-    const encounterId = req.params.id;
 
     if (!userId) {
       res.status(401).json({ error: 'User must be authenticated' });
+      return;
+    }
+
+    const encounterId = readEncounterId(req);
+    if (!encounterId) {
+      res.status(400).json({ error: 'Invalid encounter id' });
       return;
     }
 

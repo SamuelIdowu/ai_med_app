@@ -2,6 +2,7 @@ import express from 'express';
 import { generateReport } from '../services/reportService';
 import { authenticateUser } from '../middleware/auth';
 import { logAudit } from '../services/auditService';
+import { validateUuidParam } from '../validation/index';
 
 const router = express.Router();
 
@@ -9,6 +10,11 @@ router.use(authenticateUser);
 
 router.post('/:id/generate', async (req, res) => {
   try {
+    const uuidResult = validateUuidParam(req.params.id);
+    if (!uuidResult.ok) {
+      res.status(400).json({ error: uuidResult.error });
+      return;
+    }
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -17,7 +23,7 @@ router.post('/:id/generate', async (req, res) => {
       return;
     }
 
-    const pdfBytes = await generateReport(req.user.id, req.params.id, token);
+    const pdfBytes = await generateReport(req.user.id, uuidResult.value, token);
 
     logAudit({
       userId: req.user.id,
@@ -47,7 +53,12 @@ router.post('/:id/generate', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const encounterId = req.params.id;
+    const uuidResult = validateUuidParam(req.params.id);
+    if (!uuidResult.ok) {
+      res.status(400).json({ error: uuidResult.error });
+      return;
+    }
+    const encounterId = uuidResult.value;
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 

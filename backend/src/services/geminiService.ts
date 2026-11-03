@@ -194,7 +194,7 @@ export const GeminiService = {
         errorMessage.includes('quota') ||
         errorMessage.includes('rate limit')
       ) {
-        throw new QuotaExceededError(errorMessage);
+        throw new QuotaExceededError('Gemini API quota exceeded.');
       }
 
       // Check for invalid request errors
@@ -203,7 +203,7 @@ export const GeminiService = {
         errorMessage.includes('invalid') ||
         errorMessage.includes('First content should be')
       ) {
-        throw new InvalidRequestError(errorMessage);
+        throw new InvalidRequestError('Gemini rejected the request payload.');
       }
 
       // Check for network errors
@@ -213,7 +213,7 @@ export const GeminiService = {
         errorMessage.includes('fetch') ||
         errorMessage.includes('network')
       ) {
-        throw new NetworkError(errorMessage);
+        throw new NetworkError('Could not reach the Gemini service.');
       }
 
       // Default to generic error with user-friendly message
@@ -318,15 +318,15 @@ Analyze the image now:`;
       const errorMessage = error?.message || '';
 
       if (error?.status === 429 || errorMessage.includes('quota')) {
-        throw new QuotaExceededError(errorMessage);
+        throw new QuotaExceededError('Gemini API quota exceeded.');
       }
 
       if (error?.status === 400 || errorMessage.includes('invalid')) {
-        throw new InvalidRequestError(errorMessage);
+        throw new InvalidRequestError('Gemini rejected the image payload.');
       }
 
       if (error?.status === 503 || error?.status === 504 || errorMessage.includes('network')) {
-        throw new NetworkError(errorMessage);
+        throw new NetworkError('Could not reach the Gemini service.');
       }
 
       throw new InvalidRequestError('Failed to analyze image.');

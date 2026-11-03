@@ -11,19 +11,29 @@ import {
   getMedicalProfileContext,
   sanitizeClientProfileContext,
 } from '../services/aiContextService';
+import { validateChatMessage, validateChatHistory } from '../validation/index';
 
 export const chat = async (req: Request, res: Response) => {
   try {
-    const { message, history } = req.body;
-
-    if (!message) {
+    const messageResult = validateChatMessage(req.body.message);
+    if (!messageResult.ok) {
       res.status(400).json({
-        error: 'Message is required',
+        error: messageResult.error,
         code: 'MISSING_MESSAGE',
         userMessage: 'Please enter a message to continue.',
       });
       return;
     }
+    const historyResult = validateChatHistory(req.body.history);
+    if (!historyResult.ok) {
+      res.status(400).json({
+        error: historyResult.error,
+        code: 'INVALID_HISTORY',
+        userMessage: 'Conversation history is invalid. Please start a new chat.',
+      });
+      return;
+    }
+    const { message, history } = { message: messageResult.value, history: historyResult.value };
 
     // Extract user ID and access token for function calling
     const accessToken = req.headers.authorization?.split(' ')[1];

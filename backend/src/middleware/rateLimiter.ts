@@ -1,6 +1,17 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
-const rateLimitKey = (req: { ip?: string }) => ipKeyGenerator(req.ip ?? 'unknown');
+// Authenticated requests are keyed by user id so that verified users don't get
+// throttled by someone else sharing their IP (NAT, mobile carriers). Guests and
+// requests without a resolved user fall back to the IP key.
+const rateLimitKey = (req: { ip?: string; user?: { id?: string } }) => {
+  const userId = (req as { user?: { id?: string } }).user?.id;
+  if (userId) {
+    return `user:${userId}`;
+  }
+  return rateLimitKeyIP(req);
+};
+
+const rateLimitKeyIP = (req: { ip?: string }) => ipKeyGenerator(req.ip ?? 'unknown');
 
 // Baseline limiter for all authenticated / general API routes that don't have
 // a scoped limiter of their own (profile, encounters, reports, notifications,
@@ -26,7 +37,9 @@ export const globalApiRateLimiter = rateLimit({
 });
 
 // Stricter limiter for unauthenticated (guest) AI chat access.
-// Applied after optional auth so signed-in users only hit aiRateLimiter.
+// Kept on the IP key even when a user id exists — it is only applied to
+// guest requests (no resolved user), but keeps its own IP bucket so one
+// guest cannot burn another's quota.
 export const guestAiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,
@@ -58,9 +71,9 @@ export const aiRateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Use IP address as the key with proper IPv6 support
+  // Keyed by user id when signed in (per-account quota), IP fallback for guests
   keyGenerator: (req) => {
-    return ipKeyGenerator(req.ip ?? 'unknown');
+    return rateLimitKey(req);
   },
   handler: (req, res) => {
     res.status(429).json({

@@ -1,8 +1,9 @@
-import express from 'express';
+import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { getSupabaseAdmin } from '../db/client';
+import { checkEmailAvailability } from '../validation/index';
 
-const router = express.Router();
+const router: Router = Router();
 
 // Strict rate-limiting on auth check endpoint to prevent automated credential enumeration
 const authCheckLimiter = rateLimit({
@@ -16,11 +17,11 @@ const authCheckLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post('/check', authCheckLimiter, async (req, res) => {
-  const { email } = req.body;
+router.post('/check', authCheckLimiter, async (req: Request, res: Response) => {
+  const email = checkEmailAvailability(req.body);
 
-  if (!email || typeof email !== 'string') {
-    return res.status(400).json({ exists: false, error: 'Email is required' });
+  if (!email) {
+    return res.status(400).json({ exists: false, error: 'A valid email is required' });
   }
 
   const normalizedEmail = email.toLowerCase().trim();
@@ -28,28 +29,21 @@ router.post('/check', authCheckLimiter, async (req, res) => {
   try {
     const supabase = getSupabaseAdmin();
 
-    // 1. Check primary users table
-    const { data: userRecord } = await supabase
+    // The on_auth_user_created trigger + migration backfill keep public.users in
+    // sync with auth.users, so one indexed lookup answers both cases without a
+    // service-role admin scan.
+    const { data: userRecord, error } = await supabase
       .from('users')
       .select('id')
-      .ilike('email', normalizedEmail)
+      .eq('email', normalizedEmail)
       .maybeSingle();
 
-    if (userRecord) {
-      return res.json({ exists: true });
+    if (error) {
+      throw new Error('lookup_failed');
     }
 
-    // 2. Safe check against auth admin without creating/deleting phantom probe accounts
-    const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-    if (!authError && authData?.users) {
-      const existsInAuth = authData.users.some(
-        (u) => u.email?.toLowerCase().trim() === normalizedEmail,
-      );
-      return res.json({ exists: existsInAuth });
-    }
-
-    return res.json({ exists: false });
-  } catch (e: any) {
+    return res.json({ exists: Boolean(userRecord) });
+  } catch {
     if (process.env.NODE_ENV !== 'test') {
       console.error('Unexpected error checking user');
     }

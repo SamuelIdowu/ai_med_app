@@ -1,26 +1,20 @@
 import { Request, Response } from 'express';
 import * as notificationService from '../services/notificationService';
+import { validatePushToken, validateUuidParam } from '../validation/index';
 
 export const registerToken = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { token } = req.body;
+    const tokenResult = validatePushToken(req.body.token);
 
-    if (!token) {
-      res.status(400).json({ error: 'Token is required' });
+    if (!tokenResult.ok) {
+      res.status(400).json({ error: tokenResult.error });
       return;
     }
 
-    await notificationService.registerToken(userId, token);
+    await notificationService.registerToken(userId, tokenResult.value);
     res.json({ success: true, message: 'Token registered successfully' });
   } catch (error: any) {
-    if (
-      typeof error?.message === 'string' &&
-      error.message.includes('not a valid Expo push token')
-    ) {
-      res.status(400).json({ error: error.message });
-      return;
-    }
     if (process.env.NODE_ENV !== 'test') {
       console.error('Failed to register notification token');
     }
@@ -44,9 +38,14 @@ export const getNotifications = async (req: Request, res: Response) => {
 export const markAsRead = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { id } = req.params;
+    const idResult = validateUuidParam(req.params.id);
 
-    await notificationService.markAsRead(id, userId);
+    if (!idResult.ok) {
+      res.status(400).json({ error: idResult.error });
+      return;
+    }
+
+    await notificationService.markAsRead(idResult.value, userId);
     res.json({ success: true });
   } catch (error: any) {
     if (process.env.NODE_ENV !== 'test') {
@@ -56,11 +55,28 @@ export const markAsRead = async (req: Request, res: Response) => {
   }
 };
 
-// Test endpoint to trigger a notification (for development/verification)
+// Test endpoint to trigger a notification (development/verification only —
+// not mounted in production)
 export const testNotification = async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
   try {
     const userId = (req as any).user.id;
     const { title, message, type } = req.body;
+
+    if (
+      typeof title !== 'string' ||
+      title.length === 0 ||
+      title.length > 120 ||
+      typeof message !== 'string' ||
+      message.length === 0 ||
+      message.length > 2000
+    ) {
+      res.status(400).json({ error: 'Valid title and message are required' });
+      return;
+    }
 
     await notificationService.sendNotification(userId, title, message, type || 'info');
     res.json({ success: true, message: 'Notification sent' });
