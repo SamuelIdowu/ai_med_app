@@ -8,7 +8,7 @@ import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
 import { offlineStorage } from '../services/offlineStorage';
 import { Encounter } from '../services/types';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import { Illustration } from '../components/Illustration';
 import { resolveIconName } from '../icons';
 
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
         width: 112,
         height: 112,
         borderRadius: 56,
-        backgroundColor: 'rgba(39, 174, 96, 0.1)', // green/10
+        backgroundColor: withAlpha(theme.colors.status.success.primary, 0.1), // green/10
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,

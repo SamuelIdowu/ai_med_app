@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   logoPlus: {
-    color: '#10B981',
+    color: theme.colors.status.success.primary,
   },
   heroCard: {
     padding: 28,

@@ -1,7 +1,7 @@
 import { Icon } from '../Icon';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, Linking, TouchableOpacity, SafeAreaView } from 'react-native';
-import { theme } from '../../theme';
+import { theme, withAlpha } from '../../theme';
 
 interface Props {
   children: ReactNode;
@@ -57,7 +57,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
               onPress={this.handleEmergencyCall}
               activeOpacity={0.85}
             >
-              <Icon name="phone" size={24} color="#FFFFFF" />
+              <Icon name="phone" size={24} color={theme.colors.ramp.white} />
               <Text style={styles.emergencyButtonText}>Call Emergency (911)</Text>
             </TouchableOpacity>
 
@@ -81,7 +81,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0B0F19',
+    backgroundColor: theme.colors.ramp.nightDark,
   },
   container: {
     flex: 1,
@@ -93,18 +93,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 16,
     borderRadius: 9999,
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: withAlpha(theme.colors.status.emergency.primary, 0.15),
   },
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#9CA3AF',
+    color: theme.colors.ramp.gray400,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   emergencyButton: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.colors.status.emergency.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -121,14 +121,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 10,
     marginBottom: 14,
-    shadowColor: '#EF4444',
+    shadowColor: theme.colors.status.emergency.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
     elevation: 6,
   },
   emergencyButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -140,13 +140,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: withAlpha(theme.colors.ramp.white, 0.08),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: withAlpha(theme.colors.ramp.white, 0.12),
     gap: 8,
   },
   resetButtonText: {
-    color: '#E5E7EB',
+    color: theme.colors.ramp.gray200,
     fontSize: 15,
     fontWeight: '600',
   },

@@ -18,7 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { AnalyticsService } from '../services/analyticsService';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import firstAidData from '../content/first-aid-content.json';
 import { Illustration } from '../components/Illustration';
 import type { IconName } from '../icons';
@@ -351,7 +351,7 @@ export const HomeScreen: React.FC = () => {
             <View style={styles.logoRow}>
               <Text style={styles.logoText}>Laso</Text>
               <View style={styles.logoShieldBadge}>
-                <Icon name="shieldPlus" size={20} color="#FFFFFF" />
+                <Icon name="shieldPlus" size={20} color={theme.colors.ramp.white} />
               </View>
             </View>
 
@@ -363,7 +363,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Medical Profile"
               >
-                <Icon name="identificationCard" size={19} color="#FFFFFF" />
+                <Icon name="identificationCard" size={19} color={theme.colors.ramp.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -372,7 +372,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="AI Clinical Suite"
               >
-                <Icon name="sparkle" size={19} color="#FFFFFF" />
+                <Icon name="sparkle" size={19} color={theme.colors.ramp.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -381,7 +381,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Notifications"
               >
-                <Icon name="bell" size={19} color="#FFFFFF" />
+                <Icon name="bell" size={19} color={theme.colors.ramp.white} />
                 <View style={styles.unreadBadgeDot} />
               </TouchableOpacity>
 
@@ -391,7 +391,7 @@ export const HomeScreen: React.FC = () => {
                 style={styles.circleActionButton}
                 accessibilityLabel="Settings"
               >
-                <Icon name="gear" size={19} color="#FFFFFF" />
+                <Icon name="gear" size={19} color={theme.colors.ramp.white} />
               </TouchableOpacity>
             </View>
           </View>
@@ -411,7 +411,7 @@ export const HomeScreen: React.FC = () => {
                 height={84}
                 accessibilityLabel="Laso+ medical emblem"
                 fallback={
-                  <Icon name="shieldPlus" size={44} color="#FFFFFF" />
+                  <Icon name="shieldPlus" size={44} color={theme.colors.ramp.white} />
                 }
               />
             </View>
@@ -434,7 +434,7 @@ export const HomeScreen: React.FC = () => {
               <Icon
                 name={isSortDropdownOpen ? 'caretUp' : 'caretDown'}
                 size={18}
-                color="#111827"
+                color={theme.colors.ramp.gray900}
               />
             </TouchableOpacity>
 
@@ -453,7 +453,7 @@ export const HomeScreen: React.FC = () => {
                 <Icon
                   name="faders"
                   size={19}
-                  color={activeFilterCount > 0 ? '#FFFFFF' : '#111827'}
+                  color={activeFilterCount > 0 ? theme.colors.ramp.white : theme.colors.ramp.gray900}
                 />
                 {activeFilterCount > 0 && (
                   <View style={styles.filterCountBadge}>
@@ -475,7 +475,7 @@ export const HomeScreen: React.FC = () => {
                 <Icon
                   name="search"
                   size={20}
-                  color={isSearchActive || searchQuery.length > 0 ? '#FFFFFF' : '#111827'}
+                  color={isSearchActive || searchQuery.length > 0 ? theme.colors.ramp.white : theme.colors.ramp.gray900}
                 />
               </TouchableOpacity>
             </View>
@@ -509,7 +509,7 @@ export const HomeScreen: React.FC = () => {
                       : 'Alphabetical (A - Z)'}
                   </Text>
                   {sortBy === opt && (
-                    <Icon name="check" size={16} color="#0F1115" />
+                    <Icon name="check" size={16} color={theme.colors.ramp.ink} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -523,14 +523,14 @@ export const HomeScreen: React.FC = () => {
                 <Icon
                   name="search"
                   size={20}
-                  color="#111827"
+                  color={theme.colors.ramp.gray900}
                   style={styles.searchIcon}
                 />
                 <TextInput
                   ref={searchInputRef}
                   style={styles.searchInput}
                   placeholder="Search emergency protocol..."
-                  placeholderTextColor="#888888"
+                  placeholderTextColor={theme.colors.ramp.gray500}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   autoCorrect={false}
@@ -541,7 +541,7 @@ export const HomeScreen: React.FC = () => {
                     onPress={() => setSearchQuery('')}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Icon name="closeCircle" size={18} color="#888888" />
+                    <Icon name="closeCircle" size={18} color={theme.colors.ramp.gray500} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -596,7 +596,7 @@ export const HomeScreen: React.FC = () => {
                       <Icon
                         name="close"
                         size={14}
-                        color="#FFFFFF"
+                        color={theme.colors.ramp.white}
                         style={{ marginLeft: 4 }}
                       />
                     )}
@@ -619,7 +619,7 @@ export const HomeScreen: React.FC = () => {
                   }
                 >
                   <Text style={styles.activeTagText}>{tag}</Text>
-                  <Icon name="close" size={12} color="#FFFFFF" />
+                  <Icon name="close" size={12} color={theme.colors.ramp.white} />
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
@@ -667,7 +667,7 @@ export const HomeScreen: React.FC = () => {
                   {/* Top Row: Icon Circle + Step Badge */}
                   <View style={styles.cardHeaderRow}>
                     <View style={styles.iconCircleBadge}>
-                      <Icon name={item.icon} size={22} color="#000000" />
+                      <Icon name={item.icon} size={22} color={theme.colors.ramp.black} />
                     </View>
 
                     <View style={styles.cardStepsBadge}>
@@ -690,7 +690,7 @@ export const HomeScreen: React.FC = () => {
                   {/* Bottom Action Row (Emergency Protocol Link) */}
                   <View style={styles.cardActionRow}>
                     <Text style={styles.cardActionLabel}>Protocol</Text>
-                    <Icon name="arrowRight" size={16} color="#0F1115" />
+                    <Icon name="arrowRight" size={16} color={theme.colors.ramp.ink} />
                   </View>
                 </TouchableOpacity>
               ))}
@@ -701,7 +701,7 @@ export const HomeScreen: React.FC = () => {
               <Icon
                 name="listMagnifyingGlass"
                 size={48}
-                color="#888888"
+                color={theme.colors.ramp.gray500}
               />
               <Text style={styles.emptyStateTitle}>No matching protocols</Text>
               <Text style={styles.emptyStateSub}>
@@ -730,7 +730,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={styles.viewMoreBannerText}>
                 View all {filteredEmergencies.length} emergency protocols
               </Text>
-              <Icon name="arrowRight" size={18} color="#0F1115" />
+              <Icon name="arrowRight" size={18} color={theme.colors.ramp.ink} />
             </TouchableOpacity>
           )}
 
@@ -742,7 +742,7 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <Icon name="robot" size={24} color="#FFFFFF" />
+                <Icon name="robot" size={24} color={theme.colors.ramp.white} />
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>AI Emergency Triage</Text>
@@ -751,7 +751,7 @@ export const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            <Icon name="caretRight" size={24} color="#000000" />
+            <Icon name="caretRight" size={24} color={theme.colors.ramp.black} />
           </TouchableOpacity>
 
           {/* AI Clinical Suite Hub Card */}
@@ -762,7 +762,7 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <Icon name="sparkle" size={24} color="#FFFFFF" />
+                <Icon name="sparkle" size={24} color={theme.colors.ramp.white} />
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>AI Clinical Suite</Text>
@@ -771,7 +771,7 @@ export const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            <Icon name="caretRight" size={24} color="#000000" />
+            <Icon name="caretRight" size={24} color={theme.colors.ramp.black} />
           </TouchableOpacity>
 
           {/* Nearest Clinics & Live Map Banner */}
@@ -782,7 +782,7 @@ export const HomeScreen: React.FC = () => {
           >
             <View style={styles.aiTriageLeft}>
               <View style={styles.aiTriageIcon}>
-                <Icon name="mapPin" size={24} color="#FFFFFF" />
+                <Icon name="mapPin" size={24} color={theme.colors.ramp.white} />
               </View>
               <View style={styles.aiTriageTextCol}>
                 <Text style={styles.aiTriageTitle}>Nearest Clinics & Live Map</Text>
@@ -791,7 +791,7 @@ export const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            <Icon name="caretRight" size={24} color="#000000" />
+            <Icon name="caretRight" size={24} color={theme.colors.ramp.black} />
           </TouchableOpacity>
 
           {/* Spacing for floating bottom bar */}
@@ -823,7 +823,7 @@ export const HomeScreen: React.FC = () => {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.modalCloseBtn}
                   >
-                    <Icon name="close" size={20} color="#111827" />
+                    <Icon name="close" size={20} color={theme.colors.ramp.gray900} />
                   </TouchableOpacity>
                 </View>
 
@@ -855,7 +855,7 @@ export const HomeScreen: React.FC = () => {
                           <Icon
                             name="close"
                             size={14}
-                            color="#FFFFFF"
+                            color={theme.colors.ramp.white}
                             style={{ marginLeft: 6 }}
                           />
                         )}
@@ -893,7 +893,7 @@ export const HomeScreen: React.FC = () => {
                           <Icon
                             name="close"
                             size={14}
-                            color="#FFFFFF"
+                            color={theme.colors.ramp.white}
                             style={{ marginLeft: 6 }}
                           />
                         )}
@@ -940,7 +940,7 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
   },
   scrollArea: {
     flex: 1,
@@ -968,9 +968,9 @@ const styles = StyleSheet.create({
     width: 190,
     height: 190,
     borderRadius: 95,
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: withAlpha(theme.colors.ramp.white, 0.1),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
+    borderColor: withAlpha(theme.colors.ramp.white, 0.16),
   },
   heroHeaderRow: {
     flexDirection: 'row',
@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     letterSpacing: -0.5,
   },
   logoShieldBadge: {
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.20)',
+    borderColor: withAlpha(theme.colors.ramp.white, 0.2),
   },
   headerActions: {
     flexDirection: 'row',
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.20)',
+    borderColor: withAlpha(theme.colors.ramp.white, 0.2),
     position: 'relative',
   },
   unreadBadgeDot: {
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     lineHeight: 38,
     letterSpacing: -0.6,
   },
@@ -1049,9 +1049,9 @@ const styles = StyleSheet.create({
     borderRadius: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: withAlpha(theme.colors.ramp.white, 0.08),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
+    borderColor: withAlpha(theme.colors.ramp.white, 0.22),
   },
   // 2. BODY CONTENT
   bodyContainer: {
@@ -1069,18 +1069,18 @@ const styles = StyleSheet.create({
   sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     paddingVertical: 9,
     paddingHorizontal: 14,
     borderRadius: 22,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   sortButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   controlsRightGroup: {
     flexDirection: 'row',
@@ -1091,45 +1091,45 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   circleControlBtnActive: {
-    backgroundColor: '#0F1115',
-    borderColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
+    borderColor: theme.colors.ramp.ink,
   },
   filterCountBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     borderRadius: 9,
     width: 18,
     height: 18,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.white,
   },
   filterCountBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 
   // Sort Dropdown Menu
   sortDropdownMenu: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingVertical: 6,
     marginBottom: 12,
-    shadowColor: '#000000',
+    shadowColor: theme.colors.ramp.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
@@ -1143,15 +1143,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   sortDropdownItemActive: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
   },
   sortDropdownItemText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4B5563',
+    color: theme.colors.ramp.gray600,
   },
   sortDropdownItemTextActive: {
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     fontWeight: '800',
   },
 
@@ -1162,10 +1162,10 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7F8FA',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
   },
@@ -1176,7 +1176,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.ramp.gray900,
   },
 
   // HORIZONTAL CATEGORY FILTER PILLS
@@ -1194,21 +1194,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   filterPillActive: {
-    backgroundColor: '#0F1115',
-    borderColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
+    borderColor: theme.colors.ramp.ink,
   },
   filterPillText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#1F2937',
+    color: theme.colors.ramp.gray800,
   },
   filterPillTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '700',
   },
 
@@ -1223,13 +1223,13 @@ const styles = StyleSheet.create({
   activeTagsLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     marginRight: 2,
   },
   activeTagPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -1238,7 +1238,7 @@ const styles = StyleSheet.create({
   activeTagText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   clearTagsBtn: {
     paddingHorizontal: 6,
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
   clearTagsText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#EF4444',
+    color: theme.colors.status.emergency.primary,
   },
 
   // Section Headers
@@ -1265,18 +1265,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     letterSpacing: -0.3,
   },
   sectionBadgeCount: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
   },
   sectionActionText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#4B5563',
+    color: theme.colors.ramp.gray600,
   },
 
   // 2-Column Cards Grid (Minimal Top 4)
@@ -1331,14 +1331,14 @@ const styles = StyleSheet.create({
   emergencyCardTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 4,
     letterSpacing: -0.2,
   },
   emergencyCardSubtitle: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     lineHeight: 16,
     marginBottom: 12,
   },
@@ -1348,12 +1348,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: theme.colors.ramp.gray100,
   },
   cardActionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
 
   // Empty state
@@ -1362,32 +1362,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 36,
     paddingHorizontal: 20,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   emptyStateTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginTop: 10,
   },
   emptyStateSub: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     textAlign: 'center',
     marginTop: 4,
     marginBottom: 16,
   },
   emptyStateResetBtn: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
   },
   emptyStateResetText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '700',
     fontSize: 13,
   },
@@ -1397,10 +1397,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginTop: 14,
@@ -1409,7 +1409,7 @@ const styles = StyleSheet.create({
   viewMoreBannerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
 
   // AI Triage Banner
@@ -1459,7 +1459,7 @@ const styles = StyleSheet.create({
   // 3. FILTER BOTTOM SHEET MODAL (Screen 3 in mockup)
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(6, 16, 17, 0.55)',
+    backgroundColor: withAlpha(theme.colors.palette.darkSideMoon, 0.55),
     justifyContent: 'flex-end',
   },
   modalSheet: {
@@ -1536,7 +1536,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   modalPillTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '700',
   },
   modalFooterRow: {
@@ -1567,6 +1567,6 @@ const styles = StyleSheet.create({
   modalApplyBtnText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 });

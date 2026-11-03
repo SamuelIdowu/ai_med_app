@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, Alert, Easing } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StorageService } from '../services/storage';
 import { supabase } from '../services/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import { Illustration } from '../components/Illustration';
 
 const { width } = Dimensions.get('window');
@@ -18,7 +18,8 @@ export const SplashScreen = () => {
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 1200,
+                duration: 500,
+                easing: Easing.out(Easing.cubic),
                 useNativeDriver: true,
             }),
             Animated.spring(scaleAnim, {
@@ -29,7 +30,8 @@ export const SplashScreen = () => {
             }),
             Animated.timing(slideAnim, {
                 toValue: 0,
-                duration: 1000,
+                duration: 450,
+                easing: Easing.out(Easing.cubic),
                 useNativeDriver: true,
             }),
         ]).start();
@@ -112,9 +114,9 @@ const styles = StyleSheet.create({
     logoText: {
         fontSize: 42,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        color: theme.colors.text.inverse,
         marginBottom: 8,
-        textShadowColor: 'rgba(0, 0, 0, 0.35)',
+        textShadowColor: withAlpha(theme.colors.ramp.black, 0.35),
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 6,
     },
@@ -131,13 +133,13 @@ const styles = StyleSheet.create({
         bottom: 50,
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: withAlpha(theme.colors.ramp.white, 0.1),
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: withAlpha(theme.colors.ramp.white, 0.2),
     },
     resetText: {
-        color: '#FFF',
+        color: theme.colors.text.inverse,
         fontSize: 12,
         fontWeight: '600',
     },

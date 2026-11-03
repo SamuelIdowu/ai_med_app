@@ -37,7 +37,7 @@ import {
   buildMedicalProfileContext,
 } from '../services/medicalProfileService';
 import { useAuth } from '../context/AuthContext';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import type { IconName } from '../icons';
 
 const QUICK_SUGGESTIONS: { label: string; icon: IconName; prompt: string }[] = [
@@ -235,8 +235,8 @@ export const AIChatScreen: React.FC = () => {
       title: 'First Aid Protocol',
       description: 'Step-by-step guidance for bleeding, burns, CPR & choking',
       icon: 'firstAidKit',
-      iconBgColor: '#F3F4F6',
-      iconColor: '#0F1115',
+      iconBgColor: theme.colors.ramp.gray100,
+      iconColor: theme.colors.ramp.ink,
       onPress: () => navigation.navigate('FirstAidList'),
     },
     {
@@ -244,8 +244,8 @@ export const AIChatScreen: React.FC = () => {
       title: 'Live Streaming Triage',
       description: 'Real-time markdown SSE clinical triage with escalation detection',
       icon: 'lightning',
-      iconBgColor: '#F3F4F6',
-      iconColor: '#0F1115',
+      iconBgColor: theme.colors.ramp.gray100,
+      iconColor: theme.colors.ramp.ink,
       onPress: () => navigation.navigate('LiveTriage'),
     },
     {
@@ -253,8 +253,8 @@ export const AIChatScreen: React.FC = () => {
       title: 'Photo Analysis',
       description: 'Wound vision or general AI assessment with severity guidance',
       icon: 'scan',
-      iconBgColor: '#F3F4F6',
-      iconColor: '#0F1115',
+      iconBgColor: theme.colors.ramp.gray100,
+      iconColor: theme.colors.ramp.ink,
       onPress: () => navigation.navigate('AIAnalysis'),
     },
     {
@@ -262,8 +262,8 @@ export const AIChatScreen: React.FC = () => {
       title: 'Nearest Clinics & Map',
       description: 'Locate closest hospitals and urgent care centers with GPS distance',
       icon: 'mapPin',
-      iconBgColor: '#F3F4F6',
-      iconColor: '#0F1115',
+      iconBgColor: theme.colors.ramp.gray100,
+      iconColor: theme.colors.ramp.ink,
       onPress: () => navigation.navigate('ProviderList'),
     },
     {
@@ -271,8 +271,8 @@ export const AIChatScreen: React.FC = () => {
       title: 'Emergency Dial & Dispatch',
       description: 'Direct 911 one-tap line with location assistance',
       icon: 'emergencyCall',
-      iconBgColor: '#F3F4F6',
-      iconColor: '#0F1115',
+      iconBgColor: theme.colors.ramp.gray100,
+      iconColor: theme.colors.ramp.ink,
       onPress: () => sendMessage('What should I do in an emergency before paramedics arrive?'),
     },
   ];
@@ -386,8 +386,8 @@ export const AIChatScreen: React.FC = () => {
               >
                 {!isUser && (
                   <View style={styles.modelAvatarCircle}>
-                    <LinearGradient colors={['#0F1115', '#262A33']} style={styles.avatarGradient}>
-                      <Icon name="sparkle" size={14} color="#FFFFFF" />
+                    <LinearGradient colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]} style={styles.avatarGradient}>
+                      <Icon name="sparkle" size={14} color={theme.colors.ramp.white} />
                     </LinearGradient>
                   </View>
                 )}
@@ -403,7 +403,7 @@ export const AIChatScreen: React.FC = () => {
                         onPress={() => VoiceService.speak(msg.text)}
                         activeOpacity={0.7}
                       >
-                        <Icon name="speakerHigh" size={15} color="#4B5563" />
+                        <Icon name="speakerHigh" size={15} color={theme.colors.ramp.gray600} />
                         <Text style={styles.speakButtonText}>Listen to guidance</Text>
                       </TouchableOpacity>
                     </>
@@ -416,8 +416,8 @@ export const AIChatScreen: React.FC = () => {
           {loading && (
             <View style={[styles.messageRow, styles.modelRow]}>
               <View style={styles.modelAvatarCircle}>
-                <LinearGradient colors={['#0F1115', '#262A33']} style={styles.avatarGradient}>
-                  <Icon name="sparkle" size={14} color="#FFFFFF" />
+                <LinearGradient colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]} style={styles.avatarGradient}>
+                  <Icon name="sparkle" size={14} color={theme.colors.ramp.white} />
                 </LinearGradient>
               </View>
               <View style={[styles.bubble, styles.modelBubble, { paddingVertical: 14 }]}>
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   userMessageText: {
     fontSize: 15,
     lineHeight: 21,
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   suggestionsSection: {
     marginTop: 16,
@@ -640,13 +640,13 @@ const styles = StyleSheet.create({
     width: 220,
     height: 150,
     borderRadius: 14,
-    backgroundColor: '#1F242D',
+    backgroundColor: theme.colors.ramp.inkDim,
   },
   mediaTagPill: {
     position: 'absolute',
     bottom: 8,
     left: 8,
-    backgroundColor: 'rgba(15, 17, 21, 0.8)',
+    backgroundColor: withAlpha(theme.colors.ramp.ink, 0.8),
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -655,16 +655,16 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   mediaTagText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 10,
     fontWeight: '700',
   },
   videoBubbleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F242D',
+    backgroundColor: theme.colors.ramp.inkDim,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: theme.colors.ramp.gray700,
     borderRadius: 14,
     padding: 10,
     width: 220,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -684,15 +684,15 @@ const styles = StyleSheet.create({
   videoBubbleTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   videoBubbleSubtitle: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: theme.colors.ramp.gray400,
     marginTop: 1,
   },
   videoPillBadge: {
-    backgroundColor: '#374151',
+    backgroundColor: theme.colors.ramp.gray700,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
   videoPillBadgeText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   speakButton: {
     flexDirection: 'row',
@@ -709,12 +709,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.ramp.gray200,
     alignSelf: 'flex-start',
   },
   speakButtonText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#4B5563',
+    color: theme.colors.ramp.gray600,
   },
 });

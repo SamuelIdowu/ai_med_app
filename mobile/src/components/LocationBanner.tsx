@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -118,6 +118,6 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 });

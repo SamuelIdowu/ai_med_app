@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Dimensions,
   Platform,
   Alert,
@@ -15,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RhythmWaveform } from '../charts/RhythmWaveform';
 import { VoiceService } from '../../services/voiceService';
 import { OrganicFluidSphere } from '../ui/OrganicFluidSphere';
+import { theme } from '../../theme';
 
 interface VoiceWaveformModalProps {
   visible: boolean;
@@ -29,33 +29,10 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<any>(null);
-
-  // Pulse animation for the glowing AI orb
-  useEffect(() => {
-    if (visible) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.15,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1.0,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulse.start();
-      return () => pulse.stop();
-    }
-  }, [visible, pulseAnim]);
 
   // Handle verbal agent instruction and speech recognition lifecycle
   useEffect(() => {
@@ -193,14 +170,14 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
             onPress={handleClose}
             style={styles.closeCircle}
           >
-            <Icon name="close" size={20} color="#0F172A" />
+            <Icon name="close" size={20} color={theme.colors.ramp.slate900} />
           </TouchableOpacity>
 
           <View style={styles.statusPill}>
             <View
               style={[
                 styles.statusDot,
-                { backgroundColor: isAgentSpeaking ? '#3B82F6' : '#10B981' },
+                { backgroundColor: isAgentSpeaking ? theme.colors.status.info.primary : theme.colors.status.success.primary },
               ]}
             />
             <Text style={styles.statusText}>
@@ -238,8 +215,8 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
           <RhythmWaveform
             barCount={36}
             height={48}
-            activeColor={isAgentSpeaking ? '#2563EB' : '#0F1115'}
-            mutedColor="#E5E7EB"
+            activeColor={isAgentSpeaking ? theme.colors.status.info.primary : theme.colors.ramp.ink}
+            mutedColor={theme.colors.ramp.gray200}
             style={styles.waveform}
           />
 
@@ -249,7 +226,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
               onPress={handleClose}
               style={styles.controlCircle}
             >
-              <Icon name="close" size={22} color="#0F172A" />
+              <Icon name="close" size={22} color={theme.colors.ramp.slate900} />
             </TouchableOpacity>
 
             {/* Send Transcribed Speech Button */}
@@ -264,7 +241,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
               <Icon
                 name={transcript.trim().length > 0 ? 'arrowUp' : 'microphone'}
                 size={26}
-                color="#FFFFFF"
+                color={theme.colors.ramp.white}
               />
             </TouchableOpacity>
           </View>
@@ -286,7 +263,7 @@ const ORB_SIZE = Math.min(windowWidth * 0.52, 210);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.canvas.background,
     justifyContent: 'space-between',
     paddingVertical: 44,
     paddingHorizontal: 24,
@@ -300,21 +277,21 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     gap: 6,
   },
   statusDot: {
@@ -325,7 +302,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
+    color: theme.colors.ramp.gray700,
   },
   centerContainer: {
     alignItems: 'center',
@@ -336,7 +313,7 @@ const styles = StyleSheet.create({
     width: ORB_SIZE,
     height: ORB_SIZE,
     borderRadius: ORB_SIZE / 2,
-    shadowColor: '#000000',
+    shadowColor: theme.colors.ramp.black,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
     shadowRadius: 28,
@@ -351,15 +328,15 @@ const styles = StyleSheet.create({
   instructionBanner: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#1E3A8A',
+    color: theme.colors.status.info.text,
     textAlign: 'center',
     fontWeight: '600',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: theme.colors.status.info.surface,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#DBEAFE',
+    borderColor: theme.colors.status.info.border,
   },
   transcriptBox: {
     minHeight: 64,
@@ -370,12 +347,12 @@ const styles = StyleSheet.create({
   transcriptText: {
     fontSize: 17,
     lineHeight: 24,
-    color: '#0F172A',
+    color: theme.colors.ramp.slate900,
     textAlign: 'center',
     fontWeight: '600',
   },
   placeholderText: {
-    color: '#9CA3AF',
+    color: theme.colors.ramp.gray400,
     fontStyle: 'italic',
     fontWeight: '400',
   },
@@ -396,9 +373,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -406,21 +383,21 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#374151',
+    backgroundColor: theme.colors.ramp.gray700,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000000',
+    shadowColor: theme.colors.ramp.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
   },
   activeActionCircle: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
   },
   hintText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     fontWeight: '500',
   },
 });

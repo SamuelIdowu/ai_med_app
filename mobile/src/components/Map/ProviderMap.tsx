@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     width: 17,
     height: 17,
     borderRadius: 9,
-    backgroundColor: '#2563EB',
+    backgroundColor: theme.colors.status.info.primary,
     borderWidth: 3,
     borderColor: theme.colors.canvas.surface,
   },

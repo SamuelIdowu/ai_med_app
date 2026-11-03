@@ -66,7 +66,7 @@ export const ClinicalBarChart: React.FC<ClinicalBarChartProps> = ({
                 y1={yPos}
                 x2={chartWidth - paddingRight}
                 y2={yPos}
-                stroke={isThreshold ? '#E2E8F0' : '#F1F5F9'}
+                stroke={isThreshold ? theme.colors.canvas.border : theme.colors.chart.gridLine}
                 strokeWidth={1}
                 strokeDasharray="4,4"
               />

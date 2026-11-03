@@ -11,7 +11,7 @@ import { MedicalProfileService } from '../services/medicalProfileService';
 import { EncounterService } from '../services/encounterService';
 import { StorageService } from '../services/storage';
 import { useAuth } from '../context/AuthContext';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import type { IconName } from '../icons';
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
@@ -115,7 +115,7 @@ export const SettingsScreen = () => {
     }) => (
         <TouchableOpacity style={styles.optionItem} onPress={onPress}>
             <View style={styles.optionContent}>
-                <View style={[styles.iconContainer, { backgroundColor: color === theme.colors.status.danger ? 'rgba(239, 68, 68, 0.12)' : theme.colors.primary.light }]}>
+                <View style={[styles.iconContainer, { backgroundColor: color === theme.colors.status.danger ? withAlpha(theme.colors.status.emergency.primary, 0.12) : theme.colors.primary.light }]}>
                     <Icon name={icon} size={20} color={color} />
                 </View>
                 <Text style={[styles.optionLabel, { color }]}>{label}</Text>
@@ -203,7 +203,7 @@ export const SettingsScreen = () => {
                 </View>
                 {(isExporting || isDeleting) && (
                     <View style={styles.loadingOverlay}>
-                        <ActivityIndicator size="large" color="#0F1115" />
+                        <ActivityIndicator size="large" color={theme.colors.ramp.ink} />
                         <Text style={styles.loadingText}>{isDeleting ? 'Deleting data...' : 'Exporting data...'}</Text>
                     </View>
                 )}
@@ -232,7 +232,7 @@ export const SettingsScreen = () => {
                                 <Switch
                                     value={analyticsConsent}
                                     onValueChange={setAnalyticsConsent}
-                                    trackColor={{ false: '#E5E7EB', true: '#0F1115' }}
+                                    trackColor={{ false: theme.colors.ramp.gray200, true: theme.colors.ramp.ink }}
                                 />
                             </View>
                             <Text style={styles.toggleDesc}>Allow us to collect anonymous usage data to improve the app.</Text>
@@ -242,7 +242,7 @@ export const SettingsScreen = () => {
                                 <Switch
                                     value={marketingConsent}
                                     onValueChange={setMarketingConsent}
-                                    trackColor={{ false: '#E5E7EB', true: '#0F1115' }}
+                                    trackColor={{ false: theme.colors.ramp.gray200, true: theme.colors.ramp.ink }}
                                 />
                             </View>
                             <Text style={styles.toggleDesc}>Receive updates about new features and health tips.</Text>
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: withAlpha(theme.colors.ramp.black, 0.5),
         justifyContent: 'flex-end',
     },
     modalContent: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
         ...theme.spatial.shadows3d.level2,
     },
     saveButtonText: {
-        color: '#FFFFFF',
+        color: theme.colors.text.inverse,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(255,255,255,0.85)',
+        backgroundColor: withAlpha(theme.colors.ramp.white, 0.85),
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 100,

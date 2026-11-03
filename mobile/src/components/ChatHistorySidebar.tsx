@@ -10,10 +10,11 @@ import {
     Alert,
 } from 'react-native';
 import { Chat } from '../types/chatTypes';
+import { theme, withAlpha } from '../theme';
 
-const PRIMARY_COLOR = '#0F1115';
-const TEXT_DARK = '#0F1115';
-const TEXT_SECONDARY = '#6B7280';
+const PRIMARY_COLOR = theme.colors.ramp.ink;
+const TEXT_DARK = theme.colors.ramp.ink;
+const TEXT_SECONDARY = theme.colors.ramp.gray500;
 
 interface ChatHistorySidebarProps {
     visible: boolean;
@@ -142,7 +143,7 @@ export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
                                         style={styles.deleteButton}
                                         onPress={() => handleDelete(chat.id)}
                                     >
-                                        <Icon name="trash" size={20} color="#ef4444" />
+                                        <Icon name="trash" size={20} color={theme.colors.status.emergency.primary} />
                                     </TouchableOpacity>
                                 </View>
                             ))
@@ -157,11 +158,11 @@ export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: withAlpha(theme.colors.ramp.black, 0.5),
         justifyContent: 'flex-end',
     },
     sidebar: {
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.surface,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '80%',
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        borderBottomColor: theme.colors.chart.gridLine,
     },
     headerTitle: {
         fontSize: 20,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     newChatText: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
         fontSize: 16,
         fontWeight: '600',
     },
@@ -227,15 +228,15 @@ const styles = StyleSheet.create({
     chatItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.colors.canvas.surface,
         borderRadius: 12,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: theme.colors.ramp.gray200,
     },
     chatItemActive: {
-        backgroundColor: '#F3F4F6',
-        borderColor: '#0F1115',
+        backgroundColor: theme.colors.ramp.gray100,
+        borderColor: theme.colors.ramp.ink,
     },
     chatItemContent: {
         flex: 1,

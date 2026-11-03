@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     input: {
-        backgroundColor: '#FFF',
+        backgroundColor: theme.colors.canvas.surface,
         borderWidth: 1,
         borderColor: BORDER_COLOR,
         borderRadius: 12,
@@ -425,14 +425,14 @@ const styles = StyleSheet.create({
         color: TEXT_DARK,
     },
     dateButton: {
-        backgroundColor: '#FFF',
+        backgroundColor: theme.colors.canvas.surface,
         borderWidth: 1,
         borderColor: BORDER_COLOR,
         borderRadius: 12,
         padding: 16,
     },
     pickerWrapper: {
-        backgroundColor: '#FFF',
+        backgroundColor: theme.colors.canvas.surface,
         borderWidth: 1,
         borderColor: BORDER_COLOR,
         borderRadius: 12,
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
         opacity: 0.7,
     },
     primaryButtonText: {
-        color: '#FFF',
+        color: theme.colors.text.inverse,
         fontSize: 18,
         fontWeight: 'bold',
     },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,9 +6,10 @@ import {
   ViewStyle,
   Image,
   ImageSourcePropType,
+  AccessibilityInfo,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../../theme';
+import { theme, withAlpha } from '../../theme';
 
 export type SphereState = 'idle' | 'recording' | 'thinking';
 
@@ -40,8 +41,28 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
   // Specular drift
   const specularOffset = useRef(new Animated.Value(0)).current;
 
+  // Reduced-motion handling: users with the OS "reduce motion" setting get a
+  // static sphere instead of four infinite concurrent loops.
+  const [reduceMotion, setReduceMotion] = useState(false);
+
   useEffect(() => {
-    if (!active) return;
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (mounted) setReduceMotion(enabled);
+      })
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (enabled) => {
+      if (mounted) setReduceMotion(enabled);
+    });
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!active || reduceMotion) return;
 
     // Cadence speeds based on state
     const duration =
@@ -148,8 +169,8 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
     };
   }, [
     active,
+    reduceMotion,
     state,
-    size,
     squishX,
     squishY,
     haloScale1,
@@ -162,16 +183,16 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
   // Color theme presets according to state
   const haloColor =
     state === 'recording'
-      ? 'rgba(14, 136, 160, 0.45)'
+      ? withAlpha(theme.colors.palette.coralCoast, 0.45)
       : state === 'thinking'
-      ? 'rgba(48, 87, 98, 0.40)'
-      : 'rgba(177, 200, 216, 0.25)';
+      ? withAlpha(theme.colors.palette.petroBlue, 0.4)
+      : withAlpha(theme.colors.palette.blissfulBlue, 0.25);
 
   const gradientColors =
     state === 'recording'
-      ? [theme.colors.palette.coralCoast, '#1099b5', theme.colors.palette.petroBlue]
+      ? [theme.colors.palette.coralCoast, theme.colors.primary.main, theme.colors.palette.petroBlue]
       : state === 'thinking'
-      ? [theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal, '#061011']
+      ? [theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal, theme.colors.palette.darkSideMoon]
       : [theme.colors.palette.coralCoast, theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal];
 
   return (
@@ -279,6 +300,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '12%',
     left: '18%',
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    backgroundColor: withAlpha(theme.colors.ramp.white, 0.35),
   },
 });

@@ -60,7 +60,7 @@ export const PermissionsScreen = () => {
                                 value={anonymousData}
                                 onValueChange={setAnonymousData}
                                 trackColor={{ false: theme.colors.canvas.subtle, true: theme.colors.primary.main }}
-                                thumbColor={'#FFFFFF'}
+                                thumbColor={theme.colors.ramp.white}
                                 ios_backgroundColor={theme.colors.canvas.subtle}
                             />
                         </View>
@@ -79,7 +79,7 @@ export const PermissionsScreen = () => {
                                 value={cameraAccess}
                                 onValueChange={setCameraAccess}
                                 trackColor={{ false: theme.colors.canvas.subtle, true: theme.colors.primary.main }}
-                                thumbColor={'#FFFFFF'}
+                                thumbColor={theme.colors.ramp.white}
                                 ios_backgroundColor={theme.colors.canvas.subtle}
                             />
                         </View>
@@ -98,7 +98,7 @@ export const PermissionsScreen = () => {
                                 value={reportSharing}
                                 onValueChange={setReportSharing}
                                 trackColor={{ false: theme.colors.canvas.subtle, true: theme.colors.primary.main }}
-                                thumbColor={'#FFFFFF'}
+                                thumbColor={theme.colors.ramp.white}
                                 ios_backgroundColor={theme.colors.canvas.subtle}
                             />
                         </View>
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
         ...theme.spatial.shadows3d.level2,
     },
     primaryButtonText: {
-        color: '#FFFFFF',
+        color: theme.colors.text.inverse,
         fontSize: 18,
         fontWeight: 'bold',
     },

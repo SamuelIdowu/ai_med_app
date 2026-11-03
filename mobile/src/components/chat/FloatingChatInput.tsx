@@ -54,7 +54,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
               <Image source={{ uri: attachedMedia.uri }} style={styles.previewThumbnail} />
             ) : (
               <View style={styles.videoThumbnailPlaceholder}>
-                <Icon name="videoCamera" size={20} color="#FFFFFF" />
+                <Icon name="videoCamera" size={20} color={theme.colors.ramp.white} />
               </View>
             )}
 
@@ -72,7 +72,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Icon name="closeCircle" size={20} color="#6B7280" />
+                <Icon name="closeCircle" size={20} color={theme.colors.ramp.gray500} />
               </TouchableOpacity>
             )}
           </View>
@@ -132,20 +132,20 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
           <LinearGradient
             colors={
               canSend
-                ? ['#0F1115', '#262A33']
-                : ['#E5E7EB', '#D1D5DB']
+                ? [theme.colors.ramp.ink, theme.colors.ramp.inkElev]
+                : [theme.colors.ramp.gray200, theme.colors.ramp.gray300]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientOrb}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={theme.colors.ramp.white} />
             ) : (
               <Icon
                 name="arrowUp"
                 size={18}
-                color="#FFFFFF"
+                color={theme.colors.ramp.white}
               />
             )}
           </LinearGradient>
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   pillInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: theme.spatial.radii.pill,
     borderWidth: 1,
     borderColor: theme.colors.canvas.border,
@@ -205,10 +205,10 @@ const styles = StyleSheet.create({
   mediaPreviewCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     padding: 6,
     paddingRight: 10,
     ...theme.spatial.shadows.sm,
@@ -217,13 +217,13 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
   },
   videoThumbnailPlaceholder: {
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -235,11 +235,11 @@ const styles = StyleSheet.create({
   mediaTypeLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   mediaHint: {
     fontSize: 11,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     marginTop: 1,
   },
   removeMediaBtn: {

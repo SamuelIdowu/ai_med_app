@@ -53,7 +53,7 @@ export const PhotoPreviewScreen = () => {
                         {photoUri ? (
                             <Image source={{ uri: photoUri }} style={styles.previewImage} resizeMode="cover" />
                         ) : (
-                            <View style={[styles.previewImage, { backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }]}>
+                            <View style={[styles.previewImage, { backgroundColor: theme.colors.ramp.gray300, justifyContent: 'center', alignItems: 'center' }]}>
                                 <Text>No Image Captured</Text>
                             </View>
                         )}
@@ -96,9 +96,9 @@ export const PhotoPreviewScreen = () => {
                             <Text style={styles.consentText}>I consent to secure AI analysis of this image and saving the result to my history.</Text>
                         </View>
                         <Switch
-                            trackColor={{ false: "#cbd5e1", true: PRIMARY_COLOR }}
-                            thumbColor={"#ffffff"}
-                            ios_backgroundColor="#cbd5e1"
+                            trackColor={{ false: theme.colors.ramp.slate300, true: PRIMARY_COLOR }}
+                            thumbColor={theme.colors.ramp.white}
+                            ios_backgroundColor={theme.colors.ramp.slate300}
                             onValueChange={setConsent}
                             value={consent}
                         />
@@ -192,8 +192,8 @@ const styles = StyleSheet.create({
         backgroundColor: SURFACE_COLOR,
     },
     modeChipSelected: {
-        backgroundColor: '#0F1115',
-        borderColor: '#0F1115',
+        backgroundColor: theme.colors.ramp.ink,
+        borderColor: theme.colors.ramp.ink,
     },
     modeChipText: {
         fontSize: 13,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
         color: TEXT_DARK,
     },
     modeChipTextSelected: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
     },
     captureTips: {
         fontSize: 12,

@@ -228,7 +228,7 @@ export const HistoryScreen: React.FC = () => {
               disabled={healthSyncing}
             >
               {healthSyncing
-                ? <ActivityIndicator size="small" color="#FFFFFF" />
+                ? <ActivityIndicator size="small" color={theme.colors.ramp.white} />
                 : <Text style={styles.healthSyncButtonText}>Connect / Sync</Text>}
             </TouchableOpacity>
           </View>
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.spatial.radii.pill,
   },
   activeTabToggle: {
-    backgroundColor: '#111318',
+    backgroundColor: theme.colors.ramp.inkDeep,
   },
   tabToggleText: {
     fontSize: 13,
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   activeTabText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '700',
   },
   scrollArea: {
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   healthSyncButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 12,
     fontWeight: '700',
   },

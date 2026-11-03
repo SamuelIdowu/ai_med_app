@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { theme } from '../../theme';
+import { theme, withAlpha } from '../../theme';
 
 interface CameraReticleProps {
   instruction?: string;
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: CORNER_SIZE,
     height: CORNER_SIZE,
-    borderColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.white,
   },
   topLeft: {
     top: 0,
@@ -77,13 +77,13 @@ const styles = StyleSheet.create({
   },
   badge: {
     marginTop: 12,
-    backgroundColor: 'rgba(17, 19, 24, 0.85)',
+    backgroundColor: withAlpha(theme.colors.ramp.inkDeep, 0.85),
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: theme.spatial.radii.pill,
   },
   instructionText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 12,
     fontWeight: '600',
   },

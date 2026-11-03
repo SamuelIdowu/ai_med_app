@@ -52,7 +52,7 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({
           onPress={handleCallEmergency}
           style={styles.callButton}
         >
-          <Icon name="phone" size={16} color="#FFFFFF" />
+          <Icon name="phone" size={16} color={theme.colors.ramp.white} />
           <Text style={styles.callButtonText}>Call {emergencyNumber}</Text>
         </TouchableOpacity>
 
@@ -116,12 +116,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.spatial.radii.pill,
   },
   callButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 13,
     fontWeight: '700',
   },
   guideButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderColor: theme.colors.status.emergency.border,
     borderWidth: 1,
     paddingVertical: 8,

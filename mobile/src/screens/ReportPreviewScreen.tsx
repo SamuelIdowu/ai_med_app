@@ -126,7 +126,7 @@ export const ReportPreviewScreen = () => {
                             />
                         ) : (
                             <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                                <Icon name="user" size={28} color="#737373" />
+                                <Icon name="user" size={28} color={theme.colors.ramp.gray500} />
                             </View>
                         )}
                         <View style={styles.patientDetails}>
@@ -162,7 +162,7 @@ export const ReportPreviewScreen = () => {
                     <View style={styles.card}>
                         <View style={styles.vitalsHeaderRow}>
                             <View style={styles.vitalsTitleGroup}>
-                                <Icon name="heartbeat" size={20} color="#E53734" />
+                                <Icon name="heartbeat" size={20} color={theme.colors.status.emergency.primary} />
                                 <Text style={styles.vitalsCardTitle}>Vitals & ML Triage</Text>
                             </View>
                             <View style={[
@@ -214,7 +214,7 @@ export const ReportPreviewScreen = () => {
                                 <Text style={styles.vitalsRiskTitle}>Clinical Risk Drivers & Red Flags:</Text>
                                 {encounter.vitals.risk_drivers.map((driver: string, idx: number) => (
                                     <View key={idx} style={styles.riskRow}>
-                                        <Icon name="warning" size={16} color="#DC2626" />
+                                        <Icon name="warning" size={16} color={theme.colors.status.emergency.primary} />
                                         <Text style={styles.riskText}>{driver}</Text>
                                     </View>
                                 ))}
@@ -248,7 +248,7 @@ export const ReportPreviewScreen = () => {
             {/* Sticky Share Button */}
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.shareButton} onPress={handleSharePress}>
-                    <Icon name="share" size={20} color="#FFFFFF" />
+                    <Icon name="share" size={20} color={theme.colors.ramp.white} />
                     <Text style={styles.shareButtonText}>Share Report</Text>
                 </TouchableOpacity>
             </View>
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: theme.colors.ramp.gray200,
     },
     avatarPlaceholder: {
         alignItems: 'center',
@@ -348,12 +348,12 @@ const styles = StyleSheet.create({
     patientName: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#171717',
+        color: theme.colors.ramp.charcoal,
         marginBottom: 2,
     },
     patientSubDetail: {
         fontSize: 14,
-        color: '#525252',
+        color: theme.colors.ramp.gray600,
     },
     gridRow: {
         paddingVertical: 4,
@@ -363,15 +363,15 @@ const styles = StyleSheet.create({
     },
     gridLabel: {
         fontSize: 14,
-        color: '#737373',
+        color: theme.colors.ramp.gray500,
     },
     gridValue: {
         fontSize: 14,
-        color: '#1F2937',
+        color: theme.colors.ramp.gray800,
     },
     divider: {
         height: 1,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: theme.colors.ramp.gray200,
         marginVertical: 12,
     },
     section: {
@@ -381,13 +381,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#171717',
+        color: theme.colors.ramp.charcoal,
         marginBottom: 12,
         paddingTop: 8,
     },
     notesText: {
         fontSize: 16,
-        color: '#404040', // neutral-700
+        color: theme.colors.ramp.gray700, // neutral-700
         lineHeight: 24,
     },
     photosScroll: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
         height: 112,
         borderRadius: 8,
         marginRight: 12,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: theme.colors.ramp.gray200,
     },
     footer: {
         position: 'absolute',
@@ -422,13 +422,13 @@ const styles = StyleSheet.create({
         ...theme.spatial.shadows3d.level2,
     },
     shareButtonText: {
-        color: '#FFFFFF',
+        color: theme.colors.text.inverse,
         fontSize: 16,
         fontWeight: 'bold',
     },
     errorText: {
         fontSize: 16,
-        color: '#EF4444',
+        color: theme.colors.status.emergency.primary,
         textAlign: 'center',
         marginTop: 20,
     },
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     vitalsCardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#171717',
+        color: theme.colors.ramp.charcoal,
     },
     triageBadge: {
         paddingHorizontal: 10,
@@ -454,26 +454,26 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     badgeEmergency: {
-        backgroundColor: '#FEE2E2',
+        backgroundColor: theme.colors.status.emergency.surface,
     },
     badgeUrgent: {
-        backgroundColor: '#FEF3C7',
+        backgroundColor: theme.colors.status.warning.surface,
     },
     badgeNonUrgent: {
-        backgroundColor: '#DCFCE7',
+        backgroundColor: theme.colors.status.success.surface,
     },
     triageBadgeText: {
         fontSize: 12,
         fontWeight: '700',
     },
     badgeTextEmergency: {
-        color: '#DC2626',
+        color: theme.colors.status.emergency.primary,
     },
     badgeTextUrgent: {
-        color: '#D97706',
+        color: theme.colors.status.warning.primary,
     },
     badgeTextNonUrgent: {
-        color: '#16A34A',
+        color: theme.colors.status.success.primary,
     },
     vitalsGrid: {
         flexDirection: 'row',
@@ -483,40 +483,40 @@ const styles = StyleSheet.create({
     vitalMetricBox: {
         flexBasis: '30%',
         flexGrow: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: theme.colors.ramp.gray50,
         padding: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#F3F4F6',
+        borderColor: theme.colors.ramp.gray100,
     },
     vitalMetricLabel: {
         fontSize: 11,
-        color: '#6B7280',
+        color: theme.colors.ramp.gray500,
         fontWeight: '500',
         marginBottom: 4,
     },
     vitalMetricValue: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#111827',
+        color: theme.colors.ramp.gray900,
     },
     vitalMetricUnit: {
         fontSize: 11,
         fontWeight: 'normal',
-        color: '#9CA3AF',
+        color: theme.colors.ramp.gray400,
     },
     vitalsRiskContainer: {
         marginTop: 14,
         padding: 10,
-        backgroundColor: '#FEF2F2',
+        backgroundColor: theme.colors.status.emergency.surface,
         borderRadius: 8,
         borderLeftWidth: 4,
-        borderLeftColor: '#EF4444',
+        borderLeftColor: theme.colors.status.emergency.primary,
     },
     vitalsRiskTitle: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#B91C1C',
+        color: theme.colors.status.emergency.text,
         marginBottom: 6,
     },
     riskRow: {
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     },
     riskText: {
         fontSize: 12,
-        color: '#7F1D1D',
+        color: theme.colors.status.emergency.text,
         fontWeight: '500',
     },
 });

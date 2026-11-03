@@ -1,6 +1,7 @@
 import { Icon } from './Icon';
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Image, TouchableWithoutFeedback } from 'react-native';
+import { theme, withAlpha } from '../theme';
 
 interface ShareOptionsModalProps {
     visible: boolean;
@@ -45,7 +46,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
                             {/* Header / Content Preview */}
                             <View style={styles.header}>
                                 <View style={styles.fileIconContainer}>
-                                    <Icon name="fileText" size={32} color="#E53734" />
+                                    <Icon name="fileText" size={32} color={theme.colors.status.emergency.primary} />
                                 </View>
                                 <View style={styles.headerTextContainer}>
                                     <Text style={styles.fileName}>First Aid Incident Report.pdf</Text>
@@ -78,7 +79,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
                             <View style={styles.actionsContainer}>
                                 <TouchableOpacity style={styles.actionRow} onPress={() => handleAction('Copy')}>
                                     <View style={styles.actionIconWidth}>
-                                        <Icon name="copy" size={24} color="#3B82F6" />
+                                        <Icon name="copy" size={24} color={theme.colors.status.info.primary} />
                                     </View>
                                     <Text style={styles.actionText}>Copy</Text>
                                 </TouchableOpacity>
@@ -86,7 +87,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
 
                                 <TouchableOpacity style={styles.actionRow} onPress={() => handleAction('Save to Files')}>
                                     <View style={styles.actionIconWidth}>
-                                        <Icon name="folderOpen" size={24} color="#3B82F6" />
+                                        <Icon name="folderOpen" size={24} color={theme.colors.status.info.primary} />
                                     </View>
                                     <Text style={styles.actionText}>Save to Files</Text>
                                 </TouchableOpacity>
@@ -94,7 +95,7 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
 
                                 <TouchableOpacity style={styles.actionRow} onPress={() => handleAction('Print')}>
                                     <View style={styles.actionIconWidth}>
-                                        <Icon name="printer" size={24} color="#3B82F6" />
+                                        <Icon name="printer" size={24} color={theme.colors.status.info.primary} />
                                     </View>
                                     <Text style={styles.actionText}>Print</Text>
                                 </TouchableOpacity>
@@ -117,11 +118,11 @@ export const ShareOptionsModal: React.FC<ShareOptionsModalProps> = ({ visible, o
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: withAlpha(theme.colors.ramp.black, 0.4),
         justifyContent: 'flex-end',
     },
     contentContainer: {
-        backgroundColor: '#F1F1F1',
+        backgroundColor: theme.colors.ramp.gray100,
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         paddingTop: 12,
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 5,
         borderRadius: 2.5,
-        backgroundColor: '#D1D5DB',
+        backgroundColor: theme.colors.ramp.gray300,
     },
     header: {
         flexDirection: 'row',
@@ -143,16 +144,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(156, 163, 175, 0.2)',
+        borderBottomColor: withAlpha(theme.colors.ramp.gray400, 0.2),
     },
     fileIconContainer: {
         width: 56,
         height: 56,
         borderRadius: 8,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.colors.canvas.surface,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
+        shadowColor: theme.colors.ramp.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
@@ -165,12 +166,12 @@ const styles = StyleSheet.create({
     fileName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#000000',
+        color: theme.colors.ramp.black,
         marginBottom: 2,
     },
     fileType: {
         fontSize: 14,
-        color: '#6B7280',
+        color: theme.colors.ramp.gray500,
     },
     appsScroll: {
         maxHeight: 110,
@@ -192,16 +193,16 @@ const styles = StyleSheet.create({
     },
     appName: {
         fontSize: 12,
-        color: '#000000',
+        color: theme.colors.ramp.black,
         textAlign: 'center',
     },
     divider: {
         height: 1,
-        backgroundColor: 'rgba(156, 163, 175, 0.2)',
+        backgroundColor: withAlpha(theme.colors.ramp.gray400, 0.2),
         marginBottom: 16,
     },
     actionsContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.colors.canvas.surface,
         borderRadius: 12,
         marginHorizontal: 16,
         marginBottom: 16,
@@ -219,19 +220,19 @@ const styles = StyleSheet.create({
     },
     actionText: {
         fontSize: 16,
-        color: '#3B82F6',
+        color: theme.colors.status.info.primary,
         flex: 1,
     },
     actionDivider: {
         height: 1,
-        backgroundColor: '#E5E7EB',
+        backgroundColor: theme.colors.ramp.gray200,
         marginLeft: 64, // aligned with text start
     },
     cancelContainer: {
         paddingHorizontal: 16,
     },
     cancelButton: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.colors.canvas.surface,
         borderRadius: 12,
         height: 56,
         justifyContent: 'center',
@@ -240,6 +241,6 @@ const styles = StyleSheet.create({
     cancelText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#3B82F6',
+        color: theme.colors.status.info.primary,
     },
 });

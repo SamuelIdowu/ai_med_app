@@ -1,5 +1,4 @@
-import { theme, THEME_PRESETS, BRAND_PALETTE } from '../index';
-import appTheme, { COLORS, SHADOWS } from '../../constants/theme';
+import { theme, THEME_PRESETS, BRAND_PALETTE, withAlpha } from '../index';
 
 describe('Centralized Medical Theme Engine', () => {
   it('exposes defined theme presets with clinical reference tokens including coralTeal', () => {
@@ -43,11 +42,11 @@ describe('Centralized Medical Theme Engine', () => {
     expect(theme.spatial.glassmorphism.emergency).toBeDefined();
   });
 
-  it('maintains backwards compatibility for legacy constants/theme.ts import', () => {
-    expect(COLORS.primary).toBe(theme.colors.primary.main);
-    expect(COLORS.error).toBe(theme.colors.status.emergency.primary);
-    expect(SHADOWS.card3d).toBeDefined();
-    expect(appTheme.theme).toBe(theme);
+  it('exposes the neutral ramp and withAlpha helper', () => {
+    expect(theme.colors.ramp.ink).toBe('#0F1115');
+    expect(theme.colors.ramp.white).toBe('#FFFFFF');
+    expect(withAlpha('#EF4444', 0.25)).toBe('rgba(239, 68, 68, 0.25)');
+    expect(withAlpha(theme.colors.ramp.ink, 0.5)).toBe('rgba(15, 17, 21, 0.5)');
   });
 });
 

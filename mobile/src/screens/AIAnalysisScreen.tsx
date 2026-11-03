@@ -15,7 +15,7 @@ import {
     PhotoAnalysisMode,
     StructuredPhotoAnalysis,
 } from '../types/photoAnalysis';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import { Illustration } from '../components/Illustration';
 
 const PRIMARY_COLOR = theme.colors.primary.main;
@@ -56,11 +56,13 @@ export const AIAnalysisScreen = () => {
     const pulseDot = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
+        // scaleX keeps the fill animation on the GPU (layout-free) instead of
+        // animating width off-thread.
         Animated.timing(animatedProgress, {
-            toValue: uploadProgress,
+            toValue: Math.max(uploadProgress / 100, 0.001),
             duration: 500,
             easing: Easing.out(Easing.cubic),
-            useNativeDriver: false,
+            useNativeDriver: true,
         }).start();
     }, [uploadProgress, animatedProgress]);
 
@@ -264,7 +266,7 @@ export const AIAnalysisScreen = () => {
                     <View style={styles.headlineRow}>
                         <Text style={styles.headlineText}>Assess Injury</Text>
                         <View style={styles.offlineChip}>
-                            <Icon name="cloudCheck" size={16} color="#065f46" />
+                            <Icon name="cloudCheck" size={16} color={theme.colors.status.success.text} />
                             <Text style={styles.offlineText}>ONLINE AI</Text>
                         </View>
                     </View>
@@ -323,16 +325,16 @@ export const AIAnalysisScreen = () => {
 
                         {/* Track */}
                         <View style={styles.progressBar}>
-                            {/* Animated fill */}
+                            {/* Animated fill (scaleX from left edge) */}
                             <Animated.View
                                 style={[
                                     styles.progressFill,
                                     {
-                                        width: animatedProgress.interpolate({
-                                            inputRange: [0, 100],
-                                            outputRange: ['0%', '100%'],
-                                            extrapolate: 'clamp',
-                                        }),
+                                        width: '100%',
+                                        transformOrigin: 'left center',
+                                        transform: [
+                                            { scaleX: animatedProgress },
+                                        ],
                                     },
                                 ]}
                             >
@@ -384,7 +386,7 @@ export const AIAnalysisScreen = () => {
 
                                 {fallbackReason && (
                                     <View style={styles.fallbackBanner}>
-                                        <Icon name="arrowsLeftRight" size={16} color="#6B7280" />
+                                        <Icon name="arrowsLeftRight" size={16} color={theme.colors.ramp.gray500} />
                                         <Text style={styles.fallbackText}>
                                             Auto mode used General AI ({formatFallbackReason(fallbackReason)}).
                                         </Text>
@@ -430,8 +432,8 @@ export const AIAnalysisScreen = () => {
                                 {structuredAnalysis.recommendations.length > 0 && (
                                     <View style={styles.section}>
                                         <View style={styles.sectionHeader}>
-                                            <Icon name="firstAidKit" size={18} color="#059669" />
-                                            <Text style={[styles.sectionTitle, { color: '#059669' }]}>First Aid Steps</Text>
+                                            <Icon name="firstAidKit" size={18} color={theme.colors.status.success.primary} />
+                                            <Text style={[styles.sectionTitle, { color: theme.colors.status.success.primary }]}>First Aid Steps</Text>
                                         </View>
                                         {structuredAnalysis.recommendations.map((r, i) => (
                                             <View key={i} style={styles.stepRow}>
@@ -448,13 +450,13 @@ export const AIAnalysisScreen = () => {
                                 {structuredAnalysis.warnings.length > 0 && (
                                     <View style={[styles.section, styles.warningSection]}>
                                         <View style={styles.sectionHeader}>
-                                            <Icon name="warning" size={18} color="#d97706" />
-                                            <Text style={[styles.sectionTitle, { color: '#d97706' }]}>Important Warnings</Text>
+                                            <Icon name="warning" size={18} color={theme.colors.status.warning.primary} />
+                                            <Text style={[styles.sectionTitle, { color: theme.colors.status.warning.primary }]}>Important Warnings</Text>
                                         </View>
                                         {structuredAnalysis.warnings.map((w, i) => (
                                             <View key={i} style={styles.bulletRow}>
-                                                <Icon name="warningCircle" size={14} color="#d97706" style={{ marginTop: 2 }} />
-                                                <Text style={[styles.bulletText, { color: '#92400e' }]}>{w}</Text>
+                                                <Icon name="warningCircle" size={14} color={theme.colors.status.warning.primary} style={{ marginTop: 2 }} />
+                                                <Text style={[styles.bulletText, { color: theme.colors.status.warning.text }]}>{w}</Text>
                                             </View>
                                         ))}
                                     </View>
@@ -543,18 +545,18 @@ export const AIAnalysisScreen = () => {
                                     {analyzing ? (
                                         <>
                                             <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
-                                            <Text style={[styles.analyzeButtonText, { color: "#fff" }]}>Analyzing...</Text>
+                                            <Text style={[styles.analyzeButtonText, { color: theme.colors.text.inverse }]}>Analyzing...</Text>
                                         </>
                                     ) : (
                                         <>
                                             <LinearGradient
-                                                colors={['#0F1115', '#262A33']}
+                                                colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]}
                                                 style={StyleSheet.absoluteFill}
                                                 start={{ x: 0, y: 0 }}
                                                 end={{ x: 1, y: 0 }}
                                             />
                                             <Icon name="scan" size={24} color="#fff" style={{ zIndex: 1 }} />
-                                            <Text style={[styles.analyzeButtonText, { color: "#fff", zIndex: 1 }]}>
+                                            <Text style={[styles.analyzeButtonText, { color: theme.colors.text.inverse, zIndex: 1 }]}>
                                                 Analyze Photo
                                             </Text>
                                         </>
@@ -572,7 +574,7 @@ export const AIAnalysisScreen = () => {
                     style={styles.navItem}
                     onPress={() => navigation.navigate('AIChat')}
                 >
-                    <Icon name="chatCircle" size={24} color="#9ca3af" />
+                    <Icon name="chatCircle" size={24} color={theme.colors.ramp.gray400} />
                     <Text style={styles.navText}>Chat</Text>
                 </TouchableOpacity>
 
@@ -580,7 +582,7 @@ export const AIAnalysisScreen = () => {
                     <TouchableOpacity
                         style={[
                             styles.scanButton,
-                            images.length > 0 && { backgroundColor: '#0F1115' }
+                            images.length > 0 && { backgroundColor: theme.colors.ramp.ink }
                         ]}
                         disabled={analyzing}
                         onPress={() => images.length > 0 ? handleAnalyze() : pickImage()}
@@ -603,7 +605,7 @@ export const AIAnalysisScreen = () => {
                     style={styles.navItem}
                     onPress={() => navigation.navigate('FirstAidList')}
                 >
-                    <Icon name="bookOpen" size={24} color="#9ca3af" />
+                    <Icon name="bookOpen" size={24} color={theme.colors.ramp.gray400} />
                     <Text style={styles.navText}>Guides</Text>
                 </TouchableOpacity>
             </View>
@@ -631,11 +633,11 @@ const formatFallbackReason = (reason: PhotoAnalysisFallbackReason): string => {
 
 const severityStyle = (severity: StructuredPhotoAnalysis['severity']) => {
     const map: Record<StructuredPhotoAnalysis['severity'], object> = {
-        none: { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' },
-        mild: { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' },
-        moderate: { backgroundColor: '#F3F4F6', borderColor: '#D1D5DB' },
-        severe: { backgroundColor: '#E5E7EB', borderColor: '#9CA3AF' },
-        critical: { backgroundColor: '#0F1115', borderColor: '#0F1115' },
+        none: { backgroundColor: theme.colors.ramp.gray100, borderColor: theme.colors.ramp.gray200 },
+        mild: { backgroundColor: theme.colors.ramp.gray100, borderColor: theme.colors.ramp.gray200 },
+        moderate: { backgroundColor: theme.colors.ramp.gray100, borderColor: theme.colors.ramp.gray300 },
+        severe: { backgroundColor: theme.colors.ramp.gray200, borderColor: theme.colors.ramp.gray400 },
+        critical: { backgroundColor: theme.colors.ramp.ink, borderColor: theme.colors.ramp.ink },
     };
     return map[severity] || map.moderate;
 };
@@ -651,7 +653,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: 'rgba(248, 246, 246, 0.95)',
+        backgroundColor: withAlpha(theme.colors.ramp.white, 0.95),
     },
     backButton: {
         width: 40,
@@ -691,18 +693,18 @@ const styles = StyleSheet.create({
     offlineChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#d1fae5',
+        backgroundColor: theme.colors.status.success.border,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
         gap: 6,
         borderWidth: 1,
-        borderColor: '#a7f3d0',
+        borderColor: theme.colors.status.success.border,
     },
     offlineText: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#065f46',
+        color: theme.colors.status.success.text,
         letterSpacing: 0.5,
     },
     subtext: {
@@ -730,11 +732,11 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: 10,
         paddingVertical: 10,
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.surface,
     },
     modeChipSelected: {
-        backgroundColor: '#0F1115',
-        borderColor: '#0F1115',
+        backgroundColor: theme.colors.ramp.ink,
+        borderColor: theme.colors.ramp.ink,
     },
     modeChipText: {
         fontSize: 13,
@@ -743,7 +745,7 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     modeChipTextSelected: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
     },
     modeChipDescription: {
         fontSize: 10,
@@ -751,15 +753,15 @@ const styles = StyleSheet.create({
         color: TEXT_SECONDARY,
     },
     modeChipDescriptionSelected: {
-        color: '#D1D5DB',
+        color: theme.colors.ramp.gray300,
     },
     fallbackBanner: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: theme.colors.ramp.gray50,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: theme.colors.ramp.gray200,
         borderRadius: 10,
         paddingHorizontal: 10,
         paddingVertical: 8,
@@ -779,10 +781,10 @@ const styles = StyleSheet.create({
         width: '100%',
         minHeight: 220,
         borderWidth: 2,
-        borderColor: '#e6d1d0',
+        borderColor: theme.colors.status.emergency.surface,
         borderStyle: 'dashed',
         borderRadius: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: theme.colors.canvas.surface,
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 24,
@@ -793,7 +795,7 @@ const styles = StyleSheet.create({
         width: 72,
         height: 72,
         borderRadius: 36,
-        backgroundColor: 'rgba(229, 55, 52, 0.1)',
+        backgroundColor: withAlpha(theme.colors.status.emergency.primary, 0.1),
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 14,
@@ -806,7 +808,7 @@ const styles = StyleSheet.create({
     },
     uploadSubtitle: {
         fontSize: 14,
-        color: '#71717a',
+        color: theme.colors.ramp.gray500,
     },
     uploadedImage: {
         width: '100%',
@@ -836,7 +838,7 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     cameraButtonText: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
         fontSize: 14,
         fontWeight: '700',
     },
@@ -844,12 +846,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.surface,
         height: 48,
         borderRadius: 8,
         gap: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: theme.colors.ramp.gray200,
     },
     galleryButtonText: {
         color: TEXT_LIGHT,
@@ -877,7 +879,7 @@ const styles = StyleSheet.create({
     analyzeButtonDisabled: {
         shadowOpacity: 0,
         elevation: 0,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: theme.colors.ramp.gray100,
     },
     analyzeButtonText: {
         fontSize: 17,
@@ -885,7 +887,7 @@ const styles = StyleSheet.create({
     },
     disclaimer: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: theme.colors.ramp.gray400,
         textAlign: 'center',
         lineHeight: 18,
         maxWidth: 300,
@@ -897,15 +899,15 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.surface,
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
+        borderTopColor: theme.colors.ramp.gray100,
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
         height: 72,
         paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-        shadowColor: '#000',
+        shadowColor: theme.colors.ramp.black,
         shadowOffset: { width: 0, height: -3 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
@@ -920,7 +922,7 @@ const styles = StyleSheet.create({
     navText: {
         fontSize: 10,
         fontWeight: '500',
-        color: '#9ca3af',
+        color: theme.colors.ramp.gray400,
         marginTop: 4,
     },
     scanTabContainer: {
@@ -953,17 +955,17 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -2,
         right: -2,
-        backgroundColor: '#0F1115',
+        backgroundColor: theme.colors.ramp.ink,
         borderRadius: 10,
         minWidth: 20,
         height: 20,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 2,
-        borderColor: '#fff',
+        borderColor: theme.colors.ramp.white,
     },
     badgeText: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
         fontSize: 10,
         fontWeight: '800',
     },
@@ -997,7 +999,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: theme.colors.ramp.gray200,
     },
     resultImage: {
         width: '100%',
@@ -1008,10 +1010,10 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingHorizontal: 4,
         marginBottom: 20,
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.canvas.surface,
         borderRadius: 16,
         padding: 16,
-        shadowColor: '#000',
+        shadowColor: theme.colors.ramp.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
@@ -1032,7 +1034,7 @@ const styles = StyleSheet.create({
     progressBar: {
         width: '100%',
         height: 10,
-        backgroundColor: '#f3e6e6',
+        backgroundColor: theme.colors.status.emergency.surface,
         borderRadius: 6,
         overflow: 'hidden',
         marginBottom: 8,
@@ -1049,7 +1051,7 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         width: 60,
-        backgroundColor: 'rgba(255,255,255,0.35)',
+        backgroundColor: withAlpha(theme.colors.ramp.white, 0.35),
         borderRadius: 6,
         transform: [{ skewX: '-20deg' }],
     },
@@ -1077,7 +1079,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         overflow: 'hidden',
         borderWidth: 2,
-        borderColor: '#e5e7eb',
+        borderColor: theme.colors.ramp.gray200,
     },
     galleryImage: {
         width: '100%',
@@ -1090,7 +1092,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         overflow: 'hidden',
         marginBottom: 16,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: theme.colors.ramp.gray100,
     },
     singlePreviewImage: {
         width: '100%',
@@ -1104,13 +1106,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: 'rgba(15, 17, 21, 0.78)',
+        backgroundColor: withAlpha(theme.colors.ramp.ink, 0.78),
         borderRadius: 18,
         paddingHorizontal: 12,
         paddingVertical: 8,
     },
     changePhotoText: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
         fontSize: 12,
         fontWeight: '700',
     },
@@ -1135,7 +1137,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 8,
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: withAlpha(theme.colors.ramp.black, 0.6),
         borderRadius: 12,
     },
     addMoreButton: {
@@ -1143,11 +1145,11 @@ const styles = StyleSheet.create({
         height: 150,
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: '#e5e7eb',
+        borderColor: theme.colors.ramp.gray200,
         borderStyle: 'dashed',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f9fafb',
+        backgroundColor: theme.colors.ramp.gray50,
     },
     addMoreText: {
         fontSize: 14,
@@ -1169,7 +1171,7 @@ const styles = StyleSheet.create({
         ...theme.spatial.shadows3d.level1,
     },
     emergencyText: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
         fontWeight: '700',
         fontSize: 14,
         flexShrink: 1,
@@ -1190,7 +1192,7 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         fontSize: 12,
         letterSpacing: 0.8,
-        color: '#1f2937',
+        color: theme.colors.ramp.gray800,
     },
     injuryTypeText: {
         fontSize: 16,
@@ -1215,14 +1217,14 @@ const styles = StyleSheet.create({
     },
     confidenceBarBg: {
         height: 6,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: theme.colors.ramp.gray200,
         borderRadius: 3,
         marginBottom: 20,
         overflow: 'hidden',
     },
     confidenceBarFill: {
         height: '100%',
-        backgroundColor: '#0F1115',
+        backgroundColor: theme.colors.ramp.ink,
         borderRadius: 3,
     },
     section: {
@@ -1230,11 +1232,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     warningSection: {
-        backgroundColor: '#F9FAFB',
+        backgroundColor: theme.colors.ramp.gray50,
         borderRadius: 10,
         padding: 12,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: theme.colors.ramp.gray200,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -1276,13 +1278,13 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#0F1115',
+        backgroundColor: theme.colors.ramp.ink,
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 1,
     },
     stepNumberText: {
-        color: '#fff',
+        color: theme.colors.text.inverse,
         fontSize: 12,
         fontWeight: '800',
     },

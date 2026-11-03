@@ -37,7 +37,7 @@ export const ThingsYouCanDoCards: React.FC<ThingsYouCanDoCardsProps> = ({
             <View
               style={[
                 styles.iconBadge,
-                { backgroundColor: action.iconBgColor || '#EBF2FF' },
+                { backgroundColor: action.iconBgColor || theme.colors.primary.light },
               ]}
             >
               <Icon

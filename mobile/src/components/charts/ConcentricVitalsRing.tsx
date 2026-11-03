@@ -20,9 +20,9 @@ interface ConcentricVitalsRingProps {
 }
 
 const DEFAULT_RINGS: RingData[] = [
-  { label: 'Awake', value: 9, color: '#9CA3AF' },
-  { label: 'Light', value: 75, color: '#0F1115' },
-  { label: 'Deep', value: 16, color: '#4B5563' },
+  { label: 'Awake', value: 9, color: theme.colors.ramp.gray400 },
+  { label: 'Light', value: 75, color: theme.colors.text.primary },
+  { label: 'Deep', value: 16, color: theme.colors.ramp.gray600 },
 ];
 
 export const ConcentricVitalsRing: React.FC<ConcentricVitalsRingProps> = ({
@@ -55,7 +55,7 @@ export const ConcentricVitalsRing: React.FC<ConcentricVitalsRingProps> = ({
                   cx={center}
                   cy={center}
                   r={radius}
-                  stroke="#F1F5F9"
+                  stroke={theme.colors.chart.gridLine}
                   strokeWidth={strokeWidth}
                   fill="none"
                 />

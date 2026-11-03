@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { RefreshControl } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 
 const BG_LIGHT = theme.colors.canvas.background;
 const CARD_LIGHT = theme.colors.canvas.surface;
@@ -90,7 +90,7 @@ export const NotificationsScreen = () => {
             style={[styles.card, !item.read && styles.unreadCard]}
             onPress={() => handleMarkAsRead(item.id, item.read)}
         >
-            <View style={[styles.iconContainer, { backgroundColor: item.type === 'alert' ? 'rgba(239, 68, 68, 0.12)' : theme.colors.primary.light }]}>
+            <View style={[styles.iconContainer, { backgroundColor: item.type === 'alert' ? withAlpha(theme.colors.status.emergency.primary, 0.12) : theme.colors.primary.light }]}>
                 <Icon
                     name={item.type === 'alert' ? 'warningCircle' : 'info'}
                     size={24}
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: theme.colors.ramp.gray100,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,

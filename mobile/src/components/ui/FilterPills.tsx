@@ -7,7 +7,7 @@ import {
   ViewStyle,
   View,
 } from 'react-native';
-import { theme } from '../../theme';
+import { theme, withAlpha } from '../../theme';
 
 export interface FilterPillItem {
   id: string;
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.canvas.surfaceSubtle,
   },
   activeCountBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: withAlpha(theme.colors.ramp.white, 0.25),
   },
   countText: {
     fontSize: 11,

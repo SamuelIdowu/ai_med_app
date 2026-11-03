@@ -210,7 +210,7 @@ export const MedicalProfileScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0F1115" />
+        <ActivityIndicator size="large" color={theme.colors.ramp.ink} />
       </View>
     );
   }
@@ -236,7 +236,7 @@ export const MedicalProfileScreen: React.FC = () => {
           style={styles.backCircle}
           activeOpacity={0.7}
         >
-          <Icon name="caretLeft" size={24} color="#0F1115" />
+          <Icon name="caretLeft" size={24} color={theme.colors.ramp.ink} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Medical Profile</Text>
@@ -246,7 +246,7 @@ export const MedicalProfileScreen: React.FC = () => {
           style={styles.editPill}
           activeOpacity={0.7}
         >
-          <Icon name="pencil" size={16} color="#0F1115" />
+          <Icon name="pencil" size={16} color={theme.colors.ramp.ink} />
           <Text style={styles.editPillText}>Edit</Text>
         </TouchableOpacity>
       </View>
@@ -258,7 +258,7 @@ export const MedicalProfileScreen: React.FC = () => {
           activeOpacity={0.85}
           onPress={() => navigation.navigate('Signup')}
         >
-          <Icon name="user" size={16} color="#0F1115" />
+          <Icon name="user" size={16} color={theme.colors.ramp.ink} />
           <Text style={styles.guestBannerText}>
             You’re in guest mode — <Text style={{ fontWeight: '700' }}>create an account</Text> to save your profile.
           </Text>
@@ -283,7 +283,7 @@ export const MedicalProfileScreen: React.FC = () => {
               />
             ) : (
               <View style={[styles.heroAvatar, styles.heroAvatarPlaceholder]}>
-                <Icon name="user" size={72} color="#9CA3AF" />
+                <Icon name="user" size={72} color={theme.colors.ramp.gray400} />
               </View>
             )}
           </View>
@@ -298,7 +298,7 @@ export const MedicalProfileScreen: React.FC = () => {
             </View>
 
             <View style={styles.bloodTypePill}>
-              <Icon name="drop" size={16} color="#0F1115" />
+              <Icon name="drop" size={16} color={theme.colors.ramp.ink} />
               <Text style={styles.bloodTypeText}>{profile.bloodType || '—'}</Text>
             </View>
           </View>
@@ -329,7 +329,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="shieldWarning" size={18} color="#0F1115" />
+            <Icon name="shieldWarning" size={18} color={theme.colors.ramp.ink} />
             <Text style={styles.sectionHeader}>Emergency Directives & Alerts</Text>
           </View>
 
@@ -337,7 +337,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <View style={styles.pillWrap}>
               {profile.medicalDirectives.map((directive, index) => (
                 <View key={index} style={styles.directiveBadge}>
-                  <Icon name="checkCircle" size={15} color="#0F1115" />
+                  <Icon name="checkCircle" size={15} color={theme.colors.ramp.ink} />
                   <Text style={styles.directiveBadgeText}>{directive}</Text>
                 </View>
               ))}
@@ -354,7 +354,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="allergy" size={18} color="#0F1115" />
+            <Icon name="allergy" size={18} color={theme.colors.ramp.ink} />
             <Text style={styles.sectionHeader}>Severe Allergies</Text>
           </View>
 
@@ -362,7 +362,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <View style={styles.pillWrap}>
               {profile.allergies.map((allergy, index) => (
                 <View key={index} style={styles.allergyBadge}>
-                  <Icon name="closeCircle" size={14} color="#0F1115" />
+                  <Icon name="closeCircle" size={14} color={theme.colors.ramp.ink} />
                   <Text style={styles.allergyBadgeText}>{allergy}</Text>
                 </View>
               ))}
@@ -379,7 +379,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="heartbeat" size={18} color="#0F1115" />
+            <Icon name="heartbeat" size={18} color={theme.colors.ramp.ink} />
             <Text style={styles.sectionHeader}>Chronic Medical Conditions</Text>
           </View>
 
@@ -403,7 +403,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="pill" size={18} color="#0F1115" />
+            <Icon name="pill" size={18} color={theme.colors.ramp.ink} />
             <Text style={styles.sectionHeader}>Current Medications</Text>
           </View>
 
@@ -411,7 +411,7 @@ export const MedicalProfileScreen: React.FC = () => {
             profile.medications.map((med, index) => (
               <MedicalCard key={index} style={styles.medicationRow}>
                 <View style={styles.medIconBox}>
-                  <Icon name="pill" size={18} color="#0F1115" />
+                  <Icon name="pill" size={18} color={theme.colors.ramp.ink} />
                 </View>
                 <Text style={styles.medicationText}>{med}</Text>
               </MedicalCard>
@@ -428,7 +428,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="notebook" size={18} color="#0F1115" />
+            <Icon name="notebook" size={18} color={theme.colors.ramp.ink} />
             <Text style={styles.sectionHeader}>Paramedic & Responder Notes</Text>
           </View>
 
@@ -445,7 +445,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* =================================================================== */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Icon name="emergencyCall" size={18} color="#0F1115" />
+            <Icon name="emergencyCall" size={18} color={theme.colors.ramp.ink} />
             <Text style={styles.sectionHeader}>Emergency Contacts (ICE)</Text>
           </View>
 
@@ -454,7 +454,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <MedicalCard style={styles.contactCard}>
               <View style={styles.contactLeft}>
                 <View style={styles.contactAvatar}>
-                  <Icon name="user" size={20} color="#0F1115" />
+                  <Icon name="user" size={20} color={theme.colors.ramp.ink} />
                 </View>
                 <View style={styles.contactDetails}>
                   <View style={styles.contactBadgeRow}>
@@ -485,7 +485,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     )
                   }
                 >
-                  <Icon name="phone" size={18} color="#FFFFFF" />
+                  <Icon name="phone" size={18} color={theme.colors.ramp.white} />
                 </TouchableOpacity>
               ) : null}
             </MedicalCard>
@@ -500,7 +500,7 @@ export const MedicalProfileScreen: React.FC = () => {
             <MedicalCard style={[styles.contactCard, { marginTop: 10 }]}>
               <View style={styles.contactLeft}>
                 <View style={styles.contactAvatar}>
-                  <Icon name="user" size={20} color="#0F1115" />
+                  <Icon name="user" size={20} color={theme.colors.ramp.ink} />
                 </View>
                 <View style={styles.contactDetails}>
                   <View style={styles.contactBadgeRow}>
@@ -530,7 +530,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   )
                 }
               >
-                <Icon name="phone" size={18} color="#FFFFFF" />
+                <Icon name="phone" size={18} color={theme.colors.ramp.white} />
               </TouchableOpacity>
             </MedicalCard>
           ) : null}
@@ -540,7 +540,7 @@ export const MedicalProfileScreen: React.FC = () => {
         {/* 10. PRIVACY & SENSITIVITY SHIELD */}
         {/* =================================================================== */}
         <View style={styles.privacyBanner}>
-          <Icon name="shieldCheck" size={20} color="#0F1115" />
+          <Icon name="shieldCheck" size={20} color={theme.colors.ramp.ink} />
           <View style={styles.privacyTextCol}>
             <Text style={styles.privacyTitle}>Encrypted & Data-Minimized</Text>
             <Text style={styles.privacyDesc}>
@@ -602,14 +602,14 @@ export const MedicalProfileScreen: React.FC = () => {
                 />
               ) : (
                 <View style={[styles.modalAvatarImage, styles.modalAvatarPlaceholder]}>
-                  <Icon name="user" size={32} color="#9CA3AF" />
+                  <Icon name="user" size={32} color={theme.colors.ramp.gray400} />
                 </View>
               )}
               <TouchableOpacity
                 style={styles.modalChangePhotoBtn}
                 onPress={handlePickImage}
               >
-                <Icon name="camera" size={16} color="#0F1115" />
+                <Icon name="camera" size={16} color={theme.colors.ramp.ink} />
                 <Text style={styles.modalChangePhotoText}>Change Photo</Text>
               </TouchableOpacity>
             </View>
@@ -624,7 +624,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 value={editForm.fullName}
                 onChangeText={(val) => setEditForm((p) => ({ ...p, fullName: val }))}
                 placeholder="e.g. Max Egger"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
             </View>
 
@@ -636,7 +636,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   value={editForm.dob}
                   onChangeText={(val) => setEditForm((p) => ({ ...p, dob: val }))}
                   placeholder="1995-06-15"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
 
@@ -647,7 +647,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   value={editForm.gender}
                   onChangeText={(val) => setEditForm((p) => ({ ...p, gender: val }))}
                   placeholder="Male / Female"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
             </View>
@@ -689,7 +689,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   value={editForm.weight}
                   onChangeText={(val) => setEditForm((p) => ({ ...p, weight: val }))}
                   placeholder="e.g. 74 kg"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
 
@@ -700,7 +700,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   value={editForm.height}
                   onChangeText={(val) => setEditForm((p) => ({ ...p, height: val }))}
                   placeholder="e.g. 180 cm"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
             </View>
@@ -722,7 +722,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     <Icon
                       name={isActive ? 'check' : 'plus'}
                       size={14}
-                      color={isActive ? '#FFFFFF' : '#0F1115'}
+                      color={isActive ? theme.colors.ramp.white : theme.colors.ramp.ink}
                     />
                     <Text
                       style={[
@@ -744,7 +744,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 value={customDirectiveInput}
                 onChangeText={setCustomDirectiveInput}
                 placeholder="Add custom alert..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
               <TouchableOpacity
                 style={styles.addChipBtn}
@@ -768,7 +768,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     onPress={() => removeChip('allergies', idx)}
                     style={styles.removeChipIcon}
                   >
-                    <Icon name="close" size={14} color="#0F1115" />
+                    <Icon name="close" size={14} color={theme.colors.ramp.ink} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -779,7 +779,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 value={allergyInput}
                 onChangeText={setAllergyInput}
                 placeholder="e.g. Penicillin, Peanuts..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
               <TouchableOpacity
                 style={styles.addChipBtn}
@@ -801,7 +801,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     onPress={() => removeChip('conditions', idx)}
                     style={styles.removeChipIcon}
                   >
-                    <Icon name="close" size={14} color="#0F1115" />
+                    <Icon name="close" size={14} color={theme.colors.ramp.ink} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -812,7 +812,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 value={conditionInput}
                 onChangeText={setConditionInput}
                 placeholder="e.g. Asthma, Hypertension..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
               <TouchableOpacity
                 style={styles.addChipBtn}
@@ -834,7 +834,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     onPress={() => removeChip('medications', idx)}
                     style={styles.removeChipIcon}
                   >
-                    <Icon name="close" size={14} color="#0F1115" />
+                    <Icon name="close" size={14} color={theme.colors.ramp.ink} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -845,7 +845,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 value={medicationInput}
                 onChangeText={setMedicationInput}
                 placeholder="e.g. Salbutamol Inhaler..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
               <TouchableOpacity
                 style={styles.addChipBtn}
@@ -864,7 +864,7 @@ export const MedicalProfileScreen: React.FC = () => {
               value={editForm.emergencyNotes}
               onChangeText={(val) => setEditForm((p) => ({ ...p, emergencyNotes: val }))}
               placeholder="Instructions for paramedics, where emergency meds are kept, etc."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.ramp.gray400}
               multiline
               numberOfLines={3}
             />
@@ -883,7 +883,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   }))
                 }
                 placeholder="e.g. Sarah Connor"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
             </View>
             <View style={styles.formRow}>
@@ -899,7 +899,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     }))
                   }
                   placeholder="Spouse, Parent, etc."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
               <View style={[styles.formField, { flex: 1.2 }]}>
@@ -915,7 +915,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   }
                   placeholder="+1 (555) 000-0000"
                   keyboardType="phone-pad"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
             </View>
@@ -938,7 +938,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   }))
                 }
                 placeholder="e.g. Dr. Robert Kelly"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.colors.ramp.gray400}
               />
             </View>
             <View style={styles.formRow}>
@@ -958,7 +958,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     }))
                   }
                   placeholder="Sibling, Physician, etc."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
               <View style={[styles.formField, { flex: 1.2 }]}>
@@ -978,7 +978,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   }
                   placeholder="+1 (555) 000-0000"
                   keyboardType="phone-pad"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.colors.ramp.gray400}
                 />
               </View>
             </View>
@@ -994,13 +994,13 @@ export const MedicalProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
   },
   header: {
     flexDirection: 'row',
@@ -1010,14 +1010,14 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 36 : 14,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.colors.ramp.gray100,
   },
   backCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F9FAFB',
-    borderColor: '#E5E7EB',
+    backgroundColor: theme.colors.ramp.gray50,
+    borderColor: theme.colors.ramp.gray200,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1025,13 +1025,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   editPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
   editPillText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   contentScroll: {
     flex: 1,
@@ -1055,14 +1055,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.gray200,
+    backgroundColor: theme.colors.canvas.surface,
     marginBottom: 16,
   },
   heroImageWrapper: {
     width: '100%',
     height: 200,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
   },
   heroAvatar: {
     width: '100%',
@@ -1072,14 +1072,14 @@ const styles = StyleSheet.create({
   heroAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
   },
   heroCardBottom: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
   },
   heroNameCol: {
     flex: 1,
@@ -1087,21 +1087,21 @@ const styles = StyleSheet.create({
   heroName: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   heroSub: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
   },
   bloodTypePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1109,7 +1109,7 @@ const styles = StyleSheet.create({
   bloodTypeText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
 
   // Biometrics Row
@@ -1117,10 +1117,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -1132,12 +1132,12 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 28,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.ramp.gray200,
   },
   statLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -1145,7 +1145,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
 
   // Sections
@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
 
   // Directives & Badges
@@ -1175,7 +1175,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1183,15 +1183,15 @@ const styles = StyleSheet.create({
   directiveBadgeText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   allergyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderWidth: 1,
-    borderColor: '#0F1115',
+    borderColor: theme.colors.ramp.ink,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 18,
@@ -1199,12 +1199,12 @@ const styles = StyleSheet.create({
   allergyBadgeText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   conditionBadge: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 18,
@@ -1212,7 +1212,7 @@ const styles = StyleSheet.create({
   conditionBadgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#1F2937',
+    color: theme.colors.ramp.gray800,
   },
 
   // Medications
@@ -1224,21 +1224,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.gray200,
+    backgroundColor: theme.colors.canvas.surface,
   },
   medIconBox: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     alignItems: 'center',
     justifyContent: 'center',
   },
   medicationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     flex: 1,
   },
 
@@ -1246,13 +1246,13 @@ const styles = StyleSheet.create({
   notesCard: {
     padding: 16,
     borderRadius: 18,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   notesText: {
     fontSize: 13,
-    color: '#374151',
+    color: theme.colors.ramp.gray700,
     lineHeight: 20,
     fontStyle: 'italic',
   },
@@ -1265,8 +1265,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.gray200,
+    backgroundColor: theme.colors.canvas.surface,
   },
   contactLeft: {
     flexDirection: 'row',
@@ -1278,7 +1278,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1294,10 +1294,10 @@ const styles = StyleSheet.create({
   contactName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   primaryPill: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1305,11 +1305,11 @@ const styles = StyleSheet.create({
   primaryPillText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     textTransform: 'uppercase',
   },
   backupPill: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1317,24 +1317,24 @@ const styles = StyleSheet.create({
   backupPillText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     textTransform: 'uppercase',
   },
   contactRelationship: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     marginBottom: 2,
   },
   contactPhone: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   callButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
@@ -1344,13 +1344,13 @@ const styles = StyleSheet.create({
   emptyCard: {
     padding: 16,
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: theme.colors.ramp.gray100,
   },
   emptyCardText: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: theme.colors.ramp.gray400,
     fontStyle: 'italic',
   },
 
@@ -1359,10 +1359,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     padding: 16,
     marginTop: 8,
   },
@@ -1372,12 +1372,12 @@ const styles = StyleSheet.create({
   privacyTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   privacyDesc: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     lineHeight: 18,
   },
 
@@ -1386,7 +1386,7 @@ const styles = StyleSheet.create({
   // ===========================================================================
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1395,23 +1395,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.colors.ramp.gray100,
   },
   modalHeaderCancel: {
     padding: 4,
   },
   modalCancelText: {
     fontSize: 15,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     fontWeight: '600',
   },
   modalHeaderTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   modalHeaderSave: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 18,
@@ -1419,7 +1419,7 @@ const styles = StyleSheet.create({
   modalSaveText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   modalScroll: {
     flex: 1,
@@ -1438,7 +1438,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
   },
   modalAvatarPlaceholder: {
     alignItems: 'center',
@@ -1450,18 +1450,18 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderRadius: 16,
   },
   modalChangePhotoText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   formSectionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginTop: 18,
     marginBottom: 10,
   },
@@ -1475,18 +1475,18 @@ const styles = StyleSheet.create({
   formLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#374151',
+    color: theme.colors.ramp.gray700,
     marginBottom: 6,
   },
   formInput: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   formTextArea: {
     height: 80,
@@ -1503,21 +1503,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   bloodTypeOptionSelected: {
-    backgroundColor: '#0F1115',
-    borderColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
+    borderColor: theme.colors.ramp.ink,
   },
   bloodTypeOptionText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#374151',
+    color: theme.colors.ramp.gray700,
   },
   bloodTypeOptionTextSelected: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 
   // Directive Toggle Chips
@@ -1534,21 +1534,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   directiveToggleChipActive: {
-    backgroundColor: '#0F1115',
-    borderColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
+    borderColor: theme.colors.ramp.ink,
   },
   directiveToggleText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   directiveToggleTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 
   // Chip input row
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   addChipBtn: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 16,
     paddingVertical: 11,
     borderRadius: 14,
@@ -1570,15 +1570,15 @@ const styles = StyleSheet.create({
   addChipBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   editPillChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1586,7 +1586,7 @@ const styles = StyleSheet.create({
   editPillChipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   removeChipIcon: {
     padding: 2,
@@ -1599,15 +1599,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#FEF9C3',
+    backgroundColor: theme.colors.status.warning.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FDE047',
+    borderColor: theme.colors.status.warning.border,
   },
   guestBannerText: {
     flex: 1,
     fontSize: 13,
-    color: '#713F12',
+    color: theme.colors.status.warning.text,
     lineHeight: 18,
   },
 });

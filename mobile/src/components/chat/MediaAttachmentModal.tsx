@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { theme } from '../../theme';
+import { theme, withAlpha } from '../../theme';
 import type { IconName } from '../../icons';
 
 export type MediaCaptureAction = 'take_photo' | 'record_video' | 'pick_photo' | 'pick_video';
@@ -111,7 +111,7 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                       <Icon
                         name={opt.icon}
                         size={24}
-                        color="#0F1115"
+                        color={theme.colors.ramp.ink}
                       />
                     </View>
 
@@ -155,25 +155,25 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 17, 21, 0.55)',
+    backgroundColor: withAlpha(theme.colors.ramp.ink, 0.55),
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 36,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     ...theme.spatial.shadows.floatingPill,
   },
   handleBar: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.ramp.gray200,
     alignSelf: 'center',
     marginBottom: 16,
   },
@@ -190,12 +190,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     marginTop: 2,
     lineHeight: 18,
   },
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -216,17 +216,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   iconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -243,10 +243,10 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   badgePill: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -254,24 +254,24 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     letterSpacing: 0.5,
   },
   optionDesc: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     lineHeight: 16,
   },
   cancelBtn: {
     paddingVertical: 14,
     borderRadius: 24,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
 });

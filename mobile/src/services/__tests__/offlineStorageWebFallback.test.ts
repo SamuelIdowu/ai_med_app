@@ -22,7 +22,13 @@ jest.mock('@react-native-async-storage/async-storage', () => {
   };
 });
 
-describe('Offline Storage web key fallback', () => {
+/**
+ * PHI vault policy (Nov-2026 audit): the vault master key may ONLY live in
+ * SecureStore. When SecureStore is unavailable (web / degraded keystore) the
+ * vault fails hard into memory only — it must never persist the key (or PHI)
+ * to AsyncStorage, which is plaintext-readable.
+ */
+describe('Offline Storage vault key policy', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     await AsyncStorage.clear();
@@ -31,9 +37,10 @@ describe('Offline Storage web key fallback', () => {
     (Platform as any).OS = 'web';
   });
 
-  it('stores the vault key in AsyncStorage and never touches SecureStore on web', async () => {
+  it('never persists the vault key or PHI payloads where SecureStore is unavailable', async () => {
     const storage = new OfflineStorage();
 
+    // Memory-only queueing still works so the user isn't blocked mid-session.
     await storage.queueOfflineEncounter({
       id: 'web-encounter',
       chiefComplaint: 'Minor burn on forearm',
@@ -42,16 +49,14 @@ describe('Offline Storage web key fallback', () => {
       createdAt: Date.now(),
     });
 
-    expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
     expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+    expect(await AsyncStorage.getItem('laso_phi_vault_key')).toBeNull();
+    expect(await AsyncStorage.getItem('healthpulse_phi_vault_key')).toBeNull();
 
-    const storedKey = await AsyncStorage.getItem('laso_phi_vault_key');
-    expect(storedKey).toMatch(/^[0-9a-f]{64}$/);
+    // No encrypted (or plaintext) PHI payload may be written either.
+    expect(await AsyncStorage.getItem('@offline_encounters_queue')).toBeNull();
 
-    const rawPayload = await AsyncStorage.getItem('@offline_encounters_queue');
-    expect(rawPayload).toMatch(/^enc:v2:/);
-    expect(rawPayload).not.toContain('Minor burn on forearm');
-
+    // The queued encounter survives in memory for sync/retry.
     const pending = await storage.getPendingEncounters();
     expect(pending).toHaveLength(1);
     expect(pending[0].id).toBe('web-encounter');

@@ -16,7 +16,7 @@ import type { ScrollViewInstance } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import { EmergencyBanner } from '../components/ui/EmergencyBanner';
 import { SymptomChip } from '../components/ui/SymptomChip';
 import { streamTriage, parseSSELine } from '../services/streamingClient';
@@ -353,7 +353,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
             style={styles.sosButton}
             activeOpacity={0.8}
           >
-            <Icon name="phone" size={16} color="#FFFFFF" />
+            <Icon name="phone" size={16} color={theme.colors.ramp.white} />
             <Text style={styles.sosText}>911</Text>
           </TouchableOpacity>
         </View>
@@ -369,7 +369,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           <Icon
             name="chatCircle"
             size={16}
-            color={triageMode === 'symptoms' ? '#FFFFFF' : theme.colors.text.secondary}
+            color={triageMode === 'symptoms' ? theme.colors.ramp.white : theme.colors.text.secondary}
           />
           <Text
             style={[styles.tabButtonText, triageMode === 'symptoms' && styles.tabButtonTextActive]}
@@ -386,7 +386,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           <Icon
             name="cpr"
             size={16}
-            color={triageMode === 'vitals' ? '#FFFFFF' : theme.colors.text.secondary}
+            color={triageMode === 'vitals' ? theme.colors.ramp.white : theme.colors.text.secondary}
           />
           <Text
             style={[styles.tabButtonText, triageMode === 'vitals' && styles.tabButtonTextActive]}
@@ -542,7 +542,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   <Icon
                     name="bleeding"
                     size={16}
-                    color={bleeding ? '#FFFFFF' : '#EF4444'}
+                    color={bleeding ? theme.colors.ramp.white : theme.colors.status.emergency.primary}
                   />
                   <Text style={[styles.flagToggleText, bleeding && styles.flagToggleTextActive]}>
                     Severe Active Bleeding
@@ -557,7 +557,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   <Icon
                     name="brain"
                     size={16}
-                    color={altered ? '#FFFFFF' : '#F59E0B'}
+                    color={altered ? theme.colors.ramp.white : theme.colors.status.warning.primary}
                   />
                   <Text style={[styles.flagToggleText, altered && styles.flagToggleTextActive]}>
                     Altered Mental Status
@@ -572,10 +572,10 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                 activeOpacity={0.8}
               >
                 {evaluatingVitals ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
+                  <ActivityIndicator color={theme.colors.ramp.white} size="small" />
                 ) : (
                   <>
-                    <Icon name="lightning" size={18} color="#FFFFFF" />
+                    <Icon name="lightning" size={18} color={theme.colors.ramp.white} />
                     <Text style={styles.evaluateVitalsButtonText}>Score Vitals via Classical ML</Text>
                   </>
                 )}
@@ -600,10 +600,10 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                         style={[
                           styles.resultClassification,
                           vitalsResult.is_emergency
-                            ? { color: '#DC2626' }
+                            ? { color: theme.colors.status.emergency.primary }
                             : vitalsResult.is_urgent
-                            ? { color: '#D97706' }
-                            : { color: '#16A34A' },
+                            ? { color: theme.colors.status.warning.primary }
+                            : { color: theme.colors.status.success.primary },
                         ]}
                       >
                         {vitalsResult.triage_label.toUpperCase()}
@@ -629,10 +629,10 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                                   width: `${Math.round(prob * 100)}%`,
                                   backgroundColor:
                                     cls === 'Emergency'
-                                      ? '#EF4444'
+                                      ? theme.colors.status.emergency.primary
                                       : cls === 'Urgent'
-                                      ? '#F59E0B'
-                                      : '#22C55E',
+                                      ? theme.colors.status.warning.primary
+                                      : theme.colors.status.success.primary,
                                 },
                               ]}
                             />
@@ -649,7 +649,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                       <Text style={styles.riskDriversHeader}>Clinical Risk Drivers & Thresholds</Text>
                       {vitalsResult.risk_drivers.map((driver, idx) => (
                         <View key={idx} style={styles.riskDriverRow}>
-                          <Icon name="warningCircle" size={14} color="#EF4444" />
+                          <Icon name="warningCircle" size={14} color={theme.colors.status.emergency.primary} />
                           <Text style={styles.riskDriverText}>{driver}</Text>
                         </View>
                       ))}
@@ -661,7 +661,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     onPress={handleSaveAndPreviewReport}
                     activeOpacity={0.8}
                   >
-                    <Icon name="fileText" size={18} color="#FFFFFF" />
+                    <Icon name="fileText" size={18} color={theme.colors.ramp.white} />
                     <Text style={styles.saveReportButtonText}>Save & Preview Medical Report</Text>
                   </TouchableOpacity>
                 </View>
@@ -689,9 +689,9 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
               activeOpacity={0.8}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={theme.colors.ramp.white} />
               ) : (
-                <Icon name="arrowUp" size={20} color="#FFFFFF" />
+                <Icon name="arrowUp" size={20} color={theme.colors.ramp.white} />
               )}
             </TouchableOpacity>
           </View>
@@ -725,8 +725,8 @@ const markdownStyles = {
     marginVertical: 4,
   },
   blockquote: {
-    backgroundColor: '#F3F4F6',
-    borderLeftColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.gray100,
+    borderLeftColor: theme.colors.ramp.ink,
     borderLeftWidth: 3,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -798,10 +798,10 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
   },
   statusDotOnline: {
-    backgroundColor: '#10B981',
+    backgroundColor: theme.colors.status.success.primary,
   },
   statusDotOffline: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: theme.colors.status.warning.primary,
   },
   statusLabel: {
     fontSize: 11,
@@ -812,13 +812,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
   },
   sosText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '800',
     fontSize: 12,
   },
@@ -862,7 +862,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: theme.colors.ramp.gray100,
   },
   cardHeaderLeft: {
     flexDirection: 'row',
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 44,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderColor: theme.colors.canvas.border,
     borderWidth: 1,
     borderRadius: 22,
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
@@ -916,7 +916,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: 16,
     marginVertical: 10,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderRadius: 12,
     padding: 3,
   },
@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tabButtonActive: {
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
   },
   tabButtonText: {
     fontSize: 13,
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   tabButtonTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   vitalsContainer: {
     marginBottom: 20,
@@ -994,16 +994,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.gray200,
+    backgroundColor: theme.colors.canvas.surface,
   },
   flagToggleActiveRed: {
-    backgroundColor: '#EF4444',
-    borderColor: '#DC2626',
+    backgroundColor: theme.colors.status.emergency.primary,
+    borderColor: theme.colors.status.emergency.primary,
   },
   flagToggleActiveAmber: {
-    backgroundColor: '#F59E0B',
-    borderColor: '#D97706',
+    backgroundColor: theme.colors.status.warning.primary,
+    borderColor: theme.colors.status.warning.primary,
   },
   flagToggleText: {
     fontSize: 12,
@@ -1011,14 +1011,14 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
   },
   flagToggleTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   evaluateVitalsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingVertical: 14,
     borderRadius: 14,
     marginTop: 4,
@@ -1028,7 +1028,7 @@ const styles = StyleSheet.create({
   evaluateVitalsButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   vitalsResultCard: {
     borderRadius: 16,
@@ -1038,16 +1038,16 @@ const styles = StyleSheet.create({
     ...theme.spatial.shadows.card,
   },
   resultCardEmergency: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#F87171',
+    backgroundColor: theme.colors.status.emergency.surface,
+    borderColor: theme.colors.status.emergency.border,
   },
   resultCardUrgent: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FBBF24',
+    backgroundColor: theme.colors.status.warning.surface,
+    borderColor: theme.colors.status.warning.border,
   },
   resultCardNormal: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#86EFAC',
+    backgroundColor: theme.colors.status.success.surface,
+    borderColor: theme.colors.status.success.border,
   },
   resultHeader: {
     flexDirection: 'row',
@@ -1056,7 +1056,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.06)',
+    borderBottomColor: withAlpha(theme.colors.ramp.black, 0.06),
   },
   resultBadgeLabel: {
     fontSize: 10,
@@ -1099,7 +1099,7 @@ const styles = StyleSheet.create({
   probBarTrack: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: withAlpha(theme.colors.ramp.black, 0.06),
     borderRadius: 4,
     overflow: 'hidden',
     marginHorizontal: 8,
@@ -1116,16 +1116,16 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   riskDriversBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: withAlpha(theme.colors.ramp.black, 0.05),
   },
   riskDriversHeader: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#DC2626',
+    color: theme.colors.status.emergency.primary,
     marginBottom: 6,
     textTransform: 'uppercase',
   },
@@ -1138,11 +1138,11 @@ const styles = StyleSheet.create({
   riskDriverText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#991B1B',
+    color: theme.colors.status.emergency.text,
   },
   saveReportButton: {
     marginTop: 12,
-    backgroundColor: '#0F172A',
+    backgroundColor: theme.colors.ramp.slate900,
     borderRadius: 12,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -1151,7 +1151,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveReportButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 14,
     fontWeight: '700',
   },

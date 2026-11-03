@@ -16,13 +16,13 @@ export interface LasoMarkProps {
 
 const getColors = (tone: LasoMarkTone) => {
   if (tone === 'inverse') {
-    return { mark: '#FFFFFF', text: '#FFFFFF' };
+    return { mark: theme.colors.ramp.white, text: theme.colors.ramp.white };
   }
   if (tone === 'mono') {
-    return { mark: theme.colors.text?.primary || '#111827', text: theme.colors.text?.primary || '#111827' };
+    return { mark: theme.colors.text?.primary || theme.colors.ramp.gray900, text: theme.colors.text?.primary || theme.colors.ramp.gray900 };
   }
   // brand — use text/brand, avoid green accent
-  return { mark: theme.colors.text?.primary || '#111827', text: theme.colors.text?.primary || '#111827' };
+  return { mark: theme.colors.text?.primary || theme.colors.ramp.gray900, text: theme.colors.text?.primary || theme.colors.ramp.gray900 };
 };
 
 export const LasoMark: React.FC<LasoMarkProps> = ({

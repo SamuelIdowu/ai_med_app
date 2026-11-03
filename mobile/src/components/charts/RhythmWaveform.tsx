@@ -13,8 +13,8 @@ interface RhythmWaveformProps {
 export const RhythmWaveform: React.FC<RhythmWaveformProps> = ({
   barCount = 24,
   height = 32,
-  activeColor = '#0F1115',
-  mutedColor = '#E5E7EB',
+  activeColor = theme.colors.ramp.ink,
+  mutedColor = theme.colors.ramp.gray200,
   style,
 }) => {
   // Pattern representing cardiac pulse oscillation

@@ -15,32 +15,35 @@ const KEY_LENGTH = 32;
 const NONCE_LENGTH = 12;
 let cachedEncryptionKey: Uint8Array | null = null;
 
+/**
+ * PHI vault key storage policy (Nov-2026 audit): the master key may ONLY ever
+ * live in the OS keychain/keystore via SecureStore. There is intentionally NO
+ * AsyncStorage fallback: a plaintext-readable fallback would degrade the whole
+ * vault's guarantee. When SecureStore is unavailable we fail hard instead, so
+ * callers surface the failure rather than silently storing PHI less securely.
+ */
 async function readStoredKey(alias: string): Promise<string | null> {
-  if (Platform.OS !== 'web') {
-    try {
-      if (SecureStore && typeof SecureStore.getItemAsync === 'function') {
-        const secureValue = await SecureStore.getItemAsync(alias);
-        if (secureValue) return secureValue;
-      }
-    } catch {
-      // Fall through to AsyncStorage if the native keystore is unavailable.
-    }
+  if (Platform.OS === 'web' || !SecureStore || typeof SecureStore.getItemAsync !== 'function') {
+    throw new Error('SecureStore is unavailable — offline PHI vault cannot be opened');
   }
-  return AsyncStorage.getItem(alias);
+  return SecureStore.getItemAsync(alias);
 }
 
 async function writeStoredKey(alias: string, value: string): Promise<void> {
-  if (Platform.OS !== 'web') {
-    try {
-      if (SecureStore && typeof SecureStore.setItemAsync === 'function') {
-        await SecureStore.setItemAsync(alias, value);
-        return;
-      }
-    } catch {
-      // Fall through to AsyncStorage if the native keystore is unavailable.
-    }
+  if (Platform.OS === 'web' || !SecureStore || typeof SecureStore.setItemAsync !== 'function') {
+    throw new Error('SecureStore is unavailable — offline PHI vault cannot be created');
   }
-  await AsyncStorage.setItem(alias, value);
+  await SecureStore.setItemAsync(alias, value);
+}
+
+async function migrateLegacyKeyToStrongStorage(): Promise<void> {
+  // If the legacy vault key was ever persisted in AsyncStorage during the
+  // historical fallback behaviour, remove it now that SecureStore holds the key.
+  try {
+    await AsyncStorage.removeItem(LEGACY_MASTER_KEY_STORAGE_ALIAS);
+  } catch {
+    // Non-fatal: legacy key not present or storage failed.
+  }
 }
 
 async function getOrCreateEncryptionKey(): Promise<Uint8Array> {
@@ -60,8 +63,11 @@ async function getOrCreateEncryptionKey(): Promise<Uint8Array> {
       throw new Error('Offline vault key has an invalid length');
     }
     if (migratedLegacyKey) {
+      // Re-persist the legacy key under the current alias so future lookups
+      // cost one read and the legacy alias copy can be garbage-collected.
       await writeStoredKey(MASTER_KEY_STORAGE_ALIAS, storedKey);
     }
+    await migrateLegacyKeyToStrongStorage();
     cachedEncryptionKey = key;
     return key;
   }

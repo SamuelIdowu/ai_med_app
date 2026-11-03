@@ -11,7 +11,7 @@ import {
   Text,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../../theme';
+import { theme, withAlpha } from '../../theme';
 import type { IconName } from '../../icons';
 
 export type NavTabId = 'Home' | 'Analytics' | 'AIChat' | 'Articles' | 'Profile';
@@ -112,7 +112,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
             style={styles.emergencyOuterRing}
           >
             <View style={styles.emergencyInnerCircle}>
-              <Icon name="phone" size={26} color="#FFFFFF" />
+              <Icon name="phone" size={26} color={theme.colors.ramp.white} />
             </View>
           </TouchableOpacity>
         </View>
@@ -131,7 +131,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
               <Icon
                 name="emergencyCall"
                 size={32}
-                color="#0F1115"
+                color={theme.colors.ramp.ink}
               />
             </View>
 
@@ -157,7 +157,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
                   handleCallEmergency();
                 }}
               >
-                <Icon name="phone" size={18} color="#FFFFFF" />
+                <Icon name="phone" size={18} color={theme.colors.ramp.white} />
                 <Text style={styles.modalCallText}>Call 911</Text>
               </TouchableOpacity>
             </View>
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 2,
     borderColor: theme.colors.status.emergency.primary,
     alignItems: 'center',
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(6, 16, 17, 0.65)',
+    backgroundColor: withAlpha(theme.colors.palette.darkSideMoon, 0.65),
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -316,6 +316,6 @@ const styles = StyleSheet.create({
   modalCallText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 });

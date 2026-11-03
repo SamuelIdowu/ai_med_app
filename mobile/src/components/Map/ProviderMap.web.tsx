@@ -257,7 +257,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
               ['==', ['downcase', ['get', 'type']], 'hospital'],
               theme.colors.emergency.primary,
               ['==', ['downcase', ['get', 'type']], 'pharmacy'],
-              '#4C6FFF',
+              theme.colors.status.info.primary,
               theme.colors.palette.eliteTeal,
             ],
             'circle-stroke-color': theme.colors.canvas.surface,
@@ -292,7 +292,7 @@ export const ProviderMap = forwardRef<ProviderMapHandle, ProviderMapProps>(
           source: 'user-location',
           paint: {
             'circle-radius': 8,
-            'circle-color': '#2563EB',
+            'circle-color': theme.colors.status.info.primary,
             'circle-stroke-color': theme.colors.canvas.surface,
             'circle-stroke-width': 3,
           },

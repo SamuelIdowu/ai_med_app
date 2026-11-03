@@ -81,7 +81,7 @@ export const LoginScreen: React.FC = () => {
           {/* Logo Laso+ */}
           <View style={styles.logoRow}>
             <View style={styles.logoBadge}>
-              <Icon name="plus" size={16} color="#FFFFFF" />
+              <Icon name="plus" size={16} color={theme.colors.ramp.white} />
             </View>
             <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
           </View>
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   logoPlus: {
-    color: '#10B981',
+    color: theme.colors.status.success.primary,
   },
   header: {
     marginBottom: 24,

@@ -15,7 +15,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import firstAidData from '../content/first-aid-content.json';
 import { EncounterService } from '../services/encounterService';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 import { resolveIconName } from '../icons';
 
 type RootStackParamList = {
@@ -113,7 +113,7 @@ export const EmergencyStepScreen: React.FC = () => {
           style={styles.backCircle}
           activeOpacity={0.7}
         >
-          <Icon name="caretLeft" size={24} color="#000000" />
+          <Icon name="caretLeft" size={24} color={theme.colors.ramp.black} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle} numberOfLines={1}>
@@ -144,7 +144,7 @@ export const EmergencyStepScreen: React.FC = () => {
                       <Icon
                         name={resolveIconName(category.icon)}
                         size={44}
-                        color="#0F1115"
+                        color={theme.colors.ramp.ink}
                       />
                     }
                   />
@@ -152,7 +152,7 @@ export const EmergencyStepScreen: React.FC = () => {
                   <Icon
                     name={resolveIconName(category.icon)}
                     size={44}
-                    color="#0F1115"
+                    color={theme.colors.ramp.ink}
                   />
                 )}
               </View>
@@ -163,13 +163,13 @@ export const EmergencyStepScreen: React.FC = () => {
               {/* Protocol Spec Badges */}
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroPill}>
-                  <Icon name="listNumbers" size={14} color="#0F1115" />
+                  <Icon name="listNumbers" size={14} color={theme.colors.ramp.ink} />
                   <Text style={styles.heroPillText}>{totalSteps} Detailed Steps</Text>
                 </View>
 
                 {category.urgency ? (
                   <View style={styles.heroPillAlert}>
-                    <Icon name="warningCircle" size={14} color="#0F1115" />
+                    <Icon name="warningCircle" size={14} color={theme.colors.ramp.ink} />
                     <Text style={styles.heroPillAlertText}>{category.urgency}</Text>
                   </View>
                 ) : null}
@@ -179,7 +179,7 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Critical Emergency Warning Banner */}
             {category.warning && (
               <View style={styles.criticalWarningBox}>
-                <Icon name="warningOctagon" size={22} color="#0F1115" />
+                <Icon name="warningOctagon" size={22} color={theme.colors.ramp.ink} />
                 <View style={styles.criticalWarningContent}>
                   <Text style={styles.criticalWarningTitle}>Crucial Medical Notice</Text>
                   <Text style={styles.criticalWarningText}>{category.warning}</Text>
@@ -218,7 +218,7 @@ export const EmergencyStepScreen: React.FC = () => {
                     </Text>
                   </View>
 
-                  <Icon name="caretRight" size={20} color="#9CA3AF" />
+                  <Icon name="caretRight" size={20} color={theme.colors.ramp.gray400} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -231,7 +231,7 @@ export const EmergencyStepScreen: React.FC = () => {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('AIChat')}
             >
-              <Icon name="robot" size={18} color="#0F1115" />
+              <Icon name="robot" size={18} color={theme.colors.ramp.ink} />
               <Text style={styles.pillButtonOutlineText}>Ask AI Triage</Text>
             </TouchableOpacity>
 
@@ -244,7 +244,7 @@ export const EmergencyStepScreen: React.FC = () => {
               }}
             >
               <Text style={styles.pillButtonSolidText}>Start Instructions</Text>
-              <Icon name="arrowRight" size={18} color="#FFFFFF" />
+              <Icon name="arrowRight" size={18} color={theme.colors.ramp.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -297,7 +297,7 @@ export const EmergencyStepScreen: React.FC = () => {
                   currentStep.illustration_icon || category.icon
                 )}
                   size={52}
-                  color="#0F1115"
+                  color={theme.colors.ramp.ink}
                 />
               </View>
               <Text style={styles.stepIllustrationLabel}>
@@ -325,7 +325,7 @@ export const EmergencyStepScreen: React.FC = () => {
               {/* Safety Caution / Do's & Don'ts */}
               {currentStep.caution && (
                 <View style={styles.cautionBox}>
-                  <Icon name="warningCircle" size={18} color="#0F1115" />
+                  <Icon name="warningCircle" size={18} color={theme.colors.ramp.ink} />
                   <View style={styles.cautionContent}>
                     <Text style={styles.cautionTitle}>Critical Warning:</Text>
                     <Text style={styles.cautionText}>{currentStep.caution}</Text>
@@ -368,7 +368,7 @@ export const EmergencyStepScreen: React.FC = () => {
         <View style={styles.modalBackdrop}>
           <View style={styles.feedbackModalCard}>
             <View style={styles.modalCheckCircle}>
-              <Icon name="check" size={32} color="#FFFFFF" />
+              <Icon name="check" size={32} color={theme.colors.ramp.white} />
             </View>
 
             <Text style={styles.feedbackTitle}>
@@ -390,7 +390,7 @@ export const EmergencyStepScreen: React.FC = () => {
                   <Icon
                     name="star"
                     size={32}
-                    color="#000000"
+                    color={theme.colors.ramp.black}
                     weight={star <= rating ? 'fill' : 'regular'}
                   />
                 </TouchableOpacity>
@@ -416,7 +416,7 @@ export const EmergencyStepScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
   },
   header: {
     flexDirection: 'row',
@@ -425,24 +425,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'android' ? 38 : 10,
     paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: theme.colors.ramp.gray100,
   },
   backCircle: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
-    borderColor: '#E4E4E7',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     maxWidth: '70%',
     textAlign: 'center',
   },
@@ -463,10 +463,10 @@ const styles = StyleSheet.create({
 
   // Overview Medical Illustration Hero Card
   illustrationHeroCard: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 26,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingVertical: 28,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -476,13 +476,13 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    shadowColor: '#000000',
+    shadowColor: theme.colors.ramp.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -491,14 +491,14 @@ const styles = StyleSheet.create({
   heroProtocolName: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     textAlign: 'center',
     marginBottom: 4,
   },
   heroSubtitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -513,17 +513,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
   },
   heroPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   heroPillAlert: {
     flexDirection: 'row',
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   stepBadgeText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   stepCapsuleTextCol: {
     flex: 1,
@@ -623,12 +623,12 @@ const styles = StyleSheet.create({
   stepCapsuleTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   stepCapsulePreview: {
     fontSize: 12,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     lineHeight: 16,
   },
 
@@ -645,23 +645,23 @@ const styles = StyleSheet.create({
   progressStepLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   progressStepName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     maxWidth: '60%',
   },
   progressBarTrack: {
     height: 4,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.ramp.gray100,
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
   },
 
   // Step Header
@@ -675,28 +675,28 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepHeaderBadgeText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
   stepHeaderTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     flex: 1,
   },
 
   // Step Illustration Card
   stepIllustrationCard: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     paddingVertical: 32,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -706,9 +706,9 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
   stepIllustrationLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#4B5563',
+    color: theme.colors.ramp.gray600,
     textAlign: 'center',
   },
 
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
   stepInstructionSectionTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#9CA3AF',
+    color: theme.colors.ramp.gray400,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -735,37 +735,37 @@ const styles = StyleSheet.create({
   stepPrimaryContent: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     lineHeight: 24,
     marginBottom: 16,
   },
   explanationBox: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.ramp.gray50,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.ramp.gray200,
     marginBottom: 12,
   },
   explanationTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 4,
   },
   explanationText: {
     fontSize: 13,
-    color: '#4B5563',
+    color: theme.colors.ramp.gray600,
     lineHeight: 18,
   },
   cautionBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: '#0F1115',
+    borderColor: theme.colors.ramp.ink,
     gap: 10,
   },
   cautionContent: {
@@ -774,13 +774,13 @@ const styles = StyleSheet.create({
   cautionTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   cautionText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     lineHeight: 18,
   },
 
@@ -794,9 +794,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
+    borderTopColor: theme.colors.ramp.gray100,
     gap: 12,
   },
   pillButtonOutline: {
@@ -807,14 +807,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#0F1115',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.ramp.ink,
+    backgroundColor: theme.colors.canvas.surface,
     gap: 8,
   },
   pillButtonOutlineText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
   },
   pillButtonSolid: {
     flex: 1,
@@ -823,26 +823,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 24,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     gap: 8,
   },
   pillButtonSolidText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 
   // Modal Backdrop
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: withAlpha(theme.colors.ramp.black, 0.5),
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   feedbackModalCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.canvas.surface,
     borderRadius: 28,
     padding: 24,
     alignItems: 'center',
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -859,13 +859,13 @@ const styles = StyleSheet.create({
   feedbackTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F1115',
+    color: theme.colors.text.primary,
     marginBottom: 6,
     textAlign: 'center',
   },
   feedbackSub: {
     fontSize: 13,
-    color: '#6B7280',
+    color: theme.colors.ramp.gray500,
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 18,
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   },
   modalSubmitButton: {
     width: '100%',
-    backgroundColor: '#0F1115',
+    backgroundColor: theme.colors.ramp.ink,
     paddingVertical: 14,
     borderRadius: 24,
     alignItems: 'center',
@@ -888,6 +888,6 @@ const styles = StyleSheet.create({
   modalSubmitButtonText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
 });

@@ -15,7 +15,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
     style,
     lightObj
 }) => {
-    const isDark = theme.colors.canvas.background === '#061011' || theme.colors.canvas.background === '#0B0F19';
+    const isDark = theme.colors.canvas.background === theme.colors.palette.darkSideMoon || theme.colors.canvas.background === theme.colors.ramp.nightDark;
     return (
         <LinearGradient
             colors={[theme.colors.canvas.background, theme.colors.canvas.surfaceSubtle]}

@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   activeButton: {
-    backgroundColor: '#111318',
+    backgroundColor: theme.colors.ramp.inkDeep,
   },
   segmentText: {
     fontSize: 13,
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   activeText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '700',
   },
 });

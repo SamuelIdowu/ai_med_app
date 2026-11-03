@@ -96,12 +96,12 @@ export const VitalsAreaChart: React.FC<VitalsAreaChartProps> = ({
       <Svg width={chartWidth} height={height}>
         <Defs>
           <LinearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor="#0F1115" stopOpacity="0.18" />
-            <Stop offset="100%" stopColor="#0F1115" stopOpacity="0.00" />
+            <Stop offset="0%" stopColor={theme.colors.ramp.ink} stopOpacity="0.18" />
+            <Stop offset="100%" stopColor={theme.colors.ramp.ink} stopOpacity="0.00" />
           </LinearGradient>
           <LinearGradient id="pinGradient" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor="#0F1115" stopOpacity="0.7" />
-            <Stop offset="100%" stopColor="#0F1115" stopOpacity="0.05" />
+            <Stop offset="0%" stopColor={theme.colors.ramp.ink} stopOpacity="0.7" />
+            <Stop offset="100%" stopColor={theme.colors.ramp.ink} stopOpacity="0.05" />
           </LinearGradient>
         </Defs>
 
@@ -116,7 +116,7 @@ export const VitalsAreaChart: React.FC<VitalsAreaChartProps> = ({
                 y1={yPos}
                 x2={chartWidth - paddingRight}
                 y2={yPos}
-                stroke="#F1F5F9"
+                stroke={theme.colors.chart.gridLine}
                 strokeWidth={1}
                 strokeDasharray={tick === 80 ? undefined : '3,3'}
               />
@@ -131,7 +131,7 @@ export const VitalsAreaChart: React.FC<VitalsAreaChartProps> = ({
         <Path
           d={linePath}
           fill="none"
-          stroke="#0F1115"
+          stroke={theme.colors.ramp.ink}
           strokeWidth={3}
           strokeLinecap="round"
         />
@@ -152,8 +152,8 @@ export const VitalsAreaChart: React.FC<VitalsAreaChartProps> = ({
               cx={highlightPoint.x}
               cy={highlightPoint.y}
               r={6}
-              fill="#FFFFFF"
-              stroke="#0F1115"
+              fill={theme.colors.ramp.white}
+              stroke={theme.colors.ramp.ink}
               strokeWidth={3}
             />
           </G>
@@ -231,20 +231,20 @@ const styles = StyleSheet.create({
   },
   scrubberBadge: {
     position: 'absolute',
-    backgroundColor: '#111318',
+    backgroundColor: theme.colors.ramp.inkDeep,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: theme.spatial.radii.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000000',
+    shadowColor: theme.colors.ramp.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
   },
   scrubberText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.spatial.radii.pill,
   },
   xLabelPillActive: {
-    backgroundColor: '#111318',
+    backgroundColor: theme.colors.ramp.inkDeep,
   },
   xLabelText: {
     fontSize: 11,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   xLabelTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
     fontWeight: '700',
   },
 });

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { supabase } from './supabase';
 
 import { Platform } from 'react-native';
+import { isTransientNetworkError, networkRetryBackoffMs } from './networkRetry';
 
 const getBaseUrl = (): string => {
     if (process.env.EXPO_PUBLIC_BACKEND_URL) {
@@ -72,11 +73,43 @@ function refreshAccessToken(): Promise<string | null> {
     return refreshPromise;
 }
 
-// Retry a request once after refreshing an expired Supabase session.
+// Transient network failures get automatic retries for idempotent requests
+// (GET/HEAD/OPTIONS only — mutations are never auto-retried to avoid
+// duplicate side effects). Backoff is exponential with jitter.
+const NETWORK_RETRY_MAX = 3;
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const original = error?.config;
+
+        const method = original?.method?.toLowerCase?.();
+        const isIdempotent = method === 'get' || method === 'head' || method === 'options';
+        const networkRetries = original?.__networkRetries ?? 0;
+
+        if (
+            original &&
+            isIdempotent &&
+            !original.__isAuthRetry &&
+            isTransientNetworkError(error) &&
+            networkRetries < NETWORK_RETRY_MAX
+        ) {
+            original.__networkRetries = networkRetries + 1;
+            const nextAttempt = original.__networkRetries as number;
+            const backoff = networkRetryBackoffMs(nextAttempt);
+            const jitter = Math.floor(Math.random() * 150);
+            if (isDev) {
+                console.warn(
+                    `[API] Transient network error for ${original.url}, retry ${nextAttempt}/${NETWORK_RETRY_MAX}`,
+                );
+            }
+            await delay(backoff + jitter);
+            return api(original);
+        }
+
+        // Retry a request once after refreshing an expired Supabase session.
         if (error?.response?.status === 401 && original && !original.__isAuthRetry) {
             original.__isAuthRetry = true;
             const token = await refreshAccessToken();
