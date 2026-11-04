@@ -93,8 +93,10 @@ def test_live_server_vision_multipart_upload_e2e(live_server_url):
         assert "latency_ms" in data
 
 def test_live_server_embed_e2e(live_server_url):
-    # 30s: the first embed request may cold-load the sentence-transformers model.
-    with httpx.Client(base_url=live_server_url, timeout=30.0) as client:
+    # 120s: the first embed request cold-loads the sentence-transformers model
+    # (torch import + weight load). Measured ~50s on Windows dev machines with
+    # a warm HF cache; allow generous headroom for first-ever cache downloads.
+    with httpx.Client(base_url=live_server_url, timeout=120.0) as client:
         res = client.post("/v1/ml/embed", json={"text": "Acute respiratory distress protocol"})
         assert res.status_code == 200
         data = res.json()

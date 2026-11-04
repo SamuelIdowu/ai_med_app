@@ -118,6 +118,12 @@ Run the complete test suite:
 .venv\Scripts\python.exe -m pytest tests -v
 ```
 
+> **Note (first run):** install the full dependency set into the venv first
+> (`python -m pip install -e .` — CI does the same). The embed tests cold-load
+> `sentence-transformers/all-MiniLM-L6-v2`; the weights download to
+> `~/.cache/huggingface` once (~90 MB) and the first load can take 1-2 minutes
+> on Windows, after which loads are fast (~60 s) and inference ~1 s.
+
 Tests include:
 - `tests/test_e2e_server.py`: Real live socket Uvicorn E2E tests over TCP.
 - `tests/benchmark_safety.py`: 50-scenario clinical sensitivity/specificity benchmark covering all 35 emergency conditions.

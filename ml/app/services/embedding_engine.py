@@ -27,6 +27,11 @@ class EmbeddingEngine:
                 cls._model = SentenceTransformer(cls.MODEL_NAME)
             except Exception as e:
                 cls._model = None
+                # A failed load (e.g. transient Hugging Face hub/network error)
+                # must not poison the process forever: allow later requests to
+                # retry the load. Permanent errors (missing package) fail fast,
+                # so repeated retries are cheap and embed stays explicit.
+                cls._tried_loading = False
                 raise RuntimeError("Medical embedding model could not be loaded") from e
         return cls._model
 
