@@ -15,7 +15,9 @@
         "NSCameraUsageDescription": "Laso uses your camera to analyze injuries, scan wounds, and provide guided first-aid assistance.",
         "NSMicrophoneUsageDescription": "Laso uses your microphone for hands-free voice triage during medical emergencies.",
         "NSLocationWhenInUseUsageDescription": "Laso uses your location to identify nearest emergency clinics and medical facilities.",
-        "NSSpeechRecognitionUsageDescription": "Laso uses speech recognition to transcribe symptoms during emergency situations."
+        "NSSpeechRecognitionUsageDescription": "Laso uses speech recognition to transcribe symptoms during emergency situations.",
+        "NSPhotoLibraryUsageDescription": "Laso needs photo library access so you can upload existing photos of injuries for analysis.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -80,6 +82,19 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Allow Laso to locate nearby healthcare clinics and emergency rooms."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#FF231F7C"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Laso to access your photos so you can upload images of injuries for analysis.",
+          "cameraPermission": "Allow Laso to access your camera to inspect wounds and injuries."
         }
       ]
     ],

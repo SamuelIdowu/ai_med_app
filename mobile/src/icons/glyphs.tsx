@@ -20,14 +20,7 @@ const GlyphSvg: React.FC<Partial<GlyphProps> & { size: number; children: React.R
   size,
   children,
 }) => (
-  <Svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    accessibilityElementsHidden
-    importantForAccessibility="no-hide-descendants"
-  >
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     {children}
   </Svg>
 );
@@ -194,7 +187,10 @@ export const PoisoningGlyph: React.FC<GlyphProps> = ({ size, color, strokeWidth 
   const s = line(color, strokeWidth);
   return (
     <GlyphSvg size={size}>
-      <Path d="M9.5 3h5M10.5 3v5.2L5.6 17a2.2 2.2 0 0 0 1.9 3.3h9a2.2 2.2 0 0 0 1.9-3.3l-4.9-8.8V3" {...s} />
+      <Path
+        d="M9.5 3h5M10.5 3v5.2L5.6 17a2.2 2.2 0 0 0 1.9 3.3h9a2.2 2.2 0 0 0 1.9-3.3l-4.9-8.8V3"
+        {...s}
+      />
       <Path d="M12 12.8v3.4M12 18.6h.01" {...s} />
     </GlyphSvg>
   );
@@ -218,7 +214,10 @@ export const BitesGlyph: React.FC<GlyphProps> = ({ size, color, strokeWidth }) =
     <GlyphSvg size={size}>
       <Circle cx={12} cy={6.2} r={1.7} {...s} />
       <Path d="M12 8.2a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z" {...s} />
-      <Path d="M8.8 9.8 6.4 8.4M15.2 9.8l2.4-1.4M8.6 12H5.5M15.4 12h3.1M8.8 14.2l-2.4 1.4M15.2 14.2l2.4 1.4M11 4.8 10 3.2M13 4.8l1-1.6" {...s} />
+      <Path
+        d="M8.8 9.8 6.4 8.4M15.2 9.8l2.4-1.4M8.6 12H5.5M15.4 12h3.1M8.8 14.2l-2.4 1.4M15.2 14.2l2.4 1.4M11 4.8 10 3.2M13 4.8l1-1.6"
+        {...s}
+      />
     </GlyphSvg>
   );
 };

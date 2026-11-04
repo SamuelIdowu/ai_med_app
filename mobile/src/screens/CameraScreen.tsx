@@ -1,12 +1,12 @@
 
 import { Icon } from '../components/Icon';
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions, FlashMode } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 import { CameraReticle } from '../components/ui/CameraReticle';
-import { theme } from '../theme';
+import { theme, withAlpha } from '../theme';
 
 export const CameraScreen = () => {
     const navigation = useNavigation<any>();
@@ -22,6 +22,23 @@ export const CameraScreen = () => {
 
     if (!permission.granted) {
         // Camera permissions are not granted yet.
+        if (!permission.canAskAgain) {
+            // Permanently denied — the prompt cannot be re-shown; go to OS settings.
+            return (
+                <View style={styles.container}>
+                    <Text style={styles.message}>Camera access is disabled. Enable it in your device settings.</Text>
+                    <TouchableOpacity
+                        onPress={() => Linking.openSettings()}
+                        style={styles.permissionButton}
+                    >
+                        <Text style={styles.permissionButtonText}>Open Settings</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Text style={styles.settingsFallbackText}>Not now</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
         return (
             <View style={styles.container}>
                 <Text style={styles.message}>We need your permission to show the camera</Text>
@@ -93,7 +110,7 @@ export const CameraScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: theme.colors.ramp.black,
     },
     message: {
         textAlign: 'center',
@@ -113,6 +130,11 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    settingsFallbackText: {
+        color: withAlpha(theme.colors.ramp.white, 0.7),
+        fontSize: 14,
+        marginTop: 16,
+    },
     camera: {
         flex: 1,
     },
@@ -131,7 +153,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: withAlpha(theme.colors.ramp.black, 0.4),
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -151,7 +173,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: 48,
         height: 48,
-        borderColor: 'rgba(255, 255, 255, 0.8)',
+        borderColor: withAlpha(theme.colors.ramp.white, 0.8),
     },
     topLeft: {
         top: 0,
@@ -204,7 +226,7 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         borderWidth: 4,
         borderColor: 'white',
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        backgroundColor: withAlpha(theme.colors.ramp.white, 0.3),
         padding: 4,
         justifyContent: 'center',
         alignItems: 'center',

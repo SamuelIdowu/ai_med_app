@@ -30,7 +30,6 @@ function validateProductionEnvironment() {
 module.exports = ({ config }) => {
   validateProductionEnvironment();
 
-  const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
   const plugins = config.plugins || [];
   // Required by SDK 58 (expo install --fix): datetimepicker, sharing and
   // status-bar must be registered as config plugins.
@@ -48,22 +47,5 @@ module.exports = ({ config }) => {
     ...requiredPlugins.filter((plugin) => !pluginsWithMapLibre.includes(plugin)),
   ];
 
-  if (!googleMapsApiKey) {
-    return { ...config, plugins: finalPlugins };
-  }
-
-  return {
-    ...config,
-    plugins: finalPlugins,
-    android: {
-      ...config.android,
-      config: {
-        ...(config.android && config.android.config),
-        googleMaps: {
-          ...(config.android && config.android.config && config.android.config.googleMaps),
-          apiKey: googleMapsApiKey,
-        },
-      },
-    },
-  };
+  return { ...config, plugins: finalPlugins };
 };
