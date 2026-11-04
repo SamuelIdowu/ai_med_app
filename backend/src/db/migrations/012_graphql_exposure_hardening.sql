@@ -18,6 +18,8 @@ REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM authenticated;
 GRANT SELECT ON public.vital_readings TO authenticated;
 
 -- 3. Owner-only policy so the realtime channel streams only the user's rows.
+-- Re-runnable: CREATE POLICY has no IF NOT EXISTS in Postgres.
+DROP POLICY IF EXISTS "vital_readings_owner_select" ON public.vital_readings;
 CREATE POLICY "vital_readings_owner_select"
   ON public.vital_readings
   FOR SELECT
