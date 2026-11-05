@@ -34,7 +34,6 @@ Fill in the values in `.env`. The key groups are:
 | `ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
 | `CORS_ORIGINS` | ML | ML service origins (`*` for native clients) |
 | `EXPO_PUBLIC_BACKEND_URL` | mobile | API base URL |
-| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mobile | Optional Android Maps key |
 
 `docker-compose.prod.yml` rejects an empty `REDIS_PASSWORD`; there is no
 default production password.
@@ -131,8 +130,8 @@ python mobile/scripts/validate_illustrations.py
 ```
 
 Source JPEGs and optimizer backups are excluded from EAS uploads by
-`mobile/.easignore`. Android Google Maps is configured at build time from
-`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` in `mobile/app.config.js`.
+`mobile/.easignore`. Maps use MapLibre with OpenFreeMap tiles — no Google Maps
+key is needed for Android builds.
 
 ## 7. Google OAuth
 
@@ -298,7 +297,6 @@ Set these EAS environment variables for the production profile:
 EXPO_PUBLIC_SUPABASE_URL
 EXPO_PUBLIC_SUPABASE_ANON_KEY
 EXPO_PUBLIC_BACKEND_URL
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY (optional)
 ```
 
 `mobile/app.config.js` rejects production builds that use localhost, emulator,

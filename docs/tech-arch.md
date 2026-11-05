@@ -64,7 +64,7 @@ DevOps / CI-CD
 * **Analytics:** PostHog (self-hostable) or Firebase Analytics
 * **CI/CD:** GitHub Actions → Vercel / Render / Supabase Deploy
 * **Encryption & Key Management:** Cloud KMS (AWS KMS / GCP KMS) or Supabase encryption at rest; additional app-level AES-256 encryption for sensitive blobs (client-side encryption optional)
-* **Maps:** Google Maps / Apple Maps for provider directory links
+* **Maps:** MapLibre (native + web) with OpenFreeMap tiles for the provider directory
 * **Payment & Billing (future):** Stripe (if monetizing later)
 
 Rationale: Supabase + Vercel + Expo reduces operational overhead, speeds the solo dev workflow, and gives an integrated stack for authentication and storage.

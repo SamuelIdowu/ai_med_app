@@ -62,7 +62,6 @@ Key variables (see `.env.example` for the full list):
 | `ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
 | `CORS_ORIGINS` | ML | ML service origins (`*` for native clients) |
 | `EXPO_PUBLIC_BACKEND_URL` | mobile | API base URL |
-| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mobile | Optional Android Maps key |
 
 Set the same secrets in GitHub Actions (`.github/workflows/ci.yml` reads
 `secrets.*`). The default CI jobs use placeholders and run hermetically; the

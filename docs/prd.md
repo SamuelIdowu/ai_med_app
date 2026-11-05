@@ -181,7 +181,7 @@ Provide users with quick, accurate, easy-to-follow first-aid steps in emergencie
 
 * Push notifications (FCM/APNs)
 * Secure storage (e.g., Supabase Storage / local encrypted store)
-* Basic map integrations (Google Maps/Apple Maps)
+* Basic map integrations (MapLibre / OpenFreeMap tiles)
 * Crash reporting (Sentry or Firebase)
 
 ---

@@ -138,7 +138,7 @@ Free-tier caveats to accept:
 Distribution decision recorded: **APK sideload + EAS Updates** (not store distribution).
 
 1. Point `EXPO_PUBLIC_BACKEND_URL` at `https://laso-backend.onrender.com/api/v1` (eas.json / `.env`).
-2. `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` optional — blank omits Android maps key.
+2. Maps use MapLibre / OpenFreeMap tiles — no Google Maps key is needed.
 3. OTA updates for JS-only changes: `eas update` (free on EAS plan).
 4. Android binary: `eas build --local -p android` -> signed APK built on your machine (no EAS build-quota usage), distribute by direct download.
 5. iOS: skipped at $0 (TestFlight/App Store require the $99/yr Apple Developer Program). Android-first.

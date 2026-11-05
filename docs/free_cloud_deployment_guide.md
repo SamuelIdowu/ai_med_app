@@ -101,7 +101,6 @@ Expo dashboard under **Environment Variables -> production** (or use
 EXPO_PUBLIC_BACKEND_URL=https://laso-backend.onrender.com/api/v1
 EXPO_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=<optional-android-maps-key>
 ```
 
 `mobile/app.config.js` blocks production builds that use a localhost or
