@@ -26,9 +26,9 @@ module.exports = {
         resolveJsonModule: true,
         skipLibCheck: true,
         paths: {
-            'phosphor-react-native/src/icons/*': [
-              path.join(repoRoot, 'mobile/node_modules/phosphor-react-native/lib/typescript/icons/*'),
-            ],
+          'phosphor-react-native/src/icons/*': [
+            path.join(repoRoot, 'mobile/node_modules/phosphor-react-native/lib/typescript/icons/*'),
+          ],
         },
       },
     }],
