@@ -55,12 +55,21 @@ export const HistoryScreen: React.FC = () => {
       .channel(`vital-readings:${userId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'vital_readings', filter: `user_id=eq.${userId}` },
-        () => { void loadVitals(activeSegment); },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vital_readings',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          void loadVitals(activeSegment);
+        },
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [session?.user?.id, activeSegment]);
 
   const loadHistory = async () => {
@@ -85,7 +94,10 @@ export const HistoryScreen: React.FC = () => {
 
   const connectHealthData = async () => {
     if (!session?.access_token) {
-      Alert.alert('Sign In Required', 'Sign in before connecting health data so readings can be saved to your account.');
+      Alert.alert(
+        'Sign In Required',
+        'Sign in before connecting health data so readings can be saved to your account.',
+      );
       return;
     }
     setHealthSyncing(true);
@@ -93,9 +105,11 @@ export const HistoryScreen: React.FC = () => {
     try {
       const count = await HealthDataService.connectAndSync();
       setHealthSyncEnabled(true);
-      setHealthSyncMessage(count > 0
-        ? `Health data sync complete. ${count} readings processed.`
-        : 'No readings were available. Check health permissions and connected data sources.');
+      setHealthSyncMessage(
+        count > 0
+          ? `Health data sync complete. ${count} readings processed.`
+          : 'No readings were available. Check health permissions and connected data sources.',
+      );
       await loadVitals(activeSegment);
     } catch (error: any) {
       setHealthSyncMessage(error?.message || 'Could not sync health data.');
@@ -104,37 +118,45 @@ export const HistoryScreen: React.FC = () => {
     }
   };
 
-  useFocusEffect(useCallback(() => {
-    if (!healthSyncEnabled || !session?.access_token) return undefined;
-    let syncing = false;
-    const syncRecentData = async () => {
-      if (syncing || AppState.currentState !== 'active') return;
-      syncing = true;
-      try {
-        await HealthDataService.syncGrantedData();
-        await loadVitals(activeSegment);
-      } catch (error) {
-        console.warn('Health data background refresh failed:', error);
-      } finally {
-        syncing = false;
-      }
-    };
-    void syncRecentData();
-    const timer = setInterval(() => { void syncRecentData(); }, 5 * 60 * 1000);
-    return () => clearInterval(timer);
-  }, [healthSyncEnabled, activeSegment, session?.access_token]));
+  useFocusEffect(
+    useCallback(() => {
+      if (!healthSyncEnabled || !session?.access_token) return undefined;
+      let syncing = false;
+      const syncRecentData = async () => {
+        if (syncing || AppState.currentState !== 'active') return;
+        syncing = true;
+        try {
+          await HealthDataService.syncGrantedData();
+          await loadVitals(activeSegment);
+        } catch (error) {
+          console.warn('Health data background refresh failed:', error);
+        } finally {
+          syncing = false;
+        }
+      };
+      void syncRecentData();
+      const timer = setInterval(
+        () => {
+          void syncRecentData();
+        },
+        5 * 60 * 1000,
+      );
+      return () => clearInterval(timer);
+    }, [healthSyncEnabled, activeSegment, session?.access_token]),
+  );
 
   const handleGenerateReport = async (encounterId: string) => {
     try {
       if (!session) {
-        Alert.alert(
-          'Sign In Required',
-          'Sign in to generate official medical PDF reports.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Sign In', onPress: () => { void signOut(); } },
-          ]
-        );
+        Alert.alert('Sign In Required', 'Sign in to generate official medical PDF reports.', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Sign In',
+            onPress: () => {
+              void signOut();
+            },
+          },
+        ]);
         return;
       }
 
@@ -142,23 +164,19 @@ export const HistoryScreen: React.FC = () => {
       const reportUri = await reportService.generateReport(encounterId);
       setLoading(false);
 
-      Alert.alert(
-        'Report Generated',
-        'Clinical triage summary PDF is ready.',
-        [
-          {
-            text: 'Share PDF',
-            onPress: async () => {
-              try {
-                await reportService.shareReport(reportUri);
-              } catch (e) {
-                console.error('Error sharing report:', e);
-              }
-            },
+      Alert.alert('Report Generated', 'Clinical triage summary PDF is ready.', [
+        {
+          text: 'Share PDF',
+          onPress: async () => {
+            try {
+              await reportService.shareReport(reportUri);
+            } catch (e) {
+              console.error('Error sharing report:', e);
+            }
           },
-          { text: 'Done', style: 'cancel' },
-        ]
-      );
+        },
+        { text: 'Done', style: 'cancel' },
+      ]);
     } catch (error: any) {
       setLoading(false);
       Alert.alert('Error', 'Failed to generate medical PDF report.');
@@ -176,34 +194,18 @@ export const HistoryScreen: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setActiveTab('vitals')}
-            style={[
-              styles.tabTogglePill,
-              activeTab === 'vitals' && styles.activeTabToggle,
-            ]}
+            style={[styles.tabTogglePill, activeTab === 'vitals' && styles.activeTabToggle]}
           >
-            <Text
-              style={[
-                styles.tabToggleText,
-                activeTab === 'vitals' && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabToggleText, activeTab === 'vitals' && styles.activeTabText]}>
               Vitals
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setActiveTab('activity')}
-            style={[
-              styles.tabTogglePill,
-              activeTab === 'activity' && styles.activeTabToggle,
-            ]}
+            style={[styles.tabTogglePill, activeTab === 'activity' && styles.activeTabToggle]}
           >
-            <Text
-              style={[
-                styles.tabToggleText,
-                activeTab === 'activity' && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabToggleText, activeTab === 'activity' && styles.activeTabText]}>
               Encounters ({encounters.length})
             </Text>
           </TouchableOpacity>
@@ -217,100 +219,99 @@ export const HistoryScreen: React.FC = () => {
       >
         {activeTab === 'vitals' ? (
           <>
-          <View style={styles.healthSyncRow}>
-            <View style={styles.healthSyncCopy}>
-              <Text style={styles.cardSectionTitle}>Connected health data</Text>
-              <Text style={styles.metricStatus}>Read-only sync from Apple Health or Health Connect</Text>
+            <View style={styles.healthSyncRow}>
+              <View style={styles.healthSyncCopy}>
+                <Text style={styles.cardSectionTitle}>Connected health data</Text>
+                <Text style={styles.metricStatus}>
+                  Read-only sync from Apple Health or Health Connect
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.healthSyncButton, healthSyncing && styles.healthSyncButtonDisabled]}
+                onPress={connectHealthData}
+                disabled={healthSyncing}
+              >
+                {healthSyncing ? (
+                  <ActivityIndicator size="small" color={theme.colors.ramp.white} />
+                ) : (
+                  <Text style={styles.healthSyncButtonText}>Connect / Sync</Text>
+                )}
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={[styles.healthSyncButton, healthSyncing && styles.healthSyncButtonDisabled]}
-              onPress={connectHealthData}
-              disabled={healthSyncing}
-            >
-              {healthSyncing
-                ? <ActivityIndicator size="small" color={theme.colors.ramp.white} />
-                : <Text style={styles.healthSyncButtonText}>Connect / Sync</Text>}
-            </TouchableOpacity>
-          </View>
-          {healthSyncMessage ? <Text style={styles.healthSyncMessage}>{healthSyncMessage}</Text> : null}
-          {!vitals || vitals.readingCount === 0 ? (
-            <MedicalCard style={styles.emptyCard}>
-              <Icon name="heartbeat" size={40} color={theme.colors.text.muted} />
-              <Text style={styles.emptyTitle}>{vitals ? 'No heart-rate readings' : 'Readings unavailable'}</Text>
-              <Text style={styles.emptySubtitle}>
-                {vitals
-                  ? 'Connect Apple Health or Health Connect, or record measured vitals during a triage session.'
-                  : 'Could not load your readings. Check your connection and try again.'}
-              </Text>
-            </MedicalCard>
-          ) : (
-          <>
-            {/* 2. Top Summary Metric Card (ref 2.webp) */}
-            <MedicalCard style={styles.vitalsSummaryCard}>
-              <View style={styles.vitalsHeaderRow}>
-                <View>
-                  <View style={styles.metricSubRow}>
-                    <Text style={styles.metricSub}>Heart Rate</Text>
-                  </View>
-                  <View style={styles.metricRow}>
-                    <Text style={styles.metricValue}>
-                      {vitals?.currentHeartRate ?? '—'}
-                    </Text>
-                    <Text style={styles.metricUnit}>BPM</Text>
-                  </View>
-                  <Text style={styles.metricStatus}>
-                    {vitals.heartRateStatus}
-                  </Text>
-                </View>
+            {healthSyncMessage ? (
+              <Text style={styles.healthSyncMessage}>{healthSyncMessage}</Text>
+            ) : null}
+            {!vitals || vitals.readingCount === 0 ? (
+              <MedicalCard style={styles.emptyCard}>
+                <Icon name="heartbeat" size={40} color={theme.colors.text.muted} />
+                <Text style={styles.emptyTitle}>
+                  {vitals ? 'No heart-rate readings' : 'Readings unavailable'}
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  {vitals
+                    ? 'Connect Apple Health or Health Connect, or record measured vitals during a triage session.'
+                    : 'Could not load your readings. Check your connection and try again.'}
+                </Text>
+              </MedicalCard>
+            ) : (
+              <>
+                {/* 2. Top Summary Metric Card (ref 2.webp) */}
+                <MedicalCard style={styles.vitalsSummaryCard}>
+                  <View style={styles.vitalsHeaderRow}>
+                    <View>
+                      <View style={styles.metricSubRow}>
+                        <Text style={styles.metricSub}>Heart Rate</Text>
+                      </View>
+                      <View style={styles.metricRow}>
+                        <Text style={styles.metricValue}>{vitals?.currentHeartRate ?? '—'}</Text>
+                        <Text style={styles.metricUnit}>BPM</Text>
+                      </View>
+                      <Text style={styles.metricStatus}>{vitals.heartRateStatus}</Text>
+                    </View>
 
-                <View style={styles.heartIconCircle}>
-                  <Icon
-                    name="cpr"
-                    size={24}
-                    color={theme.colors.primary.main}
+                    <View style={styles.heartIconCircle}>
+                      <Icon name="cpr" size={24} color={theme.colors.primary.main} />
+                    </View>
+                  </View>
+
+                  {/* Area Chart with Vertical Pin from ref 2 */}
+                  <VitalsAreaChart
+                    height={170}
+                    data={vitals?.heartRatePoints}
+                    highlightIndex={vitals ? Math.max(0, vitals.heartRatePoints.length - 1) : 0}
+                    highlightLabel={vitals ? `${vitals.currentHeartRate} BPM` : '—'}
                   />
-                </View>
-              </View>
 
-              {/* Area Chart with Vertical Pin from ref 2 */}
-              <VitalsAreaChart
-                height={170}
-                data={vitals?.heartRatePoints}
-                highlightIndex={vitals ? Math.max(0, vitals.heartRatePoints.length - 1) : 0}
-                highlightLabel={vitals ? `${vitals.currentHeartRate} BPM` : '—'}
-              />
+                  {/* 3-Column Stats: Average | Minimum | Maximum (ref 2) */}
+                  <View style={styles.threeColRow}>
+                    <View style={styles.colStat}>
+                      <Text style={styles.colLabel}>Average</Text>
+                      <Text style={styles.colValue}>{vitals?.average ?? '—'}</Text>
+                      <Text style={styles.colUnit}>BPM</Text>
+                    </View>
+                    <View style={styles.colDivider} />
+                    <View style={styles.colStat}>
+                      <Text style={styles.colLabel}>Minimum</Text>
+                      <Text style={styles.colValue}>{vitals?.min ?? '—'}</Text>
+                      <Text style={styles.colUnit}>BPM</Text>
+                    </View>
+                    <View style={styles.colDivider} />
+                    <View style={styles.colStat}>
+                      <Text style={styles.colLabel}>Maximum</Text>
+                      <Text style={styles.colValue}>{vitals?.max ?? '—'}</Text>
+                      <Text style={styles.colUnit}>BPM</Text>
+                    </View>
+                  </View>
 
-              {/* 3-Column Stats: Average | Minimum | Maximum (ref 2) */}
-              <View style={styles.threeColRow}>
-                <View style={styles.colStat}>
-                  <Text style={styles.colLabel}>Average</Text>
-                  <Text style={styles.colValue}>{vitals?.average ?? '—'}</Text>
-                  <Text style={styles.colUnit}>BPM</Text>
-                </View>
-                <View style={styles.colDivider} />
-                <View style={styles.colStat}>
-                  <Text style={styles.colLabel}>Minimum</Text>
-                  <Text style={styles.colValue}>{vitals?.min ?? '—'}</Text>
-                  <Text style={styles.colUnit}>BPM</Text>
-                </View>
-                <View style={styles.colDivider} />
-                <View style={styles.colStat}>
-                  <Text style={styles.colLabel}>Maximum</Text>
-                  <Text style={styles.colValue}>{vitals?.max ?? '—'}</Text>
-                  <Text style={styles.colUnit}>BPM</Text>
-                </View>
-              </View>
-
-              {/* Time Segment Control: Hourly | Daily | Weekly | Monthly */}
-              <TimeSegmentControl
-                activeSegment={activeSegment}
-                onChange={setActiveSegment}
-                style={styles.segmentControl}
-              />
-            </MedicalCard>
-
-          </>
-          )}
+                  {/* Time Segment Control: Hourly | Daily | Weekly | Monthly */}
+                  <TimeSegmentControl
+                    activeSegment={activeSegment}
+                    onChange={setActiveSegment}
+                    style={styles.segmentControl}
+                  />
+                </MedicalCard>
+              </>
+            )}
           </>
         ) : (
           /* Encounters & History Tab */
@@ -325,14 +326,11 @@ export const HistoryScreen: React.FC = () => {
               />
             ) : encounters.length === 0 ? (
               <MedicalCard style={styles.emptyCard}>
-                <Icon
-                  name="clipboardText"
-                  size={40}
-                  color={theme.colors.text.muted}
-                />
+                <Icon name="clipboardText" size={40} color={theme.colors.text.muted} />
                 <Text style={styles.emptyTitle}>No past encounters</Text>
                 <Text style={styles.emptySubtitle}>
-                  Emergency checks and triage sessions will appear here with downloadable clinician reports.
+                  Emergency checks and triage sessions will appear here with downloadable clinician
+                  reports.
                 </Text>
               </MedicalCard>
             ) : (
@@ -344,18 +342,17 @@ export const HistoryScreen: React.FC = () => {
                 >
                   <View style={styles.encounterRow}>
                     <View style={styles.encIconCircle}>
-                      <Icon
-                        name="firstAidKit"
-                        size={22}
-                        color={theme.colors.primary.main}
-                      />
+                      <Icon name="firstAidKit" size={22} color={theme.colors.primary.main} />
                     </View>
                     <View style={styles.encContent}>
                       <Text style={styles.encCategory}>
                         {enc.category || 'Emergency First Aid'}
                       </Text>
                       <Text style={styles.encNotes} numberOfLines={2}>
-                        {enc.notes || (enc.symptoms?.length ? enc.symptoms.join(', ') : 'Clinical triage assessment recorded')}
+                        {enc.notes ||
+                          (enc.symptoms?.length
+                            ? enc.symptoms.join(', ')
+                            : 'Clinical triage assessment recorded')}
                       </Text>
                       <Text style={styles.encDate}>
                         {new Date(enc.created_at).toLocaleDateString()}

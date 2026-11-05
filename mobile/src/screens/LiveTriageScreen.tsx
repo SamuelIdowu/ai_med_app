@@ -48,12 +48,15 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
 
   const initialEncounterId = props.encounterId || route.params?.encounterId || null;
   const isBackendEncounterId = (id: string | null): id is string =>
-    typeof id === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+    typeof id === 'string' &&
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
 
   const [activeEncounterId, setActiveEncounterId] = useState<string | null>(
-    isBackendEncounterId(initialEncounterId) ? initialEncounterId : null
+    isBackendEncounterId(initialEncounterId) ? initialEncounterId : null,
   );
-  const activeEncounterIdRef = useRef<string | null>(isBackendEncounterId(initialEncounterId) ? initialEncounterId : null);
+  const activeEncounterIdRef = useRef<string | null>(
+    isBackendEncounterId(initialEncounterId) ? initialEncounterId : null,
+  );
   const localEncounterIdRef = useRef<string>(`enc-live-${Date.now()}`);
 
   const apiBaseUrl =
@@ -98,7 +101,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
 
   const toggleSymptom = (sym: string) => {
     setSelectedSymptoms((prev) =>
-      prev.includes(sym) ? prev.filter((s) => s !== sym) : [...prev, sym]
+      prev.includes(sym) ? prev.filter((s) => s !== sym) : [...prev, sym],
     );
   };
 
@@ -120,7 +123,9 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const authToken = session?.access_token;
       const chiefComplaint = textToSend.trim() || `Symptoms: ${selectedSymptoms.join(', ')}`;
 
@@ -137,7 +142,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
             'Symptom Triage',
             chiefComplaint,
             [],
-            undefined
+            undefined,
           );
           streamEncounterId = created.backendEncounter?.id || null;
           if (isBackendEncounterId(streamEncounterId)) {
@@ -213,20 +218,24 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           (g) =>
             `### ⚡ ${g.topic} (${g.category.toUpperCase()})\n${
               g.warning ? `> **Warning**: ${g.warning}\n\n` : ''
-            }${g.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}`
+            }${g.instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}`,
         )
         .join('\n\n---\n\n');
       setStreamedText(formatted);
     } else {
       setStreamedText(
-        `### Offline Mode Active\nNo network connection detected. For life-threatening emergencies, immediately dial **911** or contact your local hospital.`
+        `### Offline Mode Active\nNo network connection detected. For life-threatening emergencies, immediately dial **911** or contact your local hospital.`,
       );
     }
   };
 
   const handleEvaluateVitals = async () => {
     const measurements = [hr, sysBp, diaBp, spo2, rr, temp];
-    if (measurements.some((measurement) => !measurement.trim() || !Number.isFinite(Number(measurement)))) {
+    if (
+      measurements.some(
+        (measurement) => !measurement.trim() || !Number.isFinite(Number(measurement)),
+      )
+    ) {
       setVitalsInputError('Enter each measured vital sign before requesting triage.');
       return;
     }
@@ -272,14 +281,14 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
       };
 
       const notes = `Clinical Vitals Triage Evaluation: ${vitalsResult.triage_label} (Confidence: ${Math.round(
-        vitalsResult.confidence * 100
+        vitalsResult.confidence * 100,
       )}%). ${vitalsResult.risk_drivers.length > 0 ? `Risk Drivers: ${vitalsResult.risk_drivers.join(', ')}` : 'No acute red flags.'}`;
 
       const result = await EncounterService.createEncounter(
         'Vitals Triage',
         notes,
         [],
-        vitalsPayload
+        vitalsPayload,
       );
 
       if (result.backendEncounter?.id) {
@@ -293,13 +302,19 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
             respiratory_rate: Number(rr),
             body_temperature: Number(temp),
           }).map(([metric, value]) => ({
-            metric: metric as 'heart_rate' | 'systolic_bp' | 'diastolic_bp' | 'oxygen_saturation' | 'respiratory_rate' | 'body_temperature',
+            metric: metric as
+              | 'heart_rate'
+              | 'systolic_bp'
+              | 'diastolic_bp'
+              | 'oxygen_saturation'
+              | 'respiratory_rate'
+              | 'body_temperature',
             value,
             recordedAt,
             source: 'manual' as const,
             externalId: `triage-${result.backendEncounter.id}-${metric}`,
             encounterId: result.backendEncounter.id,
-          }))
+          })),
         );
       }
 
@@ -326,11 +341,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           {/* Constrained 40px slot — a vector icon reads better than the
               full illustration here, matching the compact header treatment. */}
           <View style={styles.headerBeacon}>
-            <Icon
-              name="bell"
-              size={22}
-              color={theme.colors.status.danger}
-            />
+            <Icon name="bell" size={22} color={theme.colors.status.danger} />
           </View>
 
           <View style={styles.headerTitleGroup}>
@@ -369,7 +380,9 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
           <Icon
             name="chatCircle"
             size={16}
-            color={triageMode === 'symptoms' ? theme.colors.ramp.white : theme.colors.text.secondary}
+            color={
+              triageMode === 'symptoms' ? theme.colors.ramp.white : theme.colors.text.secondary
+            }
           />
           <Text
             style={[styles.tabButtonText, triageMode === 'symptoms' && styles.tabButtonTextActive]}
@@ -435,11 +448,7 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
               <View style={styles.streamCard}>
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.cardHeaderLeft}>
-                    <Icon
-                      name="stethoscope"
-                      size={18}
-                      color={theme.colors.primary.main}
-                    />
+                    <Icon name="stethoscope" size={18} color={theme.colors.primary.main} />
                     <Text style={styles.cardTitle}>Clinical Guidance Feed</Text>
                   </View>
                   {loading && <ActivityIndicator size="small" color={theme.colors.primary.main} />}
@@ -449,7 +458,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   <Markdown style={markdownStyles}>{streamedText}</Markdown>
                 ) : (
                   <Text style={styles.placeholder}>
-                    Select symptoms above or describe what happened in the input bar below. Real-time step-by-step guidance will stream here immediately.
+                    Select symptoms above or describe what happened in the input bar below.
+                    Real-time step-by-step guidance will stream here immediately.
                   </Text>
                 )}
               </View>
@@ -529,10 +539,14 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   />
                 </View>
               </View>
-              {vitalsInputError ? <Text style={styles.vitalsInputError}>{vitalsInputError}</Text> : null}
+              {vitalsInputError ? (
+                <Text style={styles.vitalsInputError}>{vitalsInputError}</Text>
+              ) : null}
 
               {/* Acute Observation Toggles */}
-              <Text style={[styles.sectionHeader, { marginTop: 12 }]}>Acute Clinical Red Flags</Text>
+              <Text style={[styles.sectionHeader, { marginTop: 12 }]}>
+                Acute Clinical Red Flags
+              </Text>
               <View style={styles.flagToggleRow}>
                 <TouchableOpacity
                   style={[styles.flagToggle, bleeding && styles.flagToggleActiveRed]}
@@ -542,7 +556,9 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   <Icon
                     name="bleeding"
                     size={16}
-                    color={bleeding ? theme.colors.ramp.white : theme.colors.status.emergency.primary}
+                    color={
+                      bleeding ? theme.colors.ramp.white : theme.colors.status.emergency.primary
+                    }
                   />
                   <Text style={[styles.flagToggleText, bleeding && styles.flagToggleTextActive]}>
                     Severe Active Bleeding
@@ -576,7 +592,9 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                 ) : (
                   <>
                     <Icon name="lightning" size={18} color={theme.colors.ramp.white} />
-                    <Text style={styles.evaluateVitalsButtonText}>Score Vitals via Classical ML</Text>
+                    <Text style={styles.evaluateVitalsButtonText}>
+                      Score Vitals via Classical ML
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -589,8 +607,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                     vitalsResult.is_emergency
                       ? styles.resultCardEmergency
                       : vitalsResult.is_urgent
-                      ? styles.resultCardUrgent
-                      : styles.resultCardNormal,
+                        ? styles.resultCardUrgent
+                        : styles.resultCardNormal,
                   ]}
                 >
                   <View style={styles.resultHeader}>
@@ -602,8 +620,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                           vitalsResult.is_emergency
                             ? { color: theme.colors.status.emergency.primary }
                             : vitalsResult.is_urgent
-                            ? { color: theme.colors.status.warning.primary }
-                            : { color: theme.colors.status.success.primary },
+                              ? { color: theme.colors.status.warning.primary }
+                              : { color: theme.colors.status.success.primary },
                         ]}
                       >
                         {vitalsResult.triage_label.toUpperCase()}
@@ -631,8 +649,8 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                                     cls === 'Emergency'
                                       ? theme.colors.status.emergency.primary
                                       : cls === 'Urgent'
-                                      ? theme.colors.status.warning.primary
-                                      : theme.colors.status.success.primary,
+                                        ? theme.colors.status.warning.primary
+                                        : theme.colors.status.success.primary,
                                 },
                               ]}
                             />
@@ -646,10 +664,16 @@ export const LiveTriageScreen: React.FC<LiveTriageScreenProps> = (props) => {
                   {/* Risk Drivers */}
                   {vitalsResult.risk_drivers && vitalsResult.risk_drivers.length > 0 && (
                     <View style={styles.riskDriversBox}>
-                      <Text style={styles.riskDriversHeader}>Clinical Risk Drivers & Thresholds</Text>
+                      <Text style={styles.riskDriversHeader}>
+                        Clinical Risk Drivers & Thresholds
+                      </Text>
                       {vitalsResult.risk_drivers.map((driver, idx) => (
                         <View key={idx} style={styles.riskDriverRow}>
-                          <Icon name="warningCircle" size={14} color={theme.colors.status.emergency.primary} />
+                          <Icon
+                            name="warningCircle"
+                            size={14}
+                            color={theme.colors.status.emergency.primary}
+                          />
                           <Text style={styles.riskDriverText}>{driver}</Text>
                         </View>
                       ))}

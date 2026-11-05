@@ -23,30 +23,17 @@ export const SymptomChip: React.FC<SymptomChipProps> = ({
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onToggle}
-      style={[
-        styles.chip,
-        selected ? styles.selectedChip : styles.unselectedChip,
-        style,
-      ]}
+      style={[styles.chip, selected ? styles.selectedChip : styles.unselectedChip, style]}
     >
       {icon && (
         <Icon
           name={icon}
           size={16}
-          color={
-            selected
-              ? theme.colors.text.inverse
-              : theme.colors.primary.main
-          }
+          color={selected ? theme.colors.text.inverse : theme.colors.primary.main}
           style={styles.icon}
         />
       )}
-      <Text
-        style={[
-          styles.label,
-          selected ? styles.selectedLabel : styles.unselectedLabel,
-        ]}
-      >
+      <Text style={[styles.label, selected ? styles.selectedLabel : styles.unselectedLabel]}>
         {label}
       </Text>
     </TouchableOpacity>

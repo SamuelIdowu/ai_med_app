@@ -41,7 +41,7 @@ export function openDirections(target: MapTarget): void {
 
   showAlert(
     'Location Unavailable',
-    'No coordinates or street address are available for this facility.'
+    'No coordinates or street address are available for this facility.',
   );
 }
 

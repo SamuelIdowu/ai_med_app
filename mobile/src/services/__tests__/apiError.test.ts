@@ -19,19 +19,17 @@ describe('getApiErrorMessage', () => {
 
   it('maps auth failures to a sign-in message', () => {
     expect(getApiErrorMessage({ response: { status: 401, data: {} } })).toContain(
-      'session has expired'
+      'session has expired',
     );
-    expect(getApiErrorMessage({ response: { status: 403, data: {} } })).toContain(
-      'permission'
-    );
+    expect(getApiErrorMessage({ response: { status: 403, data: {} } })).toContain('permission');
   });
 
   it('maps rate limits and upstream failures', () => {
     expect(getApiErrorMessage({ response: { status: 429, data: {} } })).toContain(
-      'Too many requests'
+      'Too many requests',
     );
     expect(getApiErrorMessage({ response: { status: 503, data: {} } })).toContain(
-      'temporarily unavailable'
+      'temporarily unavailable',
     );
   });
 

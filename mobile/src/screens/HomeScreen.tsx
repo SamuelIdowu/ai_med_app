@@ -210,15 +210,13 @@ export const HomeScreen: React.FC = () => {
   // Toggle category inside modal
   const handleToggleModalCategory = (cat: string) => {
     setModalCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
     );
   };
 
   // Toggle tag inside modal
   const handleToggleModalTag = (tag: string) => {
-    setModalTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    setModalTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
 
   // Apply filters from modal
@@ -410,9 +408,7 @@ export const HomeScreen: React.FC = () => {
                 width={84}
                 height={84}
                 accessibilityLabel="Laso+ medical emblem"
-                fallback={
-                  <Icon name="shieldPlus" size={44} color={theme.colors.ramp.white} />
-                }
+                fallback={<Icon name="shieldPlus" size={44} color={theme.colors.ramp.white} />}
               />
             </View>
           </View>
@@ -453,7 +449,9 @@ export const HomeScreen: React.FC = () => {
                 <Icon
                   name="faders"
                   size={19}
-                  color={activeFilterCount > 0 ? theme.colors.ramp.white : theme.colors.ramp.gray900}
+                  color={
+                    activeFilterCount > 0 ? theme.colors.ramp.white : theme.colors.ramp.gray900
+                  }
                 />
                 {activeFilterCount > 0 && (
                   <View style={styles.filterCountBadge}>
@@ -475,7 +473,11 @@ export const HomeScreen: React.FC = () => {
                 <Icon
                   name="search"
                   size={20}
-                  color={isSearchActive || searchQuery.length > 0 ? theme.colors.ramp.white : theme.colors.ramp.gray900}
+                  color={
+                    isSearchActive || searchQuery.length > 0
+                      ? theme.colors.ramp.white
+                      : theme.colors.ramp.gray900
+                  }
                 />
               </TouchableOpacity>
             </View>
@@ -487,10 +489,7 @@ export const HomeScreen: React.FC = () => {
               {(['popular', 'quickest', 'alphabetical'] as SortOption[]).map((opt) => (
                 <TouchableOpacity
                   key={opt}
-                  style={[
-                    styles.sortDropdownItem,
-                    sortBy === opt && styles.sortDropdownItemActive,
-                  ]}
+                  style={[styles.sortDropdownItem, sortBy === opt && styles.sortDropdownItemActive]}
                   onPress={() => {
                     setSortBy(opt);
                     setIsSortDropdownOpen(false);
@@ -505,12 +504,10 @@ export const HomeScreen: React.FC = () => {
                     {opt === 'popular'
                       ? 'Most popular'
                       : opt === 'quickest'
-                      ? 'Quickest protocol'
-                      : 'Alphabetical (A - Z)'}
+                        ? 'Quickest protocol'
+                        : 'Alphabetical (A - Z)'}
                   </Text>
-                  {sortBy === opt && (
-                    <Icon name="check" size={16} color={theme.colors.ramp.ink} />
-                  )}
+                  {sortBy === opt && <Icon name="check" size={16} color={theme.colors.ramp.ink} />}
                 </TouchableOpacity>
               ))}
             </View>
@@ -585,10 +582,7 @@ export const HomeScreen: React.FC = () => {
                     onPress={() => handleQuickCategoryPill(cat)}
                   >
                     <Text
-                      style={[
-                        styles.filterPillText,
-                        isSelected && styles.filterPillTextActive,
-                      ]}
+                      style={[styles.filterPillText, isSelected && styles.filterPillTextActive]}
                     >
                       {cat}
                     </Text>
@@ -614,18 +608,13 @@ export const HomeScreen: React.FC = () => {
                 <TouchableOpacity
                   key={tag}
                   style={styles.activeTagPill}
-                  onPress={() =>
-                    setSelectedTags((prev) => prev.filter((t) => t !== tag))
-                  }
+                  onPress={() => setSelectedTags((prev) => prev.filter((t) => t !== tag))}
                 >
                   <Text style={styles.activeTagText}>{tag}</Text>
                   <Icon name="close" size={12} color={theme.colors.ramp.white} />
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity
-                onPress={() => setSelectedTags([])}
-                style={styles.clearTagsBtn}
-              >
+              <TouchableOpacity onPress={() => setSelectedTags([])} style={styles.clearTagsBtn}>
                 <Text style={styles.clearTagsText}>Clear</Text>
               </TouchableOpacity>
             </View>
@@ -637,9 +626,7 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionHeaderLeft}>
               <Text style={styles.sectionTitle}>
-                {selectedCategories.length > 0
-                  ? selectedCategories.join(', ')
-                  : 'Emergencies'}
+                {selectedCategories.length > 0 ? selectedCategories.join(', ') : 'Emergencies'}
               </Text>
               <Text style={styles.sectionBadgeCount}>
                 ({displayedEmergencies.length} of {filteredEmergencies.length})
@@ -671,9 +658,7 @@ export const HomeScreen: React.FC = () => {
                     </View>
 
                     <View style={styles.cardStepsBadge}>
-                      <Text style={styles.cardStepsBadgeText}>
-                        {item.stepsCount} Steps
-                      </Text>
+                      <Text style={styles.cardStepsBadgeText}>{item.stepsCount} Steps</Text>
                     </View>
                   </View>
 
@@ -698,11 +683,7 @@ export const HomeScreen: React.FC = () => {
           ) : (
             /* EMPTY FILTER RESULT STATE */
             <View style={styles.emptyStateContainer}>
-              <Icon
-                name="listMagnifyingGlass"
-                size={48}
-                color={theme.colors.ramp.gray500}
-              />
+              <Icon name="listMagnifyingGlass" size={48} color={theme.colors.ramp.gray500} />
               <Text style={styles.emptyStateTitle}>No matching protocols</Text>
               <Text style={styles.emptyStateSub}>
                 Try adjusting your search terms or clearing active filters.
@@ -844,9 +825,7 @@ export const HomeScreen: React.FC = () => {
                         <Text
                           style={[
                             styles.modalPillText,
-                            isSelected
-                              ? styles.modalPillTextActive
-                              : styles.modalPillTextInactive,
+                            isSelected ? styles.modalPillTextActive : styles.modalPillTextInactive,
                           ]}
                         >
                           {cat}
@@ -882,9 +861,7 @@ export const HomeScreen: React.FC = () => {
                         <Text
                           style={[
                             styles.modalPillText,
-                            isSelected
-                              ? styles.modalPillTextActive
-                              : styles.modalPillTextInactive,
+                            isSelected ? styles.modalPillTextActive : styles.modalPillTextInactive,
                           ]}
                         >
                           {tag}

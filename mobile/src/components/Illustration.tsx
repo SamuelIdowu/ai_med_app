@@ -8,11 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {
-  getIllustration,
-  ILLUSTRATIONS,
-  IllustrationKey,
-} from '../assets/illustrations';
+import { getIllustration, ILLUSTRATIONS, IllustrationKey } from '../assets/illustrations';
 
 export type IllustrationFit = 'contain' | 'cover';
 

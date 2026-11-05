@@ -4,14 +4,15 @@
 // Change theme presets, fonts, or colors right here in one place.
 // Every screen, card, button, chart, and text component updates automatically!
 
-export type ThemePreset = 'coralTeal' | 'monochrome' | 'clinicalWarm' | 'cleanSlate' | 'modernTeal' | 'midnightDark';
+export type ThemePreset =
+  'coralTeal' | 'monochrome' | 'clinicalWarm' | 'cleanSlate' | 'modernTeal' | 'midnightDark';
 export type FontPreset =
   | 'MontserratAlt_SpaceGrotesk' // Modern Pair: Space Grotesk Headings/Metrics + Montserrat Alt Body
-  | 'SpaceGrotesk'             // Complete Space Grotesk
-  | 'MontserratAlternates'     // Complete Montserrat Alternates
-  | 'PlusJakartaSans'          // Geometric Sans
-  | 'Inter'                    // Neutral UI Sans
-  | 'System';                  // Native OS Sans
+  | 'SpaceGrotesk' // Complete Space Grotesk
+  | 'MontserratAlternates' // Complete Montserrat Alternates
+  | 'PlusJakartaSans' // Geometric Sans
+  | 'Inter' // Neutral UI Sans
+  | 'System'; // Native OS Sans
 
 export const BRAND_PALETTE = {
   blissfulBlue: '#b1c8d8',

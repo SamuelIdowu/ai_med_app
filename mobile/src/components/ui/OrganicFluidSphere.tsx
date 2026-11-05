@@ -65,8 +65,7 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
     if (!active || reduceMotion) return;
 
     // Cadence speeds based on state
-    const duration =
-      state === 'recording' ? 900 : state === 'thinking' ? 1400 : 2600;
+    const duration = state === 'recording' ? 900 : state === 'thinking' ? 1400 : 2600;
 
     // 1. Organic squish & stretch oscillation
     const squishLoop = Animated.loop(
@@ -95,7 +94,7 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
             useNativeDriver: true,
           }),
         ]),
-      ])
+      ]),
     );
 
     // 2. Acoustic Halo 1
@@ -111,7 +110,7 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
           duration: duration,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
 
     // 3. Acoustic Halo 2 (Phase offset)
@@ -130,7 +129,7 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
             useNativeDriver: true,
           }),
         ]),
-      ])
+      ]),
     );
 
     // 4. Specular highlight drift
@@ -146,7 +145,7 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
           duration: duration * 0.7,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
 
     squishLoop.start();
@@ -185,15 +184,23 @@ export const OrganicFluidSphere: React.FC<OrganicFluidSphereProps> = ({
     state === 'recording'
       ? withAlpha(theme.colors.palette.coralCoast, 0.45)
       : state === 'thinking'
-      ? withAlpha(theme.colors.palette.petroBlue, 0.4)
-      : withAlpha(theme.colors.palette.blissfulBlue, 0.25);
+        ? withAlpha(theme.colors.palette.petroBlue, 0.4)
+        : withAlpha(theme.colors.palette.blissfulBlue, 0.25);
 
   const gradientColors =
     state === 'recording'
       ? [theme.colors.palette.coralCoast, theme.colors.primary.main, theme.colors.palette.petroBlue]
       : state === 'thinking'
-      ? [theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal, theme.colors.palette.darkSideMoon]
-      : [theme.colors.palette.coralCoast, theme.colors.palette.petroBlue, theme.colors.palette.eliteTeal];
+        ? [
+            theme.colors.palette.petroBlue,
+            theme.colors.palette.eliteTeal,
+            theme.colors.palette.darkSideMoon,
+          ]
+        : [
+            theme.colors.palette.coralCoast,
+            theme.colors.palette.petroBlue,
+            theme.colors.palette.eliteTeal,
+          ];
 
   return (
     <View style={[styles.rootContainer, { width: size * 1.8, height: size * 1.8 }, style]}>

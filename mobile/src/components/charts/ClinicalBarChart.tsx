@@ -76,9 +76,7 @@ export const ClinicalBarChart: React.FC<ClinicalBarChartProps> = ({
 
         {/* Vertical Bars */}
         {data.map((item, idx) => {
-          const xPos =
-            paddingLeft +
-            (idx / (data.length - 1)) * (usableWidth - barWidth);
+          const xPos = paddingLeft + (idx / (data.length - 1)) * (usableWidth - barWidth);
           const clampedVal = Math.max(minValue, Math.min(maxValue, item.value));
           const norm = (clampedVal - minValue) / (maxValue - minValue);
           const barHeight = norm * usableHeight;

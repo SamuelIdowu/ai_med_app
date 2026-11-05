@@ -45,7 +45,8 @@ describe('Offline Storage legacy vault migration', () => {
     const legacyKey = crypto.createHash('sha256').update(legacyKeyHex).digest();
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-cbc', legacyKey, iv);
-    const encrypted = cipher.update(JSON.stringify([encounter]), 'utf8', 'hex') + cipher.final('hex');
+    const encrypted =
+      cipher.update(JSON.stringify([encounter]), 'utf8', 'hex') + cipher.final('hex');
 
     await SecureStore.setItemAsync(LEGACY_KEY_ALIAS, legacyKeyHex);
     await AsyncStorage.setItem(QUEUE_KEY, `enc:v1:${iv.toString('hex')}:${encrypted}`);
@@ -59,10 +60,7 @@ describe('Offline Storage legacy vault migration', () => {
   });
 
   it('does not return tampered v2 ciphertext as data', async () => {
-    await SecureStore.setItemAsync(
-      CURRENT_KEY_ALIAS,
-      'b'.repeat(64)
-    );
+    await SecureStore.setItemAsync(CURRENT_KEY_ALIAS, 'b'.repeat(64));
     await AsyncStorage.setItem(QUEUE_KEY, `enc:v2:${'00'.repeat(12)}:${'00'.repeat(48)}`);
 
     const storage = new OfflineStorage();

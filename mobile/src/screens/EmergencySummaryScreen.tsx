@@ -1,7 +1,14 @@
-
 import { Icon } from '../components/Icon';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import firstAidData from '../content/first-aid-content.json';
@@ -20,339 +27,358 @@ const SUCCESS_COLOR = theme.colors.status.success.primary;
 const TEXT_DARK = theme.colors.text.primary;
 
 type RootStackParamList = {
-    EmergencySummary: { categoryId: string; encounterId?: string; symptoms?: string[] };
+  EmergencySummary: { categoryId: string; encounterId?: string; symptoms?: string[] };
 };
 
 type EmergencySummaryRouteProp = RouteProp<RootStackParamList, 'EmergencySummary'>;
 
 export const EmergencySummaryScreen = () => {
-    const navigation = useNavigation<any>();
-    const route = useRoute<EmergencySummaryRouteProp>();
-    const { categoryId, encounterId, symptoms: routeSymptoms } = route.params;
-    const category = firstAidData.categories.find(c => c.id === categoryId);
-    const [encounter, setEncounter] = useState<Encounter | null>(null);
+  const navigation = useNavigation<any>();
+  const route = useRoute<EmergencySummaryRouteProp>();
+  const { categoryId, encounterId, symptoms: routeSymptoms } = route.params;
+  const category = firstAidData.categories.find((c) => c.id === categoryId);
+  const [encounter, setEncounter] = useState<Encounter | null>(null);
 
-    useEffect(() => {
-        if (!encounterId) return;
-        let isMounted = true;
-        EncounterService.getEncounters().then((encounters: Encounter[]) => {
-            const found = encounters.find((e: Encounter) => e.id === encounterId);
-            if (isMounted && found) {
-                setEncounter(found);
-            }
-        }).catch(() => {
-            offlineStorage.getPendingEncounters().then((pending) => {
-                const found = pending.find((p) => p.id === encounterId);
-                if (isMounted && found) {
-                    setEncounter({
-                        id: found.id,
-                        created_at: new Date(found.createdAt).toISOString(),
-                        status: 'in_progress',
-                        category: categoryId || 'general',
-                        symptoms: found.symptoms,
-                        notes: found.notes,
-                    } as unknown as Encounter);
-                }
-            }).catch(() => {});
-        });
-        return () => { isMounted = false; };
-    }, [encounterId, categoryId]);
-
-    const displaySymptoms: string[] =
-        (routeSymptoms && routeSymptoms.length > 0)
-            ? routeSymptoms
-            : (encounter?.symptoms && encounter.symptoms.length > 0)
-            ? encounter.symptoms
-            : (encounter?.notes ? [encounter.notes] : []);
-
-    const handleGoHome = () => {
-        navigation.dispatch(
-            CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-            })
-        );
-    };
-
-    const handleShare = () => {
-        if (encounterId) {
-            navigation.navigate('ReportPreview', { encounterId });
-        } else {
-            console.warn("No encounter ID available to share");
+  useEffect(() => {
+    if (!encounterId) return;
+    let isMounted = true;
+    EncounterService.getEncounters()
+      .then((encounters: Encounter[]) => {
+        const found = encounters.find((e: Encounter) => e.id === encounterId);
+        if (isMounted && found) {
+          setEncounter(found);
         }
+      })
+      .catch(() => {
+        offlineStorage
+          .getPendingEncounters()
+          .then((pending) => {
+            const found = pending.find((p) => p.id === encounterId);
+            if (isMounted && found) {
+              setEncounter({
+                id: found.id,
+                created_at: new Date(found.createdAt).toISOString(),
+                status: 'in_progress',
+                category: categoryId || 'general',
+                symptoms: found.symptoms,
+                notes: found.notes,
+              } as unknown as Encounter);
+            }
+          })
+          .catch(() => {});
+      });
+    return () => {
+      isMounted = false;
     };
+  }, [encounterId, categoryId]);
 
-    return (
-        <View style={styles.container}>
-            <StatusBar style="dark" />
+  const displaySymptoms: string[] =
+    routeSymptoms && routeSymptoms.length > 0
+      ? routeSymptoms
+      : encounter?.symptoms && encounter.symptoms.length > 0
+        ? encounter.symptoms
+        : encounter?.notes
+          ? [encounter.notes]
+          : [];
 
-            {/* Top App Bar */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Incident Summary</Text>
-            </View>
-
-            <ScrollView
-                style={styles.content}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Hero Section */}
-                <View style={styles.heroSection}>
-                    <View style={styles.heroIconContainer}>
-                        <Illustration
-                            name="achievementBadge"
-                            width={96}
-                            height={96}
-                            accessibilityLabel="Completion badge"
-                            fallback={
-                                <Icon name="checkCircle" size={48} color={SUCCESS_COLOR} />
-                            }
-                        />
-                    </View>
-                    <Text style={styles.heroTitle}>Well Done</Text>
-                    <Text style={styles.heroSubtitle}>You've successfully completed the first aid steps.</Text>
-                </View>
-
-                {/* Incident Summary Card */}
-                <View style={styles.card}>
-                    <Text style={styles.cardHeader}>Incident Report</Text>
-
-                    <View style={styles.cardSection}>
-                        <View style={styles.infoRow}>
-                            <Icon
-                                name={resolveIconName(category?.icon)}
-                                size={24}
-                                color={TEXT_SECONDARY}
-                                style={styles.rowIcon}
-                            />
-                            <View>
-                                <Text style={styles.label}>Incident</Text>
-                            <Text style={styles.value}>{category ? category.title : 'Unknown incident'}</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.infoRow}>
-                            <Icon name="calendar" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
-                            <View>
-                                <Text style={styles.label}>Date & Time</Text>
-                                <Text style={styles.value}>
-                                    {encounter?.created_at
-                                        ? new Date(encounter.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
-                                        : 'Unavailable'}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    <View style={styles.cardSection}>
-                        <Text style={[styles.label, { marginBottom: 8 }]}>Assessed Symptoms</Text>
-                        <View style={styles.bulletList}>
-                            {displaySymptoms.length > 0 ? (
-                                displaySymptoms.map((symptom, idx) => (
-                                    <View key={idx} style={styles.bulletItem}>
-                                        <View style={styles.bullet} />
-                                        <Text style={styles.bulletText}>{symptom}</Text>
-                                    </View>
-                                ))
-                            ) : (
-                                <View style={styles.bulletItem}>
-                                    <View style={styles.bullet} />
-                                    <Text style={styles.bulletText}>No specific symptoms recorded</Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-
-                    <View style={[styles.cardSection, { marginTop: 16 }]}>
-                        <Text style={[styles.label, { marginBottom: 8 }]}>Actions Taken</Text>
-                        <View style={styles.bulletList}>
-                            {category ? category.steps.slice(0, 3).map((step, idx) => (
-                                <View key={idx} style={styles.bulletItem}>
-                                    <View style={styles.bullet} />
-                                    <Text style={styles.bulletText} numberOfLines={1}>{step.title}</Text>
-                                </View>
-                            )) : (
-                                <View style={styles.bulletItem}>
-                                    <View style={styles.bullet} />
-                                    <Text style={styles.bulletText}>No actions recorded</Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                </View>
-            </ScrollView>
-
-            {/* CTA Buttons (Sticky Bottom) */}
-            <View style={styles.footer}>
-                <TouchableOpacity
-                    style={styles.shareButton}
-                    onPress={handleShare}
-                    activeOpacity={0.9}
-                    disabled={!encounterId}
-                >
-                    <Icon name="export" size={20} color="white" style={{ marginRight: 8 }} />
-                    <Text style={styles.shareButtonText}>Share Report</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.homeButton} onPress={handleGoHome} activeOpacity={0.7}>
-                    <Text style={styles.homeButtonText}>Go Home</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+  const handleGoHome = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      }),
     );
+  };
+
+  const handleShare = () => {
+    if (encounterId) {
+      navigation.navigate('ReportPreview', { encounterId });
+    } else {
+      console.warn('No encounter ID available to share');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+
+      {/* Top App Bar */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Incident Summary</Text>
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroIconContainer}>
+            <Illustration
+              name="achievementBadge"
+              width={96}
+              height={96}
+              accessibilityLabel="Completion badge"
+              fallback={<Icon name="checkCircle" size={48} color={SUCCESS_COLOR} />}
+            />
+          </View>
+          <Text style={styles.heroTitle}>Well Done</Text>
+          <Text style={styles.heroSubtitle}>
+            You've successfully completed the first aid steps.
+          </Text>
+        </View>
+
+        {/* Incident Summary Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardHeader}>Incident Report</Text>
+
+          <View style={styles.cardSection}>
+            <View style={styles.infoRow}>
+              <Icon
+                name={resolveIconName(category?.icon)}
+                size={24}
+                color={TEXT_SECONDARY}
+                style={styles.rowIcon}
+              />
+              <View>
+                <Text style={styles.label}>Incident</Text>
+                <Text style={styles.value}>{category ? category.title : 'Unknown incident'}</Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Icon name="calendar" size={24} color={TEXT_SECONDARY} style={styles.rowIcon} />
+              <View>
+                <Text style={styles.label}>Date & Time</Text>
+                <Text style={styles.value}>
+                  {encounter?.created_at
+                    ? new Date(encounter.created_at).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })
+                    : 'Unavailable'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.cardSection}>
+            <Text style={[styles.label, { marginBottom: 8 }]}>Assessed Symptoms</Text>
+            <View style={styles.bulletList}>
+              {displaySymptoms.length > 0 ? (
+                displaySymptoms.map((symptom, idx) => (
+                  <View key={idx} style={styles.bulletItem}>
+                    <View style={styles.bullet} />
+                    <Text style={styles.bulletText}>{symptom}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.bulletItem}>
+                  <View style={styles.bullet} />
+                  <Text style={styles.bulletText}>No specific symptoms recorded</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <View style={[styles.cardSection, { marginTop: 16 }]}>
+            <Text style={[styles.label, { marginBottom: 8 }]}>Actions Taken</Text>
+            <View style={styles.bulletList}>
+              {category ? (
+                category.steps.slice(0, 3).map((step, idx) => (
+                  <View key={idx} style={styles.bulletItem}>
+                    <View style={styles.bullet} />
+                    <Text style={styles.bulletText} numberOfLines={1}>
+                      {step.title}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.bulletItem}>
+                  <View style={styles.bullet} />
+                  <Text style={styles.bulletText}>No actions recorded</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* CTA Buttons (Sticky Bottom) */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.shareButton}
+          onPress={handleShare}
+          activeOpacity={0.9}
+          disabled={!encounterId}
+        >
+          <Icon name="export" size={20} color="white" style={{ marginRight: 8 }} />
+          <Text style={styles.shareButtonText}>Share Report</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.homeButton} onPress={handleGoHome} activeOpacity={0.7}>
+          <Text style={styles.homeButtonText}>Go Home</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: BG_LIGHT,
-    },
-    header: {
-        paddingTop: Platform.OS === 'android' ? 40 : 60,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: BG_LIGHT,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: TEXT_LIGHT,
-        textAlign: 'center',
-    },
-    content: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingBottom: 20,
-    },
-    heroSection: {
-        alignItems: 'center',
-        paddingVertical: 24,
-        paddingHorizontal: 16,
-    },
-    heroIconContainer: {
-        width: 112,
-        height: 112,
-        borderRadius: 56,
-        backgroundColor: withAlpha(theme.colors.status.success.primary, 0.1), // green/10
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    heroTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: TEXT_LIGHT,
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    heroSubtitle: {
-        fontSize: 16,
-        fontWeight: '400',
-        color: TEXT_SECONDARY,
-        textAlign: 'center',
-    },
-    card: {
-        backgroundColor: CARD_LIGHT,
-        marginHorizontal: 16,
-        marginTop: 16,
-        marginBottom: 16,
-        padding: 20,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: theme.colors.canvas.border,
-        ...theme.spatial.shadows3d.level1,
-    },
-    cardHeader: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: TEXT_LIGHT,
-        marginBottom: 16,
-    },
-    cardSection: {
-        marginBottom: 4,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        marginBottom: 16,
-    },
-    rowIcon: {
-        marginRight: 12,
-        marginTop: 2,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: TEXT_SECONDARY,
-        marginBottom: 2,
-    },
-    value: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: TEXT_LIGHT,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: theme.colors.canvas.border,
-        marginVertical: 16,
-    },
-    bulletList: {
-        gap: 4,
-    },
-    bulletItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    bullet: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: theme.colors.primary.main,
-        marginRight: 8,
-    },
-    bulletText: {
-        fontSize: 15,
-        color: TEXT_LIGHT,
-        lineHeight: 24,
-    },
-    footer: {
-        padding: 16,
-        backgroundColor: BG_LIGHT,
-        borderTopWidth: 1,
-        borderTopColor: theme.colors.canvas.border,
-        gap: 12,
-    },
-    shareButton: {
-        backgroundColor: SUCCESS_COLOR,
-        borderRadius: theme.spatial.radii.pill,
-        height: 52,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...theme.spatial.shadows3d.level2,
-    },
-    shareButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    homeButton: {
-        backgroundColor: 'transparent',
-        borderRadius: theme.spatial.radii.pill,
-        height: 52,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: theme.colors.canvas.border,
-    },
-    homeButtonText: {
-        color: theme.colors.text.primary,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: BG_LIGHT,
+  },
+  header: {
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BG_LIGHT,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: TEXT_LIGHT,
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  heroSection: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  heroIconContainer: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: withAlpha(theme.colors.status.success.primary, 0.1), // green/10
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: TEXT_LIGHT,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: TEXT_SECONDARY,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: CARD_LIGHT,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+    ...theme.spatial.shadows3d.level1,
+  },
+  cardHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: TEXT_LIGHT,
+    marginBottom: 16,
+  },
+  cardSection: {
+    marginBottom: 4,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  rowIcon: {
+    marginRight: 12,
+    marginTop: 2,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: TEXT_SECONDARY,
+    marginBottom: 2,
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: TEXT_LIGHT,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.canvas.border,
+    marginVertical: 16,
+  },
+  bulletList: {
+    gap: 4,
+  },
+  bulletItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  bullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.primary.main,
+    marginRight: 8,
+  },
+  bulletText: {
+    fontSize: 15,
+    color: TEXT_LIGHT,
+    lineHeight: 24,
+  },
+  footer: {
+    padding: 16,
+    backgroundColor: BG_LIGHT,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.canvas.border,
+    gap: 12,
+  },
+  shareButton: {
+    backgroundColor: SUCCESS_COLOR,
+    borderRadius: theme.spatial.radii.pill,
+    height: 52,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.spatial.shadows3d.level2,
+  },
+  shareButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  homeButton: {
+    backgroundColor: 'transparent',
+    borderRadius: theme.spatial.radii.pill,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.canvas.border,
+  },
+  homeButtonText: {
+    color: theme.colors.text.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

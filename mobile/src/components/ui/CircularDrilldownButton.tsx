@@ -33,11 +33,7 @@ export const CircularDrilldownButton: React.FC<CircularDrilldownButtonProps> = (
         style,
       ]}
     >
-      <Icon
-        name="arrowUpRight"
-        size={Math.round(size * 0.52)}
-        color={iconColor}
-      />
+      <Icon name="arrowUpRight" size={Math.round(size * 0.52)} color={iconColor} />
     </TouchableOpacity>
   );
 };

@@ -19,10 +19,16 @@ const getColors = (tone: LasoMarkTone) => {
     return { mark: theme.colors.ramp.white, text: theme.colors.ramp.white };
   }
   if (tone === 'mono') {
-    return { mark: theme.colors.text?.primary || theme.colors.ramp.gray900, text: theme.colors.text?.primary || theme.colors.ramp.gray900 };
+    return {
+      mark: theme.colors.text?.primary || theme.colors.ramp.gray900,
+      text: theme.colors.text?.primary || theme.colors.ramp.gray900,
+    };
   }
   // brand — use text/brand, avoid green accent
-  return { mark: theme.colors.text?.primary || theme.colors.ramp.gray900, text: theme.colors.text?.primary || theme.colors.ramp.gray900 };
+  return {
+    mark: theme.colors.text?.primary || theme.colors.ramp.gray900,
+    text: theme.colors.text?.primary || theme.colors.ramp.gray900,
+  };
 };
 
 export const LasoMark: React.FC<LasoMarkProps> = ({
@@ -80,4 +86,3 @@ const styles = StyleSheet.create({
 });
 
 export default LasoMark;
-

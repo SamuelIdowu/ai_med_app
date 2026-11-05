@@ -17,9 +17,9 @@ export const spatial = {
     xs: 6,
     sm: 10,
     md: 16,
-    lg: 22,      // Standard Medical Cards
-    xl: 28,      // Large Modal / Action Cards
-    pill: 9999,  // Filter Chips, Floating Nav Pill, Primary Buttons
+    lg: 22, // Standard Medical Cards
+    xl: 28, // Large Modal / Action Cards
+    pill: 9999, // Filter Chips, Floating Nav Pill, Primary Buttons
   },
   // Backwards compatibility alias
   borderRadius: {
@@ -56,7 +56,7 @@ export const spatial = {
     emergency: {
       shadowColor: '#EF4444',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.20,
+      shadowOpacity: 0.2,
       shadowRadius: 10,
       elevation: 4,
     } as ViewStyle,
@@ -116,7 +116,7 @@ export const spatial = {
     accentGlow: {
       shadowColor: '#0e88a0',
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.30,
+      shadowOpacity: 0.3,
       shadowRadius: 14,
       elevation: 6,
     } as ViewStyle,

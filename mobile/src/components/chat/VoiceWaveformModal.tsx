@@ -136,7 +136,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
     if (!cleanText) {
       Alert.alert(
         'No Speech Detected',
-        'Please speak your symptoms into the microphone before sending.'
+        'Please speak your symptoms into the microphone before sending.',
       );
       return;
     }
@@ -156,20 +156,11 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent={false}
-      onRequestClose={handleClose}
-    >
+    <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={handleClose}>
       <View style={styles.container}>
         {/* Top bar with close button */}
         <View style={styles.topBar}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleClose}
-            style={styles.closeCircle}
-          >
+          <TouchableOpacity activeOpacity={0.7} onPress={handleClose} style={styles.closeCircle}>
             <Icon name="close" size={20} color={theme.colors.ramp.slate900} />
           </TouchableOpacity>
 
@@ -177,7 +168,11 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
             <View
               style={[
                 styles.statusDot,
-                { backgroundColor: isAgentSpeaking ? theme.colors.status.info.primary : theme.colors.status.success.primary },
+                {
+                  backgroundColor: isAgentSpeaking
+                    ? theme.colors.status.info.primary
+                    : theme.colors.status.success.primary,
+                },
               ]}
             />
             <Text style={styles.statusText}>
@@ -198,12 +193,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
             <Text style={styles.instructionBanner}>{INSTRUCTION_TEXT}</Text>
           ) : (
             <View style={styles.transcriptBox}>
-              <Text
-                style={[
-                  styles.transcriptText,
-                  !transcript && styles.placeholderText,
-                ]}
-              >
+              <Text style={[styles.transcriptText, !transcript && styles.placeholderText]}>
                 {transcript || 'Speak now... your symptoms will appear here in real time.'}
               </Text>
             </View>

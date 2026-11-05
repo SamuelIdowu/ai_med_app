@@ -32,48 +32,48 @@ import { LiveTriageScreen } from '../screens/LiveTriageScreen';
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
-    const { session, loading, isGuest } = useAuth();
+  const { session, loading, isGuest } = useAuth();
 
-    if (loading) {
-        return <SplashScreen />;
-    }
+  if (loading) {
+    return <SplashScreen />;
+  }
 
-    return (
-        <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {!session && !isGuest ? (
-                    // Auth Stack
-                    <>
-                        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-                        <Stack.Screen name="Permissions" component={PermissionsScreen} />
-                        <Stack.Screen name="Login" component={LoginScreen} />
-                        <Stack.Screen name="Signup" component={SignupScreen} />
-                        <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
-                    </>
-                ) : (
-                    // App Stack
-                    <>
-                        <Stack.Screen name="Home" component={HomeScreen} />
-                        <Stack.Screen name="History" component={HistoryScreen} />
-                        <Stack.Screen name="EmergencySteps" component={EmergencyStepScreen} />
-                        <Stack.Screen name="EmergencySummary" component={EmergencySummaryScreen} />
-                        <Stack.Screen name="MedicalProfile" component={MedicalProfileScreen} />
-                        <Stack.Screen name="Camera" component={CameraScreen} />
-                        <Stack.Screen name="ReportPreview" component={ReportPreviewScreen} />
-                        <Stack.Screen name="ProviderList" component={ProviderListScreen} />
-                        <Stack.Screen name="ProviderDetail" component={ProviderDetailScreen} />
-                        <Stack.Screen name="Settings" component={SettingsScreen} />
-                        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-                        <Stack.Screen name="PhotoPreview" component={PhotoPreviewScreen} />
-                        <Stack.Screen name="AIAnalysis" component={AIAnalysisScreen} />
-                        <Stack.Screen name="AIChat" component={AIChatScreen} />
-                        <Stack.Screen name="AITools" component={AIToolsScreen} />
-                        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-                        <Stack.Screen name="FirstAidList" component={FirstAidListScreen} />
-                        <Stack.Screen name="LiveTriage" component={LiveTriageScreen} />
-                    </>
-                )}
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!session && !isGuest ? (
+          // Auth Stack
+          <>
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Permissions" component={PermissionsScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+          </>
+        ) : (
+          // App Stack
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="History" component={HistoryScreen} />
+            <Stack.Screen name="EmergencySteps" component={EmergencyStepScreen} />
+            <Stack.Screen name="EmergencySummary" component={EmergencySummaryScreen} />
+            <Stack.Screen name="MedicalProfile" component={MedicalProfileScreen} />
+            <Stack.Screen name="Camera" component={CameraScreen} />
+            <Stack.Screen name="ReportPreview" component={ReportPreviewScreen} />
+            <Stack.Screen name="ProviderList" component={ProviderListScreen} />
+            <Stack.Screen name="ProviderDetail" component={ProviderDetailScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+            <Stack.Screen name="PhotoPreview" component={PhotoPreviewScreen} />
+            <Stack.Screen name="AIAnalysis" component={AIAnalysisScreen} />
+            <Stack.Screen name="AIChat" component={AIChatScreen} />
+            <Stack.Screen name="AITools" component={AIToolsScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="FirstAidList" component={FirstAidListScreen} />
+            <Stack.Screen name="LiveTriage" component={LiveTriageScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 };

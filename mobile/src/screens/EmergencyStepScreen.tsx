@@ -62,9 +62,7 @@ export const EmergencyStepScreen: React.FC = () => {
   const isCprProtocol = category.id === 'cpr' || /cpr|cardiopulmonary/i.test(category.title || '');
 
   const rawTitle = category.title || 'First Aid';
-  const headerTitle = rawTitle.toLowerCase().endsWith('aid')
-    ? rawTitle
-    : `${rawTitle} protocol`;
+  const headerTitle = rawTitle.toLowerCase().endsWith('aid') ? rawTitle : `${rawTitle} protocol`;
 
   const handleNext = () => {
     if (currentStepIndex < totalSteps - 1) {
@@ -88,7 +86,7 @@ export const EmergencyStepScreen: React.FC = () => {
       const encounterId = await EncounterService.createEncounter(
         category.title,
         `Completed emergency protocol for ${category.title} with rating ${rating}/5`,
-        []
+        [],
       );
       navigation.navigate('EmergencySummary', { categoryId, encounterId });
     } catch (e) {
@@ -280,9 +278,7 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Step Title Header */}
             <View style={styles.stepHeaderRow}>
               <View style={styles.stepHeaderBadge}>
-                <Text style={styles.stepHeaderBadgeText}>
-                  {currentStepIndex + 1}
-                </Text>
+                <Text style={styles.stepHeaderBadgeText}>{currentStepIndex + 1}</Text>
               </View>
               <Text style={styles.stepHeaderTitle}>
                 {currentStep.title || `Step ${currentStepIndex + 1}`}
@@ -293,9 +289,7 @@ export const EmergencyStepScreen: React.FC = () => {
             <View style={styles.stepIllustrationCard}>
               <View style={styles.stepIllustrationCircle}>
                 <Icon
-                  name={resolveIconName(
-                  currentStep.illustration_icon || category.icon
-                )}
+                  name={resolveIconName(currentStep.illustration_icon || category.icon)}
                   size={52}
                   color={theme.colors.ramp.ink}
                 />
@@ -308,17 +302,13 @@ export const EmergencyStepScreen: React.FC = () => {
             {/* Detailed Medical Instructions */}
             <View style={styles.stepDescriptionSection}>
               <Text style={styles.stepInstructionSectionTitle}>Action Directive</Text>
-              <Text style={styles.stepPrimaryContent}>
-                {currentStep.content}
-              </Text>
+              <Text style={styles.stepPrimaryContent}>{currentStep.content}</Text>
 
               {/* Clinical Explanation & Mechanism */}
               {currentStep.explanation && (
                 <View style={styles.explanationBox}>
                   <Text style={styles.explanationTitle}>Clinical Rationale:</Text>
-                  <Text style={styles.explanationText}>
-                    {currentStep.explanation}
-                  </Text>
+                  <Text style={styles.explanationText}>{currentStep.explanation}</Text>
                 </View>
               )}
 
@@ -371,9 +361,7 @@ export const EmergencyStepScreen: React.FC = () => {
               <Icon name="check" size={32} color={theme.colors.ramp.white} />
             </View>
 
-            <Text style={styles.feedbackTitle}>
-              Protocol Complete
-            </Text>
+            <Text style={styles.feedbackTitle}>Protocol Complete</Text>
             <Text style={styles.feedbackSub}>
               Guidance completed for {category.title}. Confirm encounter to save clinical record.
             </Text>
@@ -402,9 +390,7 @@ export const EmergencyStepScreen: React.FC = () => {
               activeOpacity={0.85}
               onPress={handleFinishGuide}
             >
-              <Text style={styles.modalSubmitButtonText}>
-                Confirm & Log Encounter
-              </Text>
+              <Text style={styles.modalSubmitButtonText}>Confirm & Log Encounter</Text>
             </TouchableOpacity>
           </View>
         </View>

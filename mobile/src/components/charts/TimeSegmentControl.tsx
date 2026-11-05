@@ -30,9 +30,7 @@ export const TimeSegmentControl: React.FC<TimeSegmentControlProps> = ({
             onPress={() => onChange(seg)}
             style={[styles.segmentButton, isActive && styles.activeButton]}
           >
-            <Text style={[styles.segmentText, isActive && styles.activeText]}>
-              {seg}
-            </Text>
+            <Text style={[styles.segmentText, isActive && styles.activeText]}>{seg}</Text>
           </TouchableOpacity>
         );
       })}

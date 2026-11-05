@@ -182,19 +182,30 @@ describe('nearbyProvidersService', () => {
     mockedFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        features: [{ properties: {
-          place_id: 'lagos-clinic', name: 'Lagos Clinic', lat: 6.525, lon: 3.38,
-          categories: ['healthcare', 'healthcare.clinic_or_praxis'],
-        } }],
+        features: [
+          {
+            properties: {
+              place_id: 'lagos-clinic',
+              name: 'Lagos Clinic',
+              lat: 6.525,
+              lon: 3.38,
+              categories: ['healthcare', 'healthcare.clinic_or_praxis'],
+            },
+          },
+        ],
       }),
     } as never);
 
     const result = await findNearbyProviders(lagos, 10_000);
     const geoapifyRequest = new URL(String(mockedFetch.mock.calls[0][0]));
 
-    expect(geoapifyRequest.origin + geoapifyRequest.pathname).toBe('https://api.geoapify.com/v2/places');
+    expect(geoapifyRequest.origin + geoapifyRequest.pathname).toBe(
+      'https://api.geoapify.com/v2/places',
+    );
     expect(geoapifyRequest.searchParams.has('apiKey')).toBe(false);
-    expect(mockedFetch.mock.calls[0][1]?.headers).toMatchObject({ 'x-api-key': 'test-geoapify-key' });
+    expect(mockedFetch.mock.calls[0][1]?.headers).toMatchObject({
+      'x-api-key': 'test-geoapify-key',
+    });
     expect(geoapifyRequest.searchParams.get('categories')).toBe('healthcare');
     expect(geoapifyRequest.searchParams.get('filter')).toBe('circle:3.3792,6.5244,10000');
     expect(result).toMatchObject({ source: 'Geoapify', sourceTimestamp: null });

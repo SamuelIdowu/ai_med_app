@@ -32,7 +32,11 @@ import './src/theme/fontPatch';
 import { theme, ThemeProvider } from './src/theme';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
-import { registerForPushNotificationsAsync, saveTokenToBackend, addNotificationListeners } from './src/services/NotificationService';
+import {
+  registerForPushNotificationsAsync,
+  saveTokenToBackend,
+  addNotificationListeners,
+} from './src/services/NotificationService';
 import * as Notifications from 'expo-notifications';
 import { EmergencyErrorBoundary } from './src/components/ui/EmergencyErrorBoundary';
 
@@ -60,7 +64,9 @@ export default function App() {
   });
 
   const [fontTimeout, setFontTimeout] = useState(false);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setFontTimeout(true), 3500);
@@ -68,7 +74,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
+    registerForPushNotificationsAsync().then((token) => {
       if (token) {
         saveTokenToBackend(token);
       }
@@ -83,7 +89,8 @@ export default function App() {
   }, []);
 
   if (!fontsLoaded && !fontError && !fontTimeout) {
-    const isDark = theme.colors.canvas.background === '#061011' || theme.colors.canvas.background === '#0B0F19';
+    const isDark =
+      theme.colors.canvas.background === '#061011' || theme.colors.canvas.background === '#0B0F19';
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.canvas.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />

@@ -92,7 +92,7 @@ describe('Mobile Image Service & Clinical Capture Pipeline', () => {
       expect(ImageManipulator.manipulateAsync).toHaveBeenCalledWith(
         uri,
         [],
-        expect.objectContaining({ format: 'jpeg' })
+        expect.objectContaining({ format: 'jpeg' }),
       );
       expect(result).toContain('_processed.jpg');
     });
@@ -103,7 +103,7 @@ describe('Mobile Image Service & Clinical Capture Pipeline', () => {
       expect(ImageManipulator.manipulateAsync).toHaveBeenCalledWith(
         uri,
         [{ resize: { width: 1280, height: 720 } }],
-        expect.anything()
+        expect.anything(),
       );
       expect(result).toContain('_processed.jpg');
     });
@@ -129,7 +129,7 @@ describe('Mobile Image Service & Clinical Capture Pipeline', () => {
       expect(ImageManipulator.manipulateAsync).toHaveBeenCalledWith(
         uri,
         [{ resize: { width: 150, height: 150 } }],
-        expect.anything()
+        expect.anything(),
       );
       expect(thumb).toContain('_processed.jpg');
     });

@@ -49,4 +49,3 @@ describe('Centralized Medical Theme Engine', () => {
     expect(withAlpha(theme.colors.ramp.ink, 0.5)).toBe('rgba(15, 17, 21, 0.5)');
   });
 });
-

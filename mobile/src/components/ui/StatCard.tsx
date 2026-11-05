@@ -92,9 +92,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             },
           ]}
         >
-          <Text style={[styles.badgeText, { color: badgeColors.text }]}>
-            {statusBadge}
-          </Text>
+          <Text style={[styles.badgeText, { color: badgeColors.text }]}>{statusBadge}</Text>
         </View>
       )}
 

@@ -9,7 +9,7 @@ const fileNameFromUri = (uri: string): string => {
 
 export const analyzePhoto = async (
   uri: string,
-  mode: PhotoAnalysisMode = 'auto'
+  mode: PhotoAnalysisMode = 'auto',
 ): Promise<PhotoAnalysisResult> => {
   const processed = await ImageService.processImage(uri);
   const response = await api.post<PhotoAnalysisResult>('/ai/analyze', {

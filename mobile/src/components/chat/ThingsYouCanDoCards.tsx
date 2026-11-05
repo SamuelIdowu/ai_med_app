@@ -29,11 +29,7 @@ export const ThingsYouCanDoCards: React.FC<ThingsYouCanDoCardsProps> = ({
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.cardList}>
         {actions.map((action) => (
-          <MedicalCard
-            key={action.id}
-            onPress={action.onPress}
-            style={styles.card}
-          >
+          <MedicalCard key={action.id} onPress={action.onPress} style={styles.card}>
             <View
               style={[
                 styles.iconBadge,
@@ -50,11 +46,7 @@ export const ThingsYouCanDoCards: React.FC<ThingsYouCanDoCardsProps> = ({
               <Text style={styles.cardTitle}>{action.title}</Text>
               <Text style={styles.cardDesc}>{action.description}</Text>
             </View>
-            <Icon
-              name="caretRight"
-              size={20}
-              color={theme.colors.text.muted}
-            />
+            <Icon name="caretRight" size={20} color={theme.colors.text.muted} />
           </MedicalCard>
         ))}
       </View>

@@ -20,7 +20,16 @@ export interface VitalsTelemetry {
 }
 
 export interface VitalReadingInput {
-  metric: keyof Pick<VitalsTriageInput, 'heart_rate' | 'systolic_bp' | 'diastolic_bp' | 'oxygen_saturation' | 'respiratory_rate' | 'body_temperature' | 'pain_score'>;
+  metric: keyof Pick<
+    VitalsTriageInput,
+    | 'heart_rate'
+    | 'systolic_bp'
+    | 'diastolic_bp'
+    | 'oxygen_saturation'
+    | 'respiratory_rate'
+    | 'body_temperature'
+    | 'pain_score'
+  >;
   value: number;
   recordedAt: string;
   source: 'manual' | 'healthkit' | 'health_connect' | 'device';
@@ -59,7 +68,9 @@ export const VitalsService = {
   },
 
   getVitalsTelemetry: async (segment: TimeSegment = 'Hourly'): Promise<VitalsTelemetry | null> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session?.access_token) return null;
     try {
       const response = await api.get('/analytics/vitals', { params: { segment } });

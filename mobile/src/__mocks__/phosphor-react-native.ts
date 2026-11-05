@@ -119,6 +119,6 @@ const icons: any = {
   FirstAid: createIcon('FirstAid'),
 };
 
-icons.IconContext = { Provider: (props: any) => (props && props.children) ? props.children : null };
+icons.IconContext = { Provider: (props: any) => (props && props.children ? props.children : null) };
 icons.IconWeight = {};
 module.exports = icons;

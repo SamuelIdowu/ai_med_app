@@ -43,7 +43,7 @@ export function processSSEBuffer(
     onCritical?: (critical: boolean) => void;
     onDone?: () => void;
     onError?: (error: string) => void;
-  }
+  },
 ): string {
   const lines = buffer.split('\n');
   // Keep the last incomplete slice in the buffer
@@ -124,7 +124,12 @@ export async function streamTriage(options: StreamTriageOptions): Promise<void> 
         const { value, done } = await reader.read();
         if (done) {
           if (buffer.trim()) {
-            processSSEBuffer(buffer + '\n', { onDelta, onCritical, onDone, onError: (e) => onError?.(new Error(e)) });
+            processSSEBuffer(buffer + '\n', {
+              onDelta,
+              onCritical,
+              onDone,
+              onError: (e) => onError?.(new Error(e)),
+            });
           }
           onDone?.();
           break;

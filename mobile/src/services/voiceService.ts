@@ -27,7 +27,10 @@ export const VoiceService = {
         window.speechSynthesis.speak(utterance);
         return;
       } catch (err) {
-        console.warn('[VoiceService] Web speechSynthesis failed, falling back to expo-speech:', err);
+        console.warn(
+          '[VoiceService] Web speechSynthesis failed, falling back to expo-speech:',
+          err,
+        );
       }
     }
 

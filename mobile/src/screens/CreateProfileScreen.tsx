@@ -1,7 +1,19 @@
-
 import { Icon } from '../components/Icon';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Switch, ActivityIndicator, Modal } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Platform,
+  KeyboardAvoidingView,
+  Switch,
+  ActivityIndicator,
+  Modal,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -17,491 +29,523 @@ const TEXT_SECONDARY = theme.colors.text.secondary;
 const BORDER_COLOR = theme.colors.canvas.border;
 
 export const CreateProfileScreen = () => {
-    const navigation = useNavigation<any>();
-    const [loading, setLoading] = useState(false);
+  const navigation = useNavigation<any>();
+  const [loading, setLoading] = useState(false);
 
-    // Auth State
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  // Auth State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-    // Profile State
-    const [fullName, setFullName] = useState('');
-    const [dob, setDob] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [bloodType, setBloodType] = useState('O+'); // Default
-    const [gender, setGender] = useState('Male'); // Default
-    const [weight, setWeight] = useState('');
-    const [height, setHeight] = useState('');
-    const [allergies, setAllergies] = useState<string[]>([]);
-    const [conditions, setConditions] = useState<string[]>([]);
-    const [medications, setMedications] = useState<string[]>([]);
-    const [emergencyContactName, setEmergencyContactName] = useState('');
-    const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
+  // Profile State
+  const [fullName, setFullName] = useState('');
+  const [dob, setDob] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [bloodType, setBloodType] = useState('O+'); // Default
+  const [gender, setGender] = useState('Male'); // Default
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<string[]>([]);
+  const [medications, setMedications] = useState<string[]>([]);
+  const [emergencyContactName, setEmergencyContactName] = useState('');
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
 
-    // Chip Inputs
-    const [allergyInput, setAllergyInput] = useState('');
-    const [conditionInput, setConditionInput] = useState('');
-    const [medicationInput, setMedicationInput] = useState('');
+  // Chip Inputs
+  const [allergyInput, setAllergyInput] = useState('');
+  const [conditionInput, setConditionInput] = useState('');
+  const [medicationInput, setMedicationInput] = useState('');
 
-    const onDateChange = (event: any, selectedDate?: Date) => {
-        const currentDate = selectedDate || dob;
-        setShowDatePicker(Platform.OS === 'ios');
-        setDob(currentDate);
-    };
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || dob;
+    setShowDatePicker(Platform.OS === 'ios');
+    setDob(currentDate);
+  };
 
-    const addChip = (list: string[], setList: (l: string[]) => void, value: string, setValue: (v: string) => void) => {
-        if (value.trim()) {
-            setList([...list, value.trim()]);
-            setValue('');
-        }
-    };
+  const addChip = (
+    list: string[],
+    setList: (l: string[]) => void,
+    value: string,
+    setValue: (v: string) => void,
+  ) => {
+    if (value.trim()) {
+      setList([...list, value.trim()]);
+      setValue('');
+    }
+  };
 
-    const removeChip = (list: string[], setList: (l: string[]) => void, index: number) => {
-        setList(list.filter((_, i) => i !== index));
-    };
+  const removeChip = (list: string[], setList: (l: string[]) => void, index: number) => {
+    setList(list.filter((_, i) => i !== index));
+  };
 
-    const handleCreateProfile = async () => {
-        if (!email || !password || !fullName || !gender) {
-            Alert.alert('Missing Fields', 'Please fill in Email, Password, Name, and Gender.');
-            return;
-        }
+  const handleCreateProfile = async () => {
+    if (!email || !password || !fullName || !gender) {
+      Alert.alert('Missing Fields', 'Please fill in Email, Password, Name, and Gender.');
+      return;
+    }
 
-        setLoading(true);
+    setLoading(true);
 
-        try {
-            // 1. Sign Up
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email,
-                password,
-            });
+    try {
+      // 1. Sign Up
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-            if (authError) throw authError;
+      if (authError) throw authError;
 
-            // 2. Save Medical Profile (Local)
-            const profileData = {
-                fullName,
-                dob: dob.toISOString().split('T')[0],
-                bloodType,
-                gender,
-                weight,
-                height,
-                allergies,
-                conditions,
-                medications,
-                emergencyContact: {
-                    name: emergencyContactName,
-                    relationship: 'Primary Contact',
-                    phone: emergencyContactPhone,
-                },
-            };
+      // 2. Save Medical Profile (Local)
+      const profileData = {
+        fullName,
+        dob: dob.toISOString().split('T')[0],
+        bloodType,
+        gender,
+        weight,
+        height,
+        allergies,
+        conditions,
+        medications,
+        emergencyContact: {
+          name: emergencyContactName,
+          relationship: 'Primary Contact',
+          phone: emergencyContactPhone,
+        },
+      };
 
-            await MedicalProfileService.saveProfile(profileData);
+      await MedicalProfileService.saveProfile(profileData);
 
-            // 3. Success
-            Alert.alert('Success', 'Profile created successfully!', [
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        // Navigation will handle Auth state change automatically via AppNavigator
-                        // But if auto-login didn't happen (e.g. email confirmation required), we might land on Login.
-                        // For MVP with Supabase defaults, usually requires confirmation unless disabled.
-                        // We'll navigate to Login just in case if session isn't immediate.
-                        navigation.navigate('Login');
-                    }
-                }
-            ]);
+      // 3. Success
+      Alert.alert('Success', 'Profile created successfully!', [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Navigation will handle Auth state change automatically via AppNavigator
+            // But if auto-login didn't happen (e.g. email confirmation required), we might land on Login.
+            // For MVP with Supabase defaults, usually requires confirmation unless disabled.
+            // We'll navigate to Login just in case if session isn't immediate.
+            navigation.navigate('Login');
+          },
+        },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to create profile.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to create profile.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <StatusBar style="dark" />
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Permissions');
+            }
+          }}
+          style={styles.backButton}
         >
-            <StatusBar style="dark" />
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => {
-                        if (navigation.canGoBack()) {
-                            navigation.goBack();
-                        } else {
-                            navigation.navigate('Permissions');
-                        }
-                    }}
-                    style={styles.backButton}
-                >
-                    <Icon name="caretLeft" size={20} color={TEXT_DARK} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Create Profile</Text>
-                <View style={{ width: 40 }} />
+          <Icon name="caretLeft" size={20} color={TEXT_DARK} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Create Profile</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account Details</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+        </View>
+
+        {/* Personal Info Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+          <View style={styles.row}>
+            <View style={[styles.inputContainer, styles.halfInput]}>
+              <Text style={styles.inputLabel}>Date of Birth</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowDatePicker((prev) => !prev)}
+              >
+                <Text style={styles.inputText}>{dob.toISOString().split('T')[0]}</Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={dob}
+                  mode="date"
+                  display="default"
+                  onChange={onDateChange}
+                />
+              )}
             </View>
+          </View>
 
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
-                {/* Account Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Account Details</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email Address"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Password"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                    />
-                </View>
-
-                {/* Personal Info Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Personal Information</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Full Name"
-                        value={fullName}
-                        onChangeText={setFullName}
-                    />
-                    <View style={styles.row}>
-                        <View style={[styles.inputContainer, styles.halfInput]}>
-                            <Text style={styles.inputLabel}>Date of Birth</Text>
-                            <TouchableOpacity
-                                style={styles.dateButton}
-                                onPress={() => setShowDatePicker((prev) => !prev)}
-                            >
-                                <Text style={styles.inputText}>{dob.toISOString().split('T')[0]}</Text>
-                            </TouchableOpacity>
-                            {showDatePicker && (
-                                <DateTimePicker
-                                    testID="dateTimePicker"
-                                    value={dob}
-                                    mode="date"
-                                    display="default"
-                                    onChange={onDateChange}
-                                />
-                            )}
-                        </View>
-                    </View>
-
-                    <View style={styles.row}>
-                        <View style={[styles.inputContainer, styles.halfInput]}>
-                            <Text style={styles.inputLabel}>Gender</Text>
-                            <View style={styles.pickerWrapper}>
-                                <Picker
-                                    selectedValue={gender}
-                                    onValueChange={(itemValue) => setGender(itemValue)}
-                                    style={styles.picker}
-                                >
-                                    <Picker.Item label="Male" value="Male" />
-                                    <Picker.Item label="Female" value="Female" />
-                                    <Picker.Item label="Other" value="Other" />
-                                </Picker>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={styles.row}>
-                        <View style={[styles.inputContainer, styles.halfInput]}>
-                            <Text style={styles.inputLabel}>Weight (kg)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="0"
-                                value={weight}
-                                onChangeText={setWeight}
-                                keyboardType="numeric"
-                            />
-                        </View>
-                        <View style={[styles.inputContainer, styles.halfInput]}>
-                            <Text style={styles.inputLabel}>Height (cm)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="0"
-                                value={height}
-                                onChangeText={setHeight}
-                                keyboardType="numeric"
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Blood Type</Text>
-                        <View style={styles.pickerWrapper}>
-                            <Picker
-                                selectedValue={bloodType}
-                                onValueChange={(itemValue) => setBloodType(itemValue)}
-                                style={styles.picker}
-                            >
-                                <Picker.Item label="O+" value="O+" />
-                                <Picker.Item label="O-" value="O-" />
-                                <Picker.Item label="A+" value="A+" />
-                                <Picker.Item label="A-" value="A-" />
-                                <Picker.Item label="B+" value="B+" />
-                                <Picker.Item label="B-" value="B-" />
-                                <Picker.Item label="AB+" value="AB+" />
-                                <Picker.Item label="AB-" value="AB-" />
-                                <Picker.Item label="Unknown" value="Unknown" />
-                            </Picker>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Health Details */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Health Details</Text>
-
-                    {/* Allergies */}
-                    <Text style={styles.label}>Allergies</Text>
-                    <View style={styles.chipRow}>
-                        {allergies.map((item, i) => (
-                            <TouchableOpacity key={i} onPress={() => removeChip(allergies, setAllergies, i)} style={styles.chip}>
-                                <Text style={styles.chipText}>{item}</Text>
-                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                    <View style={styles.addInputContainer}>
-                        <TextInput
-                            style={styles.addInput}
-                            placeholder="Add allergy..."
-                            value={allergyInput}
-                            onChangeText={setAllergyInput}
-                            onSubmitEditing={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}
-                        />
-                        <TouchableOpacity onPress={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}>
-                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Conditions */}
-                    <Text style={[styles.label, { marginTop: 12 }]}>Chronic Conditions</Text>
-                    <View style={styles.chipRow}>
-                        {conditions.map((item, i) => (
-                            <TouchableOpacity key={i} onPress={() => removeChip(conditions, setConditions, i)} style={styles.chip}>
-                                <Text style={styles.chipText}>{item}</Text>
-                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                    <View style={styles.addInputContainer}>
-                        <TextInput
-                            style={styles.addInput}
-                            placeholder="Add condition..."
-                            value={conditionInput}
-                            onChangeText={setConditionInput}
-                            onSubmitEditing={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}
-                        />
-                        <TouchableOpacity onPress={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}>
-                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Medications */}
-                    <Text style={[styles.label, { marginTop: 12 }]}>Medications</Text>
-                    <View style={styles.chipRow}>
-                        {medications.map((item, i) => (
-                            <TouchableOpacity key={i} onPress={() => removeChip(medications, setMedications, i)} style={styles.chip}>
-                                <Text style={styles.chipText}>{item}</Text>
-                                <Icon name="close" size={14} color={PRIMARY_COLOR} />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                    <View style={styles.addInputContainer}>
-                        <TextInput
-                            style={styles.addInput}
-                            placeholder="Add medication..."
-                            value={medicationInput}
-                            onChangeText={setMedicationInput}
-                            onSubmitEditing={() => addChip(medications, setMedications, medicationInput, setMedicationInput)}
-                        />
-                        <TouchableOpacity onPress={() => addChip(medications, setMedications, medicationInput, setMedicationInput)}>
-                            <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* Emergency Contact */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Emergency Contact</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Contact Name"
-                        value={emergencyContactName}
-                        onChangeText={setEmergencyContactName}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Contact Phone"
-                        value={emergencyContactPhone}
-                        onChangeText={setEmergencyContactPhone}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-
-                <View style={{ height: 40 }} />
-
-                <TouchableOpacity
-                    style={[styles.primaryButton, loading && styles.disabledButton]}
-                    onPress={handleCreateProfile}
-                    disabled={loading}
+          <View style={styles.row}>
+            <View style={[styles.inputContainer, styles.halfInput]}>
+              <Text style={styles.inputLabel}>Gender</Text>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={gender}
+                  onValueChange={(itemValue) => setGender(itemValue)}
+                  style={styles.picker}
                 >
-                    {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryButtonText}>Save Profile</Text>}
-                </TouchableOpacity>
+                  <Picker.Item label="Male" value="Male" />
+                  <Picker.Item label="Female" value="Female" />
+                  <Picker.Item label="Other" value="Other" />
+                </Picker>
+              </View>
+            </View>
+          </View>
 
-                <View style={{ height: 40 }} />
+          <View style={styles.row}>
+            <View style={[styles.inputContainer, styles.halfInput]}>
+              <Text style={styles.inputLabel}>Weight (kg)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="0"
+                value={weight}
+                onChangeText={setWeight}
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={[styles.inputContainer, styles.halfInput]}>
+              <Text style={styles.inputLabel}>Height (cm)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="0"
+                value={height}
+                onChangeText={setHeight}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
 
-            </ScrollView>
-        </KeyboardAvoidingView>
-    );
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Blood Type</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={bloodType}
+                onValueChange={(itemValue) => setBloodType(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="O+" value="O+" />
+                <Picker.Item label="O-" value="O-" />
+                <Picker.Item label="A+" value="A+" />
+                <Picker.Item label="A-" value="A-" />
+                <Picker.Item label="B+" value="B+" />
+                <Picker.Item label="B-" value="B-" />
+                <Picker.Item label="AB+" value="AB+" />
+                <Picker.Item label="AB-" value="AB-" />
+                <Picker.Item label="Unknown" value="Unknown" />
+              </Picker>
+            </View>
+          </View>
+        </View>
+
+        {/* Health Details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Health Details</Text>
+
+          {/* Allergies */}
+          <Text style={styles.label}>Allergies</Text>
+          <View style={styles.chipRow}>
+            {allergies.map((item, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={() => removeChip(allergies, setAllergies, i)}
+                style={styles.chip}
+              >
+                <Text style={styles.chipText}>{item}</Text>
+                <Icon name="close" size={14} color={PRIMARY_COLOR} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.addInputContainer}>
+            <TextInput
+              style={styles.addInput}
+              placeholder="Add allergy..."
+              value={allergyInput}
+              onChangeText={setAllergyInput}
+              onSubmitEditing={() =>
+                addChip(allergies, setAllergies, allergyInput, setAllergyInput)
+              }
+            />
+            <TouchableOpacity
+              onPress={() => addChip(allergies, setAllergies, allergyInput, setAllergyInput)}
+            >
+              <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Conditions */}
+          <Text style={[styles.label, { marginTop: 12 }]}>Chronic Conditions</Text>
+          <View style={styles.chipRow}>
+            {conditions.map((item, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={() => removeChip(conditions, setConditions, i)}
+                style={styles.chip}
+              >
+                <Text style={styles.chipText}>{item}</Text>
+                <Icon name="close" size={14} color={PRIMARY_COLOR} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.addInputContainer}>
+            <TextInput
+              style={styles.addInput}
+              placeholder="Add condition..."
+              value={conditionInput}
+              onChangeText={setConditionInput}
+              onSubmitEditing={() =>
+                addChip(conditions, setConditions, conditionInput, setConditionInput)
+              }
+            />
+            <TouchableOpacity
+              onPress={() => addChip(conditions, setConditions, conditionInput, setConditionInput)}
+            >
+              <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Medications */}
+          <Text style={[styles.label, { marginTop: 12 }]}>Medications</Text>
+          <View style={styles.chipRow}>
+            {medications.map((item, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={() => removeChip(medications, setMedications, i)}
+                style={styles.chip}
+              >
+                <Text style={styles.chipText}>{item}</Text>
+                <Icon name="close" size={14} color={PRIMARY_COLOR} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.addInputContainer}>
+            <TextInput
+              style={styles.addInput}
+              placeholder="Add medication..."
+              value={medicationInput}
+              onChangeText={setMedicationInput}
+              onSubmitEditing={() =>
+                addChip(medications, setMedications, medicationInput, setMedicationInput)
+              }
+            />
+            <TouchableOpacity
+              onPress={() =>
+                addChip(medications, setMedications, medicationInput, setMedicationInput)
+              }
+            >
+              <Icon name="plusCircle" size={24} color={PRIMARY_COLOR} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Emergency Contact */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Emergency Contact</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Contact Name"
+            value={emergencyContactName}
+            onChangeText={setEmergencyContactName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Contact Phone"
+            value={emergencyContactPhone}
+            onChangeText={setEmergencyContactPhone}
+            keyboardType="phone-pad"
+          />
+        </View>
+
+        <View style={{ height: 40 }} />
+
+        <TouchableOpacity
+          style={[styles.primaryButton, loading && styles.disabledButton]}
+          onPress={handleCreateProfile}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.primaryButtonText}>Save Profile</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: BG_LIGHT,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 12,
-        backgroundColor: BG_LIGHT,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: TEXT_DARK,
-    },
-    content: {
-        padding: 20,
-    },
-    section: {
-        marginBottom: 24,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: TEXT_DARK,
-        marginBottom: 16,
-    },
-    input: {
-        backgroundColor: theme.colors.canvas.surface,
-        borderWidth: 1,
-        borderColor: BORDER_COLOR,
-        borderRadius: 12,
-        padding: 16,
-        fontSize: 16,
-        color: TEXT_DARK,
-        marginBottom: 12,
-    },
-    inputContainer: {
-        marginBottom: 12,
-    },
-    inputLabel: {
-        fontSize: 12,
-        color: TEXT_SECONDARY,
-        marginBottom: 4,
-        marginLeft: 4,
-    },
-    inputText: {
-        fontSize: 16,
-        color: TEXT_DARK,
-    },
-    dateButton: {
-        backgroundColor: theme.colors.canvas.surface,
-        borderWidth: 1,
-        borderColor: BORDER_COLOR,
-        borderRadius: 12,
-        padding: 16,
-    },
-    pickerWrapper: {
-        backgroundColor: theme.colors.canvas.surface,
-        borderWidth: 1,
-        borderColor: BORDER_COLOR,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    picker: {
-        height: 54, // Approx align with inputs
-        width: '100%',
-    },
-    row: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    halfInput: {
-        flex: 1,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: TEXT_DARK,
-        marginBottom: 8,
-    },
-    chipRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginBottom: 8,
-    },
-    chip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.colors.primary.light,
-        borderRadius: theme.spatial.radii.pill,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        gap: 4,
-    },
-    chipText: {
-        color: PRIMARY_COLOR,
-        fontWeight: '600',
-        fontSize: 14,
-    },
-    addInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    addInput: {
-        flex: 1,
-        borderBottomWidth: 1,
-        borderBottomColor: BORDER_COLOR,
-        paddingVertical: 8,
-        fontSize: 16,
-        color: TEXT_DARK,
-    },
-    primaryButton: {
-        backgroundColor: PRIMARY_COLOR,
-        height: 56,
-        borderRadius: theme.spatial.radii.pill,
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...theme.spatial.shadows3d.level2,
-    },
-    disabledButton: {
-        opacity: 0.7,
-    },
-    primaryButtonText: {
-        color: theme.colors.text.inverse,
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: BG_LIGHT,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: BG_LIGHT,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: TEXT_DARK,
+  },
+  content: {
+    padding: 20,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: TEXT_DARK,
+    marginBottom: 16,
+  },
+  input: {
+    backgroundColor: theme.colors.canvas.surface,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: TEXT_DARK,
+    marginBottom: 12,
+  },
+  inputContainer: {
+    marginBottom: 12,
+  },
+  inputLabel: {
+    fontSize: 12,
+    color: TEXT_SECONDARY,
+    marginBottom: 4,
+    marginLeft: 4,
+  },
+  inputText: {
+    fontSize: 16,
+    color: TEXT_DARK,
+  },
+  dateButton: {
+    backgroundColor: theme.colors.canvas.surface,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 12,
+    padding: 16,
+  },
+  pickerWrapper: {
+    backgroundColor: theme.colors.canvas.surface,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 54, // Approx align with inputs
+    width: '100%',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: TEXT_DARK,
+    marginBottom: 8,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary.light,
+    borderRadius: theme.spatial.radii.pill,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  chipText: {
+    color: PRIMARY_COLOR,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  addInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  addInput: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: TEXT_DARK,
+  },
+  primaryButton: {
+    backgroundColor: PRIMARY_COLOR,
+    height: 56,
+    borderRadius: theme.spatial.radii.pill,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.spatial.shadows3d.level2,
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
+  primaryButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });

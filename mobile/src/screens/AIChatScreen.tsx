@@ -386,7 +386,10 @@ export const AIChatScreen: React.FC = () => {
               >
                 {!isUser && (
                   <View style={styles.modelAvatarCircle}>
-                    <LinearGradient colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]} style={styles.avatarGradient}>
+                    <LinearGradient
+                      colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]}
+                      style={styles.avatarGradient}
+                    >
                       <Icon name="sparkle" size={14} color={theme.colors.ramp.white} />
                     </LinearGradient>
                   </View>
@@ -416,7 +419,10 @@ export const AIChatScreen: React.FC = () => {
           {loading && (
             <View style={[styles.messageRow, styles.modelRow]}>
               <View style={styles.modelAvatarCircle}>
-                <LinearGradient colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]} style={styles.avatarGradient}>
+                <LinearGradient
+                  colors={[theme.colors.ramp.ink, theme.colors.ramp.inkElev]}
+                  style={styles.avatarGradient}
+                >
                   <Icon name="sparkle" size={14} color={theme.colors.ramp.white} />
                 </LinearGradient>
               </View>

@@ -25,12 +25,12 @@ describe('Mobile Report Service', () => {
     expect(api.post).toHaveBeenCalledWith(
       '/reports/encounter-123/generate',
       {},
-      { responseType: 'arraybuffer' }
+      { responseType: 'arraybuffer' },
     );
     expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
       expect.stringContaining('report-encounter-123-'),
       expect.any(String),
-      { encoding: 'base64' }
+      { encoding: 'base64' },
     );
     expect(fileUri).toContain('report-encounter-123-');
   });
@@ -48,7 +48,7 @@ describe('Mobile Report Service', () => {
     });
 
     await expect(reportService.generateReport('non-existent-enc')).rejects.toThrow(
-      'Failed to generate report: 404'
+      'Failed to generate report: 404',
     );
   });
 
@@ -58,7 +58,7 @@ describe('Mobile Report Service', () => {
     });
 
     await expect(reportService.generateReport('encounter-net-err')).rejects.toThrow(
-      'Failed to connect to backend. Please check your connection.'
+      'Failed to connect to backend. Please check your connection.',
     );
   });
 

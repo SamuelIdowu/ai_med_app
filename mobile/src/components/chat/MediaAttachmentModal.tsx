@@ -61,12 +61,7 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
   onSelectAction,
 }) => {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.backdrop}>
           <TouchableWithoutFeedback>
@@ -82,16 +77,8 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                     Capture photos or videos to assist clinical evaluation
                   </Text>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={onClose}
-                  style={styles.closeCircle}
-                >
-                  <Icon
-                    name="close"
-                    size={20}
-                    color={theme.colors.text.primary}
-                  />
+                <TouchableOpacity activeOpacity={0.7} onPress={onClose} style={styles.closeCircle}>
+                  <Icon name="close" size={20} color={theme.colors.text.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -108,11 +95,7 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                     }}
                   >
                     <View style={styles.iconCircle}>
-                      <Icon
-                        name={opt.icon}
-                        size={24}
-                        color={theme.colors.ramp.ink}
-                      />
+                      <Icon name={opt.icon} size={24} color={theme.colors.ramp.ink} />
                     </View>
 
                     <View style={styles.optionContent}>
@@ -127,21 +110,13 @@ export const MediaAttachmentModal: React.FC<MediaAttachmentModalProps> = ({
                       <Text style={styles.optionDesc}>{opt.description}</Text>
                     </View>
 
-                    <Icon
-                      name="caretRight"
-                      size={20}
-                      color={theme.colors.text.muted}
-                    />
+                    <Icon name="caretRight" size={20} color={theme.colors.text.muted} />
                   </TouchableOpacity>
                 ))}
               </View>
 
               {/* Cancel Button */}
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.cancelBtn}
-                onPress={onClose}
-              >
+              <TouchableOpacity activeOpacity={0.8} style={styles.cancelBtn} onPress={onClose}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             </View>

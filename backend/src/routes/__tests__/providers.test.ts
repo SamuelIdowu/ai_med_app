@@ -75,9 +75,7 @@ describe('GET /api/v1/providers/nearby/:providerId/contact', () => {
   it('returns an available Geoapify phone number', async () => {
     mockedFindGeoapifyProviderPhone.mockResolvedValue('+234800000000');
 
-    const response = await request(app).get(
-      '/api/v1/providers/nearby/geoapify-place-123/contact',
-    );
+    const response = await request(app).get('/api/v1/providers/nearby/geoapify-place-123/contact');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ phone: '+234800000000' });

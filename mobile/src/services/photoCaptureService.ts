@@ -3,10 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 export class PhotoCaptureError extends Error {
   code: 'camera_permission' | 'library_permission' | 'cancelled' | 'capture_failed';
 
-  constructor(
-    code: PhotoCaptureError['code'],
-    message: string
-  ) {
+  constructor(code: PhotoCaptureError['code'], message: string) {
     super(message);
     this.name = 'PhotoCaptureError';
     this.code = code;
@@ -18,7 +15,7 @@ export const capturePhoto = async (): Promise<string> => {
   if (status !== 'granted') {
     throw new PhotoCaptureError(
       'camera_permission',
-      'Please enable camera access to take a photo for analysis.'
+      'Please enable camera access to take a photo for analysis.',
     );
   }
 
@@ -39,7 +36,7 @@ export const pickPhoto = async (): Promise<string> => {
   if (status !== 'granted') {
     throw new PhotoCaptureError(
       'library_permission',
-      'Please enable photo library access to choose an image.'
+      'Please enable photo library access to choose an image.',
     );
   }
 

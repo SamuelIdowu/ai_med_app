@@ -33,13 +33,13 @@ describe('Mobile Encounter Service', () => {
       const result = await EncounterService.createEncounter(
         'Burn',
         'Second-degree burn on forearm',
-        ['file:///photo1.jpg']
+        ['file:///photo1.jpg'],
       );
 
       expect(result.localId).toMatch(/^local_\d+/);
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         '@encounters',
-        expect.stringContaining('Second-degree burn on forearm')
+        expect.stringContaining('Second-degree burn on forearm'),
       );
     });
 
@@ -88,9 +88,7 @@ describe('Mobile Encounter Service', () => {
 
     it('falls back to local AsyncStorage encounters when backend is unreachable', async () => {
       (api.get as jest.Mock).mockRejectedValueOnce(new Error('Network offline'));
-      const mockLocal = [
-        { id: 'local_1', category: 'Insect Bite', notes: 'Bee sting' },
-      ];
+      const mockLocal = [{ id: 'local_1', category: 'Insect Bite', notes: 'Bee sting' }];
       (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(JSON.stringify(mockLocal));
 
       const encounters = await EncounterService.getEncounters();
@@ -104,7 +102,7 @@ describe('Mobile Encounter Service', () => {
         JSON.stringify([
           { id: 'remote-1', category: 'Allergy' },
           { id: 'remote-2', category: 'Trauma' },
-        ])
+        ]),
       );
       (api.delete as jest.Mock).mockResolvedValueOnce({ data: { success: true } });
 
@@ -113,13 +111,13 @@ describe('Mobile Encounter Service', () => {
       expect(api.delete).toHaveBeenCalledWith('/encounters/remote-1');
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         '@encounters',
-        expect.not.stringContaining('remote-1')
+        expect.not.stringContaining('remote-1'),
       );
     });
 
     it('skips remote DELETE API call when deleting an unsynced local-only encounter', async () => {
       (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
-        JSON.stringify([{ id: 'local_123', category: 'Rash' }])
+        JSON.stringify([{ id: 'local_123', category: 'Rash' }]),
       );
 
       await EncounterService.deleteEncounter('local_123');

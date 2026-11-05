@@ -271,13 +271,12 @@ export async function findGeoapifyProviderPhone(placeId: string): Promise<string
     }>;
   };
   const properties = payload.features?.[0]?.properties;
-  const phone = (
+  const phone =
     properties?.contact?.phone ||
     Object.values(properties?.contact?.phone_international ?? {})[0] ||
     properties?.datasource?.raw?.phone ||
     properties?.datasource?.raw?.['contact:phone'] ||
-    null
-  );
+    null;
   await cacheService.set(key, { phone }, 86_400);
   return phone;
 }

@@ -1,16 +1,8 @@
 export type PhotoAnalysisMode = 'auto' | 'wound' | 'general';
 export type PhotoAnalysisResultMode = 'wound' | 'general';
-export type PhotoAnalysisSeverity =
-  | 'mild'
-  | 'moderate'
-  | 'severe'
-  | 'critical'
-  | 'none';
+export type PhotoAnalysisSeverity = 'mild' | 'moderate' | 'severe' | 'critical' | 'none';
 export type PhotoAnalysisFallbackReason =
-  | 'ml_unavailable'
-  | 'ml_error'
-  | 'non_medical'
-  | 'low_confidence';
+  'ml_unavailable' | 'ml_error' | 'non_medical' | 'low_confidence';
 
 export interface StructuredPhotoAnalysis {
   severity: PhotoAnalysisSeverity;

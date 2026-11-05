@@ -152,10 +152,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
       ]}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variantStyle.iconColor}
-        />
+        <ActivityIndicator size="small" color={variantStyle.iconColor} />
       ) : (
         <View style={styles.contentRow}>
           {icon && iconPosition === 'left' && (
@@ -166,14 +163,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
               style={styles.iconLeft}
             />
           )}
-          <Text
-            style={[
-              styles.baseText,
-              variantStyle.text,
-              sizeStyle.text,
-              textStyle,
-            ]}
-          >
+          <Text style={[styles.baseText, variantStyle.text, sizeStyle.text, textStyle]}>
             {label}
           </Text>
           {icon && iconPosition === 'right' && (

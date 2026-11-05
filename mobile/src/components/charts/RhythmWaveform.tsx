@@ -19,8 +19,8 @@ export const RhythmWaveform: React.FC<RhythmWaveformProps> = ({
 }) => {
   // Pattern representing cardiac pulse oscillation
   const pattern = [
-    0.3, 0.4, 0.25, 0.5, 0.8, 0.35, 0.95, 0.6, 0.3, 0.2, 0.4, 0.85,
-    0.7, 0.3, 0.5, 0.9, 0.4, 0.3, 0.65, 0.8, 0.45, 0.3, 0.2, 0.35,
+    0.3, 0.4, 0.25, 0.5, 0.8, 0.35, 0.95, 0.6, 0.3, 0.2, 0.4, 0.85, 0.7, 0.3, 0.5, 0.9, 0.4, 0.3,
+    0.65, 0.8, 0.45, 0.3, 0.2, 0.35,
   ];
 
   return (

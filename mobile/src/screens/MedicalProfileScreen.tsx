@@ -18,7 +18,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
-import { MedicalProfileService, MedicalProfile, EmergencyContact } from '../services/medicalProfileService';
+import {
+  MedicalProfileService,
+  MedicalProfile,
+  EmergencyContact,
+} from '../services/medicalProfileService';
 import { useAuth } from '../context/AuthContext';
 import { MedicalCard } from '../components/ui/MedicalCard';
 import { BottomTabBar } from '../components/BottomTabBar';
@@ -85,10 +89,18 @@ export const MedicalProfileScreen: React.FC = () => {
           ...prev,
           ...savedProfile,
           // Ensure arrays are initialized safely without fallback to old dummy data
-          allergies: Array.isArray(savedProfile.allergies) ? savedProfile.allergies : (prev.allergies || []),
-          medications: Array.isArray(savedProfile.medications) ? savedProfile.medications : (prev.medications || []),
-          conditions: Array.isArray(savedProfile.conditions) ? savedProfile.conditions : (prev.conditions || []),
-          medicalDirectives: Array.isArray(savedProfile.medicalDirectives) ? savedProfile.medicalDirectives : (prev.medicalDirectives || []),
+          allergies: Array.isArray(savedProfile.allergies)
+            ? savedProfile.allergies
+            : prev.allergies || [],
+          medications: Array.isArray(savedProfile.medications)
+            ? savedProfile.medications
+            : prev.medications || [],
+          conditions: Array.isArray(savedProfile.conditions)
+            ? savedProfile.conditions
+            : prev.conditions || [],
+          medicalDirectives: Array.isArray(savedProfile.medicalDirectives)
+            ? savedProfile.medicalDirectives
+            : prev.medicalDirectives || [],
         }));
       }
     } catch (e) {
@@ -173,7 +185,7 @@ export const MedicalProfileScreen: React.FC = () => {
   const addChip = (
     field: 'allergies' | 'medications' | 'conditions' | 'medicalDirectives',
     value: string,
-    clearFn: () => void
+    clearFn: () => void,
   ) => {
     const trimmed = value.trim();
     if (!trimmed) return;
@@ -186,7 +198,7 @@ export const MedicalProfileScreen: React.FC = () => {
 
   const removeChip = (
     field: 'allergies' | 'medications' | 'conditions' | 'medicalDirectives',
-    index: number
+    index: number,
   ) => {
     setEditForm((prev) => ({
       ...prev,
@@ -241,11 +253,7 @@ export const MedicalProfileScreen: React.FC = () => {
 
         <Text style={styles.headerTitle}>Medical Profile</Text>
 
-        <TouchableOpacity
-          onPress={handleOpenEditModal}
-          style={styles.editPill}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity onPress={handleOpenEditModal} style={styles.editPill} activeOpacity={0.7}>
           <Icon name="pencil" size={16} color={theme.colors.ramp.ink} />
           <Text style={styles.editPillText}>Edit</Text>
         </TouchableOpacity>
@@ -260,7 +268,8 @@ export const MedicalProfileScreen: React.FC = () => {
         >
           <Icon name="user" size={16} color={theme.colors.ramp.ink} />
           <Text style={styles.guestBannerText}>
-            You’re in guest mode — <Text style={{ fontWeight: '700' }}>create an account</Text> to save your profile.
+            You’re in guest mode — <Text style={{ fontWeight: '700' }}>create an account</Text> to
+            save your profile.
           </Text>
         </TouchableOpacity>
       )}
@@ -290,7 +299,9 @@ export const MedicalProfileScreen: React.FC = () => {
 
           <View style={styles.heroCardBottom}>
             <View style={styles.heroNameCol}>
-              <Text style={styles.heroName}>{profile.fullName || user?.email?.split('@')[0] || 'Patient'}</Text>
+              <Text style={styles.heroName}>
+                {profile.fullName || user?.email?.split('@')[0] || 'Patient'}
+              </Text>
               <Text style={styles.heroSub}>
                 {profile.gender || 'Patient'}
                 {ageStr ? ` • ${ageStr}` : ''}
@@ -458,9 +469,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 </View>
                 <View style={styles.contactDetails}>
                   <View style={styles.contactBadgeRow}>
-                    <Text style={styles.contactName}>
-                      {profile.emergencyContact.name}
-                    </Text>
+                    <Text style={styles.contactName}>{profile.emergencyContact.name}</Text>
                     <View style={styles.primaryPill}>
                       <Text style={styles.primaryPillText}>Primary</Text>
                     </View>
@@ -481,7 +490,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   onPress={() =>
                     handleDialContact(
                       profile.emergencyContact?.phone || '',
-                      profile.emergencyContact?.name || 'Primary Contact'
+                      profile.emergencyContact?.name || 'Primary Contact',
                     )
                   }
                 >
@@ -504,9 +513,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 </View>
                 <View style={styles.contactDetails}>
                   <View style={styles.contactBadgeRow}>
-                    <Text style={styles.contactName}>
-                      {profile.secondaryEmergencyContact.name}
-                    </Text>
+                    <Text style={styles.contactName}>{profile.secondaryEmergencyContact.name}</Text>
                     <View style={styles.backupPill}>
                       <Text style={styles.backupPillText}>Backup</Text>
                     </View>
@@ -526,7 +533,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 onPress={() =>
                   handleDialContact(
                     profile.secondaryEmergencyContact?.phone || '',
-                    profile.secondaryEmergencyContact?.name || 'Secondary Contact'
+                    profile.secondaryEmergencyContact?.name || 'Secondary Contact',
                   )
                 }
               >
@@ -544,7 +551,8 @@ export const MedicalProfileScreen: React.FC = () => {
           <View style={styles.privacyTextCol}>
             <Text style={styles.privacyTitle}>Encrypted & Data-Minimized</Text>
             <Text style={styles.privacyDesc}>
-              Genetic markers and non-essential identifiers are never stored. Your emergency health data remains locally cached on this device.
+              Genetic markers and non-essential identifiers are never stored. Your emergency health
+              data remains locally cached on this device.
             </Text>
           </View>
         </View>
@@ -578,10 +586,7 @@ export const MedicalProfileScreen: React.FC = () => {
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
             <Text style={styles.modalHeaderTitle}>Edit Medical Profile</Text>
-            <TouchableOpacity
-              onPress={handleSaveProfile}
-              style={styles.modalHeaderSave}
-            >
+            <TouchableOpacity onPress={handleSaveProfile} style={styles.modalHeaderSave}>
               <Text style={styles.modalSaveText}>Save</Text>
             </TouchableOpacity>
           </View>
@@ -605,10 +610,7 @@ export const MedicalProfileScreen: React.FC = () => {
                   <Icon name="user" size={32} color={theme.colors.ramp.gray400} />
                 </View>
               )}
-              <TouchableOpacity
-                style={styles.modalChangePhotoBtn}
-                onPress={handlePickImage}
-              >
+              <TouchableOpacity style={styles.modalChangePhotoBtn} onPress={handlePickImage}>
                 <Icon name="camera" size={16} color={theme.colors.ramp.ink} />
                 <Text style={styles.modalChangePhotoText}>Change Photo</Text>
               </TouchableOpacity>
@@ -662,10 +664,7 @@ export const MedicalProfileScreen: React.FC = () => {
                     <TouchableOpacity
                       key={bt}
                       onPress={() => setEditForm((p) => ({ ...p, bloodType: bt }))}
-                      style={[
-                        styles.bloodTypeOption,
-                        isSelected && styles.bloodTypeOptionSelected,
-                      ]}
+                      style={[styles.bloodTypeOption, isSelected && styles.bloodTypeOptionSelected]}
                     >
                       <Text
                         style={[
@@ -750,7 +749,7 @@ export const MedicalProfileScreen: React.FC = () => {
                 style={styles.addChipBtn}
                 onPress={() =>
                   addChip('medicalDirectives', customDirectiveInput, () =>
-                    setCustomDirectiveInput('')
+                    setCustomDirectiveInput(''),
                   )
                 }
               >
@@ -783,9 +782,7 @@ export const MedicalProfileScreen: React.FC = () => {
               />
               <TouchableOpacity
                 style={styles.addChipBtn}
-                onPress={() =>
-                  addChip('allergies', allergyInput, () => setAllergyInput(''))
-                }
+                onPress={() => addChip('allergies', allergyInput, () => setAllergyInput(''))}
               >
                 <Text style={styles.addChipBtnText}>Add</Text>
               </TouchableOpacity>
@@ -816,9 +813,7 @@ export const MedicalProfileScreen: React.FC = () => {
               />
               <TouchableOpacity
                 style={styles.addChipBtn}
-                onPress={() =>
-                  addChip('conditions', conditionInput, () => setConditionInput(''))
-                }
+                onPress={() => addChip('conditions', conditionInput, () => setConditionInput(''))}
               >
                 <Text style={styles.addChipBtnText}>Add</Text>
               </TouchableOpacity>

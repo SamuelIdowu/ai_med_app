@@ -51,9 +51,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
       ios: 'telprompt:911',
       default: 'tel:911',
     });
-    Linking.openURL(telUrl).catch((err) =>
-      console.warn('Failed to launch emergency dialer:', err)
-    );
+    Linking.openURL(telUrl).catch((err) => console.warn('Failed to launch emergency dialer:', err));
   };
 
   const handleEmergencyPress = () => {
@@ -66,10 +64,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
 
   return (
     <>
-      <View
-        pointerEvents="box-none"
-        style={[styles.outerContainer, { bottom: bottomMargin }]}
-      >
+      <View pointerEvents="box-none" style={[styles.outerContainer, { bottom: bottomMargin }]}>
         <View style={styles.navRow}>
           {/* Main Dark Capsule containing 4 tabs with center notch */}
           <View style={styles.pillContainer}>
@@ -128,11 +123,7 @@ export const FloatingNavPill: React.FC<FloatingNavPillProps> = ({
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <Icon
-                name="emergencyCall"
-                size={32}
-                color={theme.colors.ramp.ink}
-              />
+              <Icon name="emergencyCall" size={32} color={theme.colors.ramp.ink} />
             </View>
 
             <Text style={styles.modalTitle}>Emergency Call 911</Text>

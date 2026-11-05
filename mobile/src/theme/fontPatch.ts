@@ -35,7 +35,12 @@ const resolveFontFamily = (style: any): any => {
   const rawWeight = style.fontWeight ? String(style.fontWeight).toLowerCase() : '400';
   let family: string | undefined;
 
-  if (rawWeight === '800' || rawWeight === '900' || rawWeight === 'heavy' || rawWeight === 'black') {
+  if (
+    rawWeight === '800' ||
+    rawWeight === '900' ||
+    rawWeight === 'heavy' ||
+    rawWeight === 'black'
+  ) {
     family = fontFamilies.extraBold;
   } else if (rawWeight === '700' || rawWeight === 'bold') {
     family = fontFamilies.bold;

@@ -66,11 +66,7 @@ export const MedicalCard: React.FC<MedicalCardProps> = ({
 
   if (onPress) {
     return (
-      <TouchableOpacity
-        style={cardStyle}
-        onPress={onPress}
-        activeOpacity={activeOpacity}
-      >
+      <TouchableOpacity style={cardStyle} onPress={onPress} activeOpacity={activeOpacity}>
         {children}
       </TouchableOpacity>
     );
@@ -84,4 +80,3 @@ const styles = StyleSheet.create({
     padding: theme.spatial.spacing.md,
   },
 });
-

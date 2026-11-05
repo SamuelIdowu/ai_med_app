@@ -32,13 +32,21 @@ router.post('/vitals/readings', async (req, res) => {
     const value = Number(reading?.value);
     const recordedAt = Date.parse(reading?.recordedAt);
     if (
-      !metric || !Number.isFinite(value) || value < metric.min || value > metric.max ||
-      !Number.isFinite(recordedAt) || recordedAt > Date.now() + 5 * 60 * 1000 ||
+      !metric ||
+      !Number.isFinite(value) ||
+      value < metric.min ||
+      value > metric.max ||
+      !Number.isFinite(recordedAt) ||
+      recordedAt > Date.now() + 5 * 60 * 1000 ||
       Date.now() - recordedAt > 366 * 24 * 60 * 60 * 1000 ||
-      !validSources.has(reading?.source) || typeof reading?.externalId !== 'string' ||
-      reading.externalId.length < 1 || reading.externalId.length > 200
+      !validSources.has(reading?.source) ||
+      typeof reading?.externalId !== 'string' ||
+      reading.externalId.length < 1 ||
+      reading.externalId.length > 200
     ) {
-      res.status(400).json({ error: 'A reading has an invalid metric, value, timestamp, source, or external ID.' });
+      res.status(400).json({
+        error: 'A reading has an invalid metric, value, timestamp, source, or external ID.',
+      });
       return;
     }
     normalized.push({
@@ -55,7 +63,9 @@ router.post('/vitals/readings', async (req, res) => {
 
   try {
     const supabase = getSupabaseAdmin();
-    const encounterIds = [...new Set(normalized.map((reading) => reading.encounter_id).filter(Boolean))];
+    const encounterIds = [
+      ...new Set(normalized.map((reading) => reading.encounter_id).filter(Boolean)),
+    ];
     if (encounterIds.length) {
       const { data: encounters, error: encounterError } = await supabase
         .from('encounters')
@@ -70,7 +80,10 @@ router.post('/vitals/readings', async (req, res) => {
     }
     const { data, error } = await supabase
       .from('vital_readings')
-      .upsert(normalized, { onConflict: 'user_id,source,external_id,metric', ignoreDuplicates: true })
+      .upsert(normalized, {
+        onConflict: 'user_id,source,external_id,metric',
+        ignoreDuplicates: true,
+      })
       .select('id, metric, value, unit, recorded_at, source, external_id');
     if (error) throw error;
     await logAudit({
@@ -89,7 +102,12 @@ router.post('/vitals/readings', async (req, res) => {
 
 router.get('/vitals', async (req, res) => {
   const segment = String(req.query.segment || 'Hourly');
-  const windows: Record<string, number> = { Hourly: 24, Daily: 24 * 7, Weekly: 24 * 28, Monthly: 24 * 180 };
+  const windows: Record<string, number> = {
+    Hourly: 24,
+    Daily: 24 * 7,
+    Weekly: 24 * 28,
+    Monthly: 24 * 180,
+  };
   if (!(segment in windows)) {
     res.status(400).json({ error: 'Invalid segment.' });
     return;
@@ -119,20 +137,30 @@ router.get('/vitals', async (req, res) => {
       userAgent: req.get('user-agent'),
       metadata: { segment, readingCount: readings.length },
     });
-    const average = values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+    const average = values.length
+      ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+      : null;
     const labelFor = (timestamp: string) => {
       const date = new Date(timestamp);
-      if (segment === 'Hourly') return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      if (segment === 'Daily') return date.toLocaleDateString([], { weekday: 'short', hour: 'numeric' });
-      if (segment === 'Weekly') return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      if (segment === 'Hourly')
+        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      if (segment === 'Daily')
+        return date.toLocaleDateString([], { weekday: 'short', hour: 'numeric' });
+      if (segment === 'Weekly')
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     };
 
     res.json({
       segment,
       currentHeartRate: latest ? Number(latest.value) : null,
-      heartRateStatus: latest ? `Last recorded ${new Date(latest.recorded_at).toLocaleString()}` : 'No heart-rate readings recorded',
-      heartRatePoints: readings.map((reading: any) => ({ label: labelFor(reading.recorded_at), value: Number(reading.value) })),
+      heartRateStatus: latest
+        ? `Last recorded ${new Date(latest.recorded_at).toLocaleString()}`
+        : 'No heart-rate readings recorded',
+      heartRatePoints: readings.map((reading: any) => ({
+        label: labelFor(reading.recorded_at),
+        value: Number(reading.value),
+      })),
       average,
       min: values.length ? Math.min(...values) : null,
       max: values.length ? Math.max(...values) : null,

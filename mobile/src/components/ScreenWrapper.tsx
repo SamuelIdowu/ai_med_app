@@ -5,32 +5,32 @@ import { StatusBar } from 'expo-status-bar';
 import { theme } from '../theme';
 
 interface ScreenWrapperProps {
-    children: React.ReactNode;
-    style?: ViewStyle;
-    lightObj?: boolean;
+  children: React.ReactNode;
+  style?: ViewStyle;
+  lightObj?: boolean;
 }
 
-export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
-    children,
-    style,
-    lightObj
-}) => {
-    const isDark = theme.colors.canvas.background === theme.colors.palette.darkSideMoon || theme.colors.canvas.background === theme.colors.ramp.nightDark;
-    return (
-        <LinearGradient
-            colors={[theme.colors.canvas.background, theme.colors.canvas.surfaceSubtle]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.container, style]}
-        >
-            <StatusBar style={lightObj !== undefined ? (lightObj ? 'light' : 'dark') : (isDark ? 'light' : 'dark')} />
-            {children}
-        </LinearGradient>
-    );
+export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style, lightObj }) => {
+  const isDark =
+    theme.colors.canvas.background === theme.colors.palette.darkSideMoon ||
+    theme.colors.canvas.background === theme.colors.ramp.nightDark;
+  return (
+    <LinearGradient
+      colors={[theme.colors.canvas.background, theme.colors.canvas.surfaceSubtle]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.container, style]}
+    >
+      <StatusBar
+        style={lightObj !== undefined ? (lightObj ? 'light' : 'dark') : isDark ? 'light' : 'dark'}
+      />
+      {children}
+    </LinearGradient>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+  container: {
+    flex: 1,
+  },
 });

@@ -63,7 +63,7 @@ export const LoginScreen: React.FC = () => {
       setGoogleLoading(false);
       Alert.alert(
         'Google Sign-In Failed',
-        error instanceof Error ? error.message : 'Could not sign in with Google.'
+        error instanceof Error ? error.message : 'Could not sign in with Google.',
       );
     }
   };
@@ -83,7 +83,9 @@ export const LoginScreen: React.FC = () => {
             <View style={styles.logoBadge}>
               <Icon name="plus" size={16} color={theme.colors.ramp.white} />
             </View>
-            <Text style={styles.logoText}>Laso<Text style={styles.logoPlus}>+</Text></Text>
+            <Text style={styles.logoText}>
+              Laso<Text style={styles.logoPlus}>+</Text>
+            </Text>
           </View>
 
           {/* Header */}

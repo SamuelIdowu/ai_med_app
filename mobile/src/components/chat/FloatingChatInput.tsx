@@ -82,16 +82,8 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
       <View style={styles.pillInputContainer}>
         {/* Attachment Button */}
         {onAttachPress && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onAttachPress}
-            style={styles.attachButton}
-          >
-            <Icon
-              name="paperclip"
-              size={21}
-              color={theme.colors.text.secondary}
-            />
+          <TouchableOpacity activeOpacity={0.7} onPress={onAttachPress} style={styles.attachButton}>
+            <Icon name="paperclip" size={21} color={theme.colors.text.secondary} />
           </TouchableOpacity>
         )}
 
@@ -108,16 +100,8 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
         />
 
         {onMicPress && !hasText && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onMicPress}
-            style={styles.micButton}
-          >
-            <Icon
-              name="microphone"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
+          <TouchableOpacity activeOpacity={0.7} onPress={onMicPress} style={styles.micButton}>
+            <Icon name="microphone" size={20} color={theme.colors.text.secondary} />
           </TouchableOpacity>
         )}
 
@@ -142,11 +126,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
             {loading ? (
               <ActivityIndicator size="small" color={theme.colors.ramp.white} />
             ) : (
-              <Icon
-                name="arrowUp"
-                size={18}
-                color={theme.colors.ramp.white}
-              />
+              <Icon name="arrowUp" size={18} color={theme.colors.ramp.white} />
             )}
           </LinearGradient>
         </TouchableOpacity>

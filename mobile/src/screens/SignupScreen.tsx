@@ -62,7 +62,7 @@ export const SignupScreen: React.FC = () => {
           [
             { text: 'Cancel', style: 'cancel' },
             { text: 'Log In', onPress: () => navigation.navigate('Login') },
-          ]
+          ],
         );
       } else {
         Alert.alert('Signup Failed', error.message);
@@ -88,7 +88,7 @@ export const SignupScreen: React.FC = () => {
       setGoogleLoading(false);
       Alert.alert(
         'Google Sign-In Failed',
-        error instanceof Error ? error.message : 'Could not sign in with Google.'
+        error instanceof Error ? error.message : 'Could not sign in with Google.',
       );
     }
   };

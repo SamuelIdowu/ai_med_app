@@ -11,9 +11,13 @@ export const reportService = {
       console.log(`Generating report for encounter: ${encounterId}`);
 
       // Call backend to generate PDF
-      const response = await api.post(`/reports/${encounterId}/generate`, {}, {
-        responseType: 'arraybuffer'
-      });
+      const response = await api.post(
+        `/reports/${encounterId}/generate`,
+        {},
+        {
+          responseType: 'arraybuffer',
+        },
+      );
 
       // Create a unique filename for the PDF
       const filename = `report-${encounterId}-${Date.now()}.pdf`;
@@ -21,8 +25,7 @@ export const reportService = {
 
       // Convert ArrayBuffer to base64
       const base64 = btoa(
-        new Uint8Array(response.data)
-          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+        new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''),
       );
 
       // Save the PDF to the file system
@@ -43,7 +46,7 @@ export const reportService = {
             const decodedString = new TextDecoder().decode(errorData);
             errorData = JSON.parse(decodedString);
           } catch (e) {
-            console.warn("Could not decode error response", e);
+            console.warn('Could not decode error response', e);
             // fallback if not json
             errorData = String.fromCharCode.apply(null, new Uint8Array(errorData) as any);
           }
@@ -52,7 +55,9 @@ export const reportService = {
         console.error('Backend error:', error.response.status, errorData);
         throw new Error(`Failed to generate report: ${error.response.status}`, { cause: error });
       } else if (error.request) {
-        throw new Error('Failed to connect to backend. Please check your connection.', { cause: error });
+        throw new Error('Failed to connect to backend. Please check your connection.', {
+          cause: error,
+        });
       } else {
         throw new Error('Failed to generate report. Please try again.', { cause: error });
       }
@@ -69,5 +74,5 @@ export const reportService = {
       console.error('Error sharing report:', error);
       throw error;
     }
-  }
+  },
 };

@@ -17,10 +17,7 @@ export const DEFAULT_CHAT_ERROR = 'Unable to connect to the clinical service. Pl
  * Turns an axios/fetch error into a precise, user-facing message.
  * Prefers a backend-provided `userMessage`, then maps common status codes.
  */
-export function getApiErrorMessage(
-  error: unknown,
-  fallback: string = DEFAULT_CHAT_ERROR
-): string {
+export function getApiErrorMessage(error: unknown, fallback: string = DEFAULT_CHAT_ERROR): string {
   const err = error as ApiErrorLike | undefined;
   const data = err?.response?.data;
 

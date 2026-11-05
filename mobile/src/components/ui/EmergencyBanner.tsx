@@ -27,20 +27,14 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({
       ios: `telprompt:${emergencyNumber}`,
       default: `tel:${emergencyNumber}`,
     });
-    Linking.openURL(telUrl).catch((err) =>
-      console.warn('Failed to launch emergency dialer:', err)
-    );
+    Linking.openURL(telUrl).catch((err) => console.warn('Failed to launch emergency dialer:', err));
   };
 
   return (
     <View style={styles.banner}>
       <View style={styles.textColumn}>
         <View style={styles.titleRow}>
-          <Icon
-            name="warningOctagon"
-            size={20}
-            color={theme.colors.status.emergency.primary}
-          />
+          <Icon name="warningOctagon" size={20} color={theme.colors.status.emergency.primary} />
           <Text style={styles.title}>{title}</Text>
         </View>
         <Text style={styles.subtitle}>{subtitle}</Text>

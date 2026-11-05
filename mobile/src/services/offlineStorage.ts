@@ -292,7 +292,7 @@ export class OfflineStorage {
       (g) =>
         g.topic.toLowerCase().includes(q) ||
         g.category.toLowerCase().includes(q) ||
-        (g.instructions || []).some((inst) => inst.toLowerCase().includes(q))
+        (g.instructions || []).some((inst) => inst.toLowerCase().includes(q)),
     );
   }
 
@@ -307,7 +307,10 @@ export class OfflineStorage {
 
   async queueOfflineEncounter(encounter: OfflineEncounter): Promise<void> {
     const updatedEncounter = { ...encounter, synced: false };
-    this.fallbackEncounters = [...this.fallbackEncounters.filter((e) => e.id !== encounter.id), updatedEncounter];
+    this.fallbackEncounters = [
+      ...this.fallbackEncounters.filter((e) => e.id !== encounter.id),
+      updatedEncounter,
+    ];
 
     try {
       const key = await getOrCreateEncryptionKey();
@@ -332,7 +335,7 @@ export class OfflineStorage {
             encounter.severity || 'moderate',
             encNotes,
             encounter.createdAt,
-          ]
+          ],
         );
       }
     } catch (err) {
@@ -372,7 +375,7 @@ export class OfflineStorage {
   }
 
   async syncPendingEncounters(
-    syncFn: (encounter: OfflineEncounter) => Promise<boolean>
+    syncFn: (encounter: OfflineEncounter) => Promise<boolean>,
   ): Promise<number> {
     const pending = await this.getPendingEncounters();
     let syncedCount = 0;

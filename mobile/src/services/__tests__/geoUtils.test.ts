@@ -295,7 +295,7 @@ describe('Geolocation & Clinic Proximity Utilities', () => {
 
       const sorted = sortProvidersByProximity(
         [providerWithoutCoords, ...mockProviders],
-        userLocation
+        userLocation,
       );
 
       expect(sorted).toHaveLength(4);

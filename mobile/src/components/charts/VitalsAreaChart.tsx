@@ -1,14 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions, ViewStyle } from 'react-native';
-import Svg, {
-  Path,
-  Defs,
-  LinearGradient,
-  Stop,
-  Circle,
-  Line,
-  G,
-} from 'react-native-svg';
+import Svg, { Path, Defs, LinearGradient, Stop, Circle, Line, G } from 'react-native-svg';
 import { theme } from '../../theme';
 
 export interface VitalsDataPoint {
@@ -189,19 +181,8 @@ export const VitalsAreaChart: React.FC<VitalsAreaChartProps> = ({
         {data.map((d, i) => {
           const isHighlight = i === highlightIndex;
           return (
-            <View
-              key={i}
-              style={[
-                styles.xLabelPill,
-                isHighlight && styles.xLabelPillActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.xLabelText,
-                  isHighlight && styles.xLabelTextActive,
-                ]}
-              >
+            <View key={i} style={[styles.xLabelPill, isHighlight && styles.xLabelPillActive]}>
+              <Text style={[styles.xLabelText, isHighlight && styles.xLabelTextActive]}>
                 {d.label}
               </Text>
             </View>

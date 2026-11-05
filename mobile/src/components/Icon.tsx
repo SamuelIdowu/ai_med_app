@@ -3,11 +3,7 @@ import { View } from 'react-native';
 
 import { theme } from '../theme';
 import type { IconTone } from '../icons/types';
-import {
-  getLasoGlyph,
-  getPhosphorIcon,
-  isIconName,
-} from '../icons/registry';
+import { getLasoGlyph, getPhosphorIcon, isIconName } from '../icons/registry';
 import { iconSizes } from '../theme/icons';
 import type { IconComponentProps } from '../icons/types';
 
@@ -55,7 +51,7 @@ export const Icon: React.FC<IconComponentProps> = ({
   if (!isIconName(name)) {
     if (__DEV__) {
       console.warn(
-        `[Icon] Unknown icon name "${String(name)}". Add it to src/icons/phosphor.ts or src/icons/glyphs.tsx.`
+        `[Icon] Unknown icon name "${String(name)}". Add it to src/icons/phosphor.ts or src/icons/glyphs.tsx.`,
       );
     }
     return null;
@@ -74,11 +70,7 @@ export const Icon: React.FC<IconComponentProps> = ({
         <Glyph
           size={resolvedSize}
           color={resolvedColor}
-          strokeWidth={
-            weight === 'bold'
-              ? theme.icon.strokeWidthBold
-              : theme.icon.strokeWidth
-          }
+          strokeWidth={weight === 'bold' ? theme.icon.strokeWidthBold : theme.icon.strokeWidth}
         />
       </View>
     );

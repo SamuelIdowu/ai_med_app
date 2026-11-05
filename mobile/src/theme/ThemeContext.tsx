@@ -118,17 +118,20 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const [preset, setPreset] = useState<ThemePreset>(initialPreset);
   const [isDark, setIsDark] = useState<boolean>(initialPreset === 'midnightDark');
 
-  const handleSetPreset = useCallback((newPreset: ThemePreset) => {
-    setPreset(newPreset);
-    if (newPreset === 'midnightDark') {
-      setIsDark(true);
-    } else if (isDark) {
-      setIsDark(false);
-    }
-  }, [isDark]);
+  const handleSetPreset = useCallback(
+    (newPreset: ThemePreset) => {
+      setPreset(newPreset);
+      if (newPreset === 'midnightDark') {
+        setIsDark(true);
+      } else if (isDark) {
+        setIsDark(false);
+      }
+    },
+    [isDark],
+  );
 
   const handleToggleDark = useCallback(() => {
-    setIsDark(prev => {
+    setIsDark((prev) => {
       const next = !prev;
       if (next) {
         setPreset('midnightDark');
@@ -149,7 +152,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       isDark,
       toggleDark: handleToggleDark,
     }),
-    [currentTheme, preset, isDark, handleSetPreset, handleToggleDark]
+    [currentTheme, preset, isDark, handleSetPreset, handleToggleDark],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

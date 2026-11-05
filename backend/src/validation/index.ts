@@ -53,7 +53,10 @@ export function validatePushToken(input: unknown): ValidationResult<string> {
   }
   // Accept Expo push token formats; anything else is rejected before it is
   // ever sent to the Expo API.
-  if (!/^ExponentPushToken\[.{20,}\]$/.test(trimmed) && !/^ExpoPushToken\[[^\]]+\]$/.test(trimmed)) {
+  if (
+    !/^ExponentPushToken\[.{20,}\]$/.test(trimmed) &&
+    !/^ExpoPushToken\[[^\]]+\]$/.test(trimmed)
+  ) {
     return fail('Token is required');
   }
   return ok(trimmed);
@@ -79,9 +82,7 @@ function validHistoryText(value: unknown): boolean {
   return typeof value === 'string' && value.length > 0 && value.length <= 8000;
 }
 
-export function validateChatHistory(
-  input: unknown,
-): ValidationResult<ValidatedChatHistoryEntry[]> {
+export function validateChatHistory(input: unknown): ValidationResult<ValidatedChatHistoryEntry[]> {
   if (input === undefined || input === null) return ok([]);
   if (!Array.isArray(input)) return fail('Invalid history');
   if (input.length > 50) return fail('History is too long');

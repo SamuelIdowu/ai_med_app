@@ -118,9 +118,7 @@ export function formatDistanceKilometers(miles: number): string {
   return `${kilometers.toFixed(1)} km away`;
 }
 
-export function formatDistanceKilometersLabel(
-  miles: number | null | undefined,
-): string | null {
+export function formatDistanceKilometersLabel(miles: number | null | undefined): string | null {
   if (typeof miles !== 'number' || !Number.isFinite(miles)) return null;
   return formatDistanceKilometers(miles);
 }

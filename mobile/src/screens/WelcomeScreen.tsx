@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -50,9 +43,7 @@ export const WelcomeScreen: React.FC = () => {
 
         {/* Headline & Value Prop */}
         <View style={styles.textContainer}>
-          <Text style={styles.title}>
-            Stay Safe.{"\n"}Act Fast in Any Emergency.
-          </Text>
+          <Text style={styles.title}>Stay Safe.{'\n'}Act Fast in Any Emergency.</Text>
           <Text style={styles.subtitle}>
             Offline-first medical triage, guided wound inspections, and instant 911 dispatch.
           </Text>
@@ -68,11 +59,7 @@ export const WelcomeScreen: React.FC = () => {
             onPress={() => navigation.navigate('Signup')}
           />
 
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={enterGuestMode}
-            style={styles.guestButton}
-          >
+          <TouchableOpacity activeOpacity={0.7} onPress={enterGuestMode} style={styles.guestButton}>
             <Text style={styles.guestButtonText}>Continue without sign up</Text>
           </TouchableOpacity>
 

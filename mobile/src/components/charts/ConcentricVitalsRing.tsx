@@ -79,9 +79,7 @@ export const ConcentricVitalsRing: React.FC<ConcentricVitalsRingProps> = ({
         {centerText && (
           <View style={[styles.centerContent, { width: size, height: size }]}>
             <Text style={styles.centerText}>{centerText}</Text>
-            {centerSubtext && (
-              <Text style={styles.centerSubtext}>{centerSubtext}</Text>
-            )}
+            {centerSubtext && <Text style={styles.centerSubtext}>{centerSubtext}</Text>}
           </View>
         )}
       </View>

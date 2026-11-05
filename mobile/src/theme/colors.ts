@@ -130,4 +130,3 @@ export const colors = {
 } as const;
 
 export type AppColors = typeof colors;
-

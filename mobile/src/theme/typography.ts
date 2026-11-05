@@ -4,7 +4,8 @@
 import { TextStyle } from 'react-native';
 import { activeDesignConfig, FONT_PRESETS } from './themeConfig';
 
-const selectedFontPreset = FONT_PRESETS[activeDesignConfig.activeFont] || FONT_PRESETS.MontserratAlt_SpaceGrotesk;
+const selectedFontPreset =
+  FONT_PRESETS[activeDesignConfig.activeFont] || FONT_PRESETS.MontserratAlt_SpaceGrotesk;
 
 export const fontFamilies = {
   regular: selectedFontPreset.regular,

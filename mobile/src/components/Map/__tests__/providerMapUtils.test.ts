@@ -3,7 +3,7 @@ import { buildProviderMarkers, type ProviderWithDistance } from '../providerMapU
 jest.mock('expo-location', () => ({}));
 
 const createProvider = (
-  overrides: Partial<ProviderWithDistance> & { distanceMiles?: number | null }
+  overrides: Partial<ProviderWithDistance> & { distanceMiles?: number | null },
 ): ProviderWithDistance => ({
   id: 'provider-1',
   name: 'Downtown Clinic',

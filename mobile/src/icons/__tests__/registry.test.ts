@@ -68,7 +68,7 @@ describe('icon registry', () => {
 
   it('keeps Phosphor and Laso icon names disjoint', () => {
     const overlaps = Object.keys(PHOSPHOR_ICONS).filter((name) =>
-      Object.prototype.hasOwnProperty.call(LASO_GLYPHS, name)
+      Object.prototype.hasOwnProperty.call(LASO_GLYPHS, name),
     );
 
     expect(overlaps).toEqual([]);

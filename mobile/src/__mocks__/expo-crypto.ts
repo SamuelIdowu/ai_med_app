@@ -6,8 +6,10 @@ export const getRandomBytes = (byteCount: number): Uint8Array =>
 export const getRandomBytesAsync = async (byteCount: number): Promise<Uint8Array> =>
   getRandomBytes(byteCount);
 
-export const getRandomValues = <T extends Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array>(
-  typedArray: T
+export const getRandomValues = <
+  T extends Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array,
+>(
+  typedArray: T,
 ): T => {
   const bytes = randomBytes(typedArray.byteLength);
   new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength).set(bytes);

@@ -57,12 +57,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeRoute }) => {
     }
   };
 
-  return (
-    <FloatingNavPill
-      activeRoute={normalizedActiveRoute}
-      onNavigate={handleNavigate}
-    />
-  );
+  return <FloatingNavPill activeRoute={normalizedActiveRoute} onNavigate={handleNavigate} />;
 };
 
 export default BottomTabBar;

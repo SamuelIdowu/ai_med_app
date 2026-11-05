@@ -24,7 +24,7 @@ export const FirstAidListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCategories = firstAidData.categories.filter((cat) =>
-    cat.title.toLowerCase().includes(searchQuery.toLowerCase())
+    cat.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const renderCategoryItem = ({ item }: { item: any }) => (
@@ -33,16 +33,10 @@ export const FirstAidListScreen: React.FC = () => {
       onPress={() => navigation.navigate('EmergencySteps', { categoryId: item.id })}
     >
       <View style={styles.iconCircle}>
-        <Icon
-          name={resolveIconName(item.icon)}
-          size={28}
-          color={theme.colors.primary.main}
-        />
+        <Icon name={resolveIconName(item.icon)} size={28} color={theme.colors.primary.main} />
       </View>
       <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardSubtitle}>
-        {item.steps?.length || 5} Verified Steps
-      </Text>
+      <Text style={styles.cardSubtitle}>{item.steps?.length || 5} Verified Steps</Text>
     </MedicalCard>
   );
 
@@ -59,11 +53,7 @@ export const FirstAidListScreen: React.FC = () => {
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Icon
-                name="caretLeft"
-                size={26}
-                color={theme.colors.text.primary}
-              />
+              <Icon name="caretLeft" size={26} color={theme.colors.text.primary} />
             </TouchableOpacity>
 
             <Text style={styles.headerTitle}>Articles & Guides</Text>
@@ -72,11 +62,7 @@ export const FirstAidListScreen: React.FC = () => {
 
           {/* Search bar */}
           <View style={styles.searchBar}>
-            <Icon
-              name="search"
-              size={20}
-              color={theme.colors.text.muted}
-            />
+            <Icon name="search" size={20} color={theme.colors.text.muted} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search emergency protocols..."

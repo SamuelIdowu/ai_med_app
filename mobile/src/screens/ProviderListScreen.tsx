@@ -72,7 +72,9 @@ export const ProviderListScreen: React.FC = () => {
   const [locationStatus, setLocationStatus] = useState<LocationPermissionStatus | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<EnrichedProvider | null>(null);
   const [sourceTimestamp, setSourceTimestamp] = useState<string | null>(null);
-  const [providerSource, setProviderSource] = useState<'OpenStreetMap' | 'Geoapify'>('OpenStreetMap');
+  const [providerSource, setProviderSource] = useState<'OpenStreetMap' | 'Geoapify'>(
+    'OpenStreetMap',
+  );
 
   const loadNearbyProviders = useCallback(async (coords: Coordinates | null) => {
     if (!coords) {
@@ -290,7 +292,6 @@ export const ProviderListScreen: React.FC = () => {
           <Icon name="phoneCall" size={20} color={theme.colors.text.inverse} />
         </TouchableOpacity>
       </View>
-
     </TouchableOpacity>
   );
 

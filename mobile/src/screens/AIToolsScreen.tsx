@@ -29,16 +29,9 @@ export const AIToolsScreen: React.FC = () => {
         >
           <View style={styles.toolsList}>
             {/* 1. Live Streaming SSE Triage Card */}
-            <MedicalCard
-              style={styles.toolCard}
-              onPress={() => navigation.navigate('LiveTriage')}
-            >
+            <MedicalCard style={styles.toolCard} onPress={() => navigation.navigate('LiveTriage')}>
               <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
-                <Icon
-                  name="lightning"
-                  size={26}
-                  color={theme.colors.primary.main}
-                />
+                <Icon name="lightning" size={26} color={theme.colors.primary.main} />
               </View>
 
               <View style={styles.textContainer}>
@@ -56,22 +49,16 @@ export const AIToolsScreen: React.FC = () => {
             </MedicalCard>
 
             {/* 2. Unified Photo Analysis */}
-            <MedicalCard
-              style={styles.toolCard}
-              onPress={() => navigation.navigate('AIAnalysis')}
-            >
+            <MedicalCard style={styles.toolCard} onPress={() => navigation.navigate('AIAnalysis')}>
               <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
-                <Icon
-                  name="scan"
-                  size={26}
-                  color={theme.colors.primary.main}
-                />
+                <Icon name="scan" size={26} color={theme.colors.primary.main} />
               </View>
 
               <View style={styles.textContainer}>
                 <Text style={styles.toolTitle}>Photo Analysis</Text>
                 <Text style={styles.toolDescription}>
-                  Auto-routed wound vision or general AI assessment with severity guidance and report export.
+                  Auto-routed wound vision or general AI assessment with severity guidance and
+                  report export.
                 </Text>
               </View>
 
@@ -83,16 +70,9 @@ export const AIToolsScreen: React.FC = () => {
             </MedicalCard>
 
             {/* 3. Conversational AI Triage */}
-            <MedicalCard
-              style={styles.toolCard}
-              onPress={() => navigation.navigate('AIChat')}
-            >
+            <MedicalCard style={styles.toolCard} onPress={() => navigation.navigate('AIChat')}>
               <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
-                <Icon
-                  name="chatCircle"
-                  size={26}
-                  color={theme.colors.primary.main}
-                />
+                <Icon name="chatCircle" size={26} color={theme.colors.primary.main} />
               </View>
 
               <View style={styles.textContainer}>
@@ -115,11 +95,7 @@ export const AIToolsScreen: React.FC = () => {
               onPress={() => navigation.navigate('FirstAidList')}
             >
               <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
-                <Icon
-                  name="firstAidKit"
-                  size={26}
-                  color={theme.colors.primary.main}
-                />
+                <Icon name="firstAidKit" size={26} color={theme.colors.primary.main} />
               </View>
 
               <View style={styles.textContainer}>
@@ -142,17 +118,14 @@ export const AIToolsScreen: React.FC = () => {
               onPress={() => navigation.navigate('ProviderList')}
             >
               <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary.light }]}>
-                <Icon
-                  name="mapPin"
-                  size={26}
-                  color={theme.colors.primary.main}
-                />
+                <Icon name="mapPin" size={26} color={theme.colors.primary.main} />
               </View>
 
               <View style={styles.textContainer}>
                 <Text style={styles.toolTitle}>Nearest Clinics & Live Map</Text>
                 <Text style={styles.toolDescription}>
-                  Locate closest hospitals, urgent care centers & pharmacies with proximity and routing.
+                  Locate closest hospitals, urgent care centers & pharmacies with proximity and
+                  routing.
                 </Text>
               </View>
 
@@ -162,7 +135,6 @@ export const AIToolsScreen: React.FC = () => {
                 iconColor={theme.colors.text.primary}
               />
             </MedicalCard>
-
           </View>
 
           <View style={{ height: 110 }} />

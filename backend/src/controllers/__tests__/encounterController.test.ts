@@ -83,7 +83,11 @@ describe('Encounter Controller', () => {
       params: { id: '3f2e5bb7-6c59-4a16-9a8e-1d13a2e0b421' },
     };
 
-    const mockEncounter = { id: '3f2e5bb7-6c59-4a16-9a8e-1d13a2e0b421', user_id: 'user-123', title: 'Chest Pain' };
+    const mockEncounter = {
+      id: '3f2e5bb7-6c59-4a16-9a8e-1d13a2e0b421',
+      user_id: 'user-123',
+      title: 'Chest Pain',
+    };
     mockedEncounterService.getEncounter.mockResolvedValueOnce(mockEncounter as any);
 
     await encounterController.getById(mockReq as Request, mockRes as Response);
@@ -117,7 +121,9 @@ describe('Encounter Controller', () => {
     await encounterController.getById(mockReq as Request, mockRes as Response);
 
     expect(statusMock).toHaveBeenCalledWith(400);
-    expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ error: 'Invalid encounter id' }));
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'Invalid encounter id' }),
+    );
     expect(mockedEncounterService.getEncounter).not.toHaveBeenCalled();
   });
 

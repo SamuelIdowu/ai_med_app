@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  ScrollView,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  ViewStyle,
-  View,
-} from 'react-native';
+import { ScrollView, TouchableOpacity, Text, StyleSheet, ViewStyle, View } from 'react-native';
 import { theme, withAlpha } from '../../theme';
 
 export interface FilterPillItem {
@@ -22,12 +15,7 @@ interface FilterPillsProps {
   style?: ViewStyle;
 }
 
-export const FilterPills: React.FC<FilterPillsProps> = ({
-  items,
-  selectedId,
-  onSelect,
-  style,
-}) => {
+export const FilterPills: React.FC<FilterPillsProps> = ({ items, selectedId, onSelect, style }) => {
   return (
     <View style={[styles.wrapper, style]}>
       <ScrollView
