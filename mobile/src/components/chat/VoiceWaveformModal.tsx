@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { RhythmWaveform } from '../charts/RhythmWaveform';
 import { VoiceService } from '../../services/voiceService';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { OrganicFluidSphere } from '../ui/OrganicFluidSphere';
 import { theme } from '../../theme';
 
@@ -33,12 +34,63 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<any>(null);
+  const tallyRef = useRef('');
+  const isListeningRef = useRef(false);
+  const isRestartingRef = useRef(false);
+
+  // Native listeners (expo-speech-recognition). On web the module is inert.
+  // Final results accumulate across utterances; interim results show under the running tally.
+  useSpeechRecognitionEvent('result', (event) => {
+    if (Platform.OS !== 'web') {
+      const next = event.results?.[0]?.transcript ?? '';
+      if (event.isFinal) {
+        tallyRef.current += `${next} `;
+        setTranscript(tallyRef.current.trim());
+      } else if (next) {
+        setTranscript(`${tallyRef.current}${next}`.trim());
+      }
+    }
+  });
+  useSpeechRecognitionEvent('error', (event) => {
+    if (Platform.OS !== 'web') {
+      console.warn('[SpeechRecognition] Error:', event.error);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        Alert.alert(
+          'Microphone unavailable',
+          'Laso needs microphone and speech recognition permissions to transcribe your symptoms. Enable them in Settings and try again.',
+        );
+        stopRecognition();
+        isListeningRef.current = false;
+        setIsListening(false);
+      }
+    }
+  });
+  useSpeechRecognitionEvent('end', () => {
+    if (Platform.OS === 'web') return;
+    isRestartingRef.current = false;
+    // Keep listening until the user closes the modal, like the web path.
+    if (isListeningRef.current && !isRestartingRef.current) {
+      isRestartingRef.current = true;
+      try {
+        ExpoSpeechRecognitionModule.start({
+          lang: 'en-US',
+          interimResults: true,
+          continuous: true,
+          requiresOnDeviceRecognition: false,
+          addsPunctuation: false,
+        });
+      } catch (e) {
+        console.warn('[SpeechRecognition] restart failed:', e);
+      }
+    }
+  });
 
   // Handle verbal agent instruction and speech recognition lifecycle
   useEffect(() => {
     if (!visible) {
       VoiceService.stop();
       stopRecognition();
+      isListeningRef.current = false;
       setTranscript('');
       setIsAgentSpeaking(false);
       setIsListening(false);
@@ -48,10 +100,12 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
     // 1. Agent starts with verbal instruction
     setIsAgentSpeaking(true);
     setTranscript('');
+    tallyRef.current = '';
 
     const startListening = () => {
       setIsAgentSpeaking(false);
       setIsListening(true);
+      isListeningRef.current = true;
       initRecognition();
     };
 
@@ -61,21 +115,54 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
 
     // Safety timeout in case speech engine onDone doesn't fire
     const safetyTimer = setTimeout(() => {
-      setIsAgentSpeaking(false);
-      setIsListening(true);
-      initRecognition();
+      if (!isListeningRef.current) {
+        startListening();
+      }
     }, 4000);
 
     return () => {
       clearTimeout(safetyTimer);
+      isListeningRef.current = false;
       VoiceService.stop();
       stopRecognition();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  // Speech Recognition (Web Speech API for Chrome / Edge / Web & Mobile Web)
-  const initRecognition = () => {
+  // Speech Recognition — native (iOS SFSpeechRecognizer / Android SpeechRecognizer
+  // via expo-speech-recognition) and Web Speech API for Chrome / Edge browsers.
+  const initRecognition = async () => {
+    if (Platform.OS === 'web') {
+      startWebRecognition();
+      return;
+    }
+
+    try {
+      const permissions = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!permissions.granted) {
+        Alert.alert(
+          'Microphone unavailable',
+          'Laso needs microphone and speech recognition permissions to transcribe your symptoms. Enable them in Settings and try again.',
+        );
+        isListeningRef.current = false;
+        setIsListening(false);
+        return;
+      }
+
+      ExpoSpeechRecognitionModule.start({
+        lang: 'en-US',
+        interimResults: true,
+        continuous: true,
+        requiresOnDeviceRecognition: false,
+        addsPunctuation: false,
+        iosTaskHint: 'dictation',
+      });
+    } catch (err) {
+      console.warn('[SpeechRecognition] Could not start:', err);
+    }
+  };
+
+  const startWebRecognition = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const SpeechRecognition =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -102,9 +189,9 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
 
           rec.onend = () => {
             // Restart if still in listening mode
-            if (isListening && recognitionRef.current) {
+            if (isListeningRef.current) {
               try {
-                recognitionRef.current.start();
+                recognitionRef.current?.start();
               } catch (e) {
                 // ignore
               }
@@ -121,6 +208,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
   };
 
   const stopRecognition = () => {
+    isRestartingRef.current = false;
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -128,6 +216,13 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
         // ignore
       }
       recognitionRef.current = null;
+    }
+    if (Platform.OS !== 'web') {
+      try {
+        ExpoSpeechRecognitionModule.abort();
+      } catch (e) {
+        // ignore
+      }
     }
   };
 
@@ -143,6 +238,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
 
     VoiceService.stop();
     stopRecognition();
+    isListeningRef.current = false;
     if (onConfirm) {
       onConfirm(cleanText);
     }
@@ -152,6 +248,7 @@ export const VoiceWaveformModal: React.FC<VoiceWaveformModalProps> = ({
   const handleClose = () => {
     VoiceService.stop();
     stopRecognition();
+    isListeningRef.current = false;
     onClose();
   };
 

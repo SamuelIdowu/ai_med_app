@@ -71,6 +71,11 @@ export const AppNavigator = () => {
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="FirstAidList" component={FirstAidListScreen} />
             <Stack.Screen name="LiveTriage" component={LiveTriageScreen} />
+            {/* Auth screens are reachable from guest mode (e.g. "create an account"
+                banner on MedicalProfileScreen). Mounted lazily by React Navigation,
+                so they cost nothing until used. */}
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
           </>
         )}
       </Stack.Navigator>

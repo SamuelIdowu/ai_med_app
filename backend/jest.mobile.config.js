@@ -57,6 +57,7 @@ module.exports = {
     '^expo-file-system/(.*)$': '<rootDir>/mobile/src/__mocks__/expo-file-system.ts',
     '^expo-sharing$': '<rootDir>/mobile/src/__mocks__/expo-sharing.ts',
     '^expo-image-manipulator$': '<rootDir>/mobile/src/__mocks__/expo-image-manipulator.ts',
+    '^expo-speech-recognition$': '<rootDir>/mobile/src/__mocks__/expo-speech-recognition.ts',
     '^react-native$': '<rootDir>/mobile/src/__mocks__/react-native.ts',
   },
 };

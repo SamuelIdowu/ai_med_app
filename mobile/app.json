@@ -96,7 +96,8 @@
           "photosPermission": "Allow Laso to access your photos so you can upload images of injuries for analysis.",
           "cameraPermission": "Allow Laso to access your camera to inspect wounds and injuries."
         }
-      ]
+      ],
+      "expo-speech-recognition"
     ],
     "extra": {
       "eas": {

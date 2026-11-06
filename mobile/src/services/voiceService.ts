@@ -76,6 +76,7 @@ export const VoiceService = {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
     }
-    return false;
+    // Native: expo-speech-recognition (iOS SFSpeechRecognizer / Android SpeechRecognizer)
+    return true;
   },
 };
