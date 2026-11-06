@@ -141,8 +141,15 @@ async function checkMlService() {
 }
 
 async function main() {
-  const geminiKey = process.env.GEMINI_API_KEY || '';
-  record('Gemini API key', Boolean(geminiKey), geminiKey ? 'configured' : 'missing');
+  const providerName = (process.env.AI_PROVIDER || 'gemini').trim().toLowerCase();
+  const providerEnvVar =
+    providerName === 'openai' ? 'OPENAI_API_KEY' : 'GEMINI_API_KEY';
+  const providerKey = process.env[providerEnvVar] || '';
+  record(
+    `AI provider (${providerName}) key`,
+    Boolean(providerKey),
+    providerKey ? `${providerName} selected via AI_PROVIDER; ${providerEnvVar} present` : `${providerEnvVar} missing`,
+  );
 
   await checkSupabaseServiceKey();
   await checkAnonKeyAndGoogle();
