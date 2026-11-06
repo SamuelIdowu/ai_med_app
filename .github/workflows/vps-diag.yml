@@ -1,0 +1,54 @@
+name: VPS Diagnostics (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          for v in VPS_HOST VPS_USER VPS_SSH_PRIVATE_KEY; do
+            if [ -z "${!v:-}" ]; then echo "::error::$v is empty"; exit 1; fi
+          done
+
+      - name: SSH diagnostics
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_HOST_KEY: ${{ secrets.VPS_SSH_HOST_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          if [ -n "$VPS_SSH_HOST_KEY" ]; then
+            printf '%s\n' "$VPS_SSH_HOST_KEY" >> ~/.ssh/known_hosts
+          else
+            ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          fi
+
+          ssh "${VPS_USER}@${VPS_HOST}" bash -s <<'REMOTE'
+          set -uo pipefail
+          echo "=== whoami / host ==="
+          whoami; hostname; date -u
+          echo "=== compose ps ==="
+          sudo docker compose -f ~/laso/docker-compose.prod.yml ps || true
+          BACKEND_CID=$(sudo docker compose -f ~/laso/docker-compose.prod.yml ps -q backend)
+          echo "backend container: $BACKEND_CID"
+          echo "=== backend env (redacted) ==="
+          sudo docker exec "$BACKEND_CID" sh -c "printenv | grep -E '^(AI_|GEMINI|OPENAI|ML_SERVICE|NODE_ENV)' | sed -E 's/(=.{6}).*/\1.../'" || true
+          echo "=== DNS from container ==="
+          sudo docker exec "$BACKEND_CID" node -e "require('dns').lookup('generativelanguage.googleapis.com',(e,a)=>console.log(e?('DNS_FAIL '+e.code):('DNS_OK '+a)))" || true
+          echo "=== TCP to Gemini from container ==="
+          sudo docker exec "$BACKEND_CID" curl -s -o /dev/null -m 10 -w 'HTTP %{http_code} connect=%{time_connect}s dns=%{time_namelookup}s\n' https://generativelanguage.googleapis.com/v1beta/models || echo CURL_FAIL
+          echo "=== last 120 backend log lines ==="
+          sudo docker logs --since 30m "$BACKEND_CID" 2>&1 | tail -n 120 || true
+          REMOTE
