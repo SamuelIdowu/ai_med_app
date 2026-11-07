@@ -32,11 +32,11 @@ export class InvalidRequestError extends AIServiceError {
 }
 
 export class NetworkError extends AIServiceError {
-  constructor(message: string = 'Network error') {
+  constructor(message: string = 'Network error', userMessage?: string) {
     super(
       'NETWORK_ERROR',
       message,
-      'Connection failed. Please check your internet connection.',
+      userMessage ?? 'Connection failed. Please check your internet connection.',
       503,
     );
   }

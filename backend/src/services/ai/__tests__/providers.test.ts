@@ -23,8 +23,11 @@ beforeEach(() => {
   process.env.OPENAI_API_KEY = 'test-openai-key';
   process.env.GEMINI_API_KEY = 'test-gemini-key';
   delete process.env.AI_MODEL;
+  delete process.env.AI_MAX_RETRIES;
+  delete process.env.AI_RETRY_BASE_DELAY_MS;
   delete process.env.OPENAI_BASE_URL;
   global.fetch = fetchMock as unknown as typeof fetch;
+  fetchMock.mockImplementation(async () => createOpenAIResponse('Apply pressure.'));
 });
 
 afterEach(() => {
@@ -94,9 +97,12 @@ describe('openaiProvider.chat', () => {
   });
 
   it('maps fetch failures to NetworkError', async () => {
-    fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
+    fetchMock
+      .mockRejectedValueOnce(new TypeError('fetch failed'))
+      .mockRejectedValueOnce(new TypeError('fetch failed'))
+      .mockRejectedValueOnce(new TypeError('fetch failed'));
     await expect(openaiProvider.chat({ message: 'Hi' })).rejects.toThrow(NetworkError);
-  });
+  }, 10000);
 
   it('maps HTTP 429 to QuotaExceededError', async () => {
     fetchMock.mockResolvedValueOnce({

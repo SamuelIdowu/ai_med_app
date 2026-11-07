@@ -6,6 +6,7 @@ import {
   IMAGE_ANALYSIS_PROMPT,
   parseStructuredImageAnalysis,
 } from './prompts';
+import { withRetries, throwNetwork } from './retry';
 
 const getApiKey = (): string => process.env.OPENAI_API_KEY || '';
 const API_URL = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
@@ -101,15 +102,20 @@ const toOpenAIMessages = (history: unknown[] = []): OpenAIChatMessage[] =>
 const callOpenAI = async (body: Record<string, unknown>): Promise<OpenAIResponse> => {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getApiKey()}`,
-      },
-      body: JSON.stringify(body),
-    });
+    response = await withRetries(() =>
+      fetch(`${API_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getApiKey()}`,
+        },
+        body: JSON.stringify(body),
+      }),
+    );
   } catch (error: any) {
+    if (error?.statusCode) {
+      throw error;
+    }
     throw new NetworkError(`Could not reach the OpenAI service: ${error?.message}`);
   }
 
@@ -124,7 +130,7 @@ const callOpenAI = async (body: Record<string, unknown>): Promise<OpenAIResponse
     if (response.status === 400)
       throw new InvalidRequestError(`OpenAI rejected the request payload: ${message}`);
     if (response.status >= 500)
-      throw new NetworkError('Could not reach the OpenAI service.');
+      throwNetwork('OpenAI', { status: response.status, message });
     throw new InvalidRequestError(message);
   }
 

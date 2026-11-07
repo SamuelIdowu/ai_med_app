@@ -7,6 +7,11 @@ import {
   IMAGE_ANALYSIS_PROMPT,
   parseStructuredImageAnalysis,
 } from './prompts';
+import {
+  withRetries,
+  isOverloadedError,
+  SERVICE_BUSY_USER_MESSAGE,
+} from './retry';
 
 const getApiKey = (): string => process.env.GEMINI_API_KEY || '';
 const MODEL = process.env.AI_MODEL || 'gemini-2.5-flash';
@@ -105,7 +110,7 @@ export const geminiProvider: AIProvider = {
         },
       });
 
-      let result = await chat.sendMessage(message);
+      let result = await withRetries(() => chat.sendMessage(message));
       let response = await result.response;
 
       // Handle function calls in a loop
@@ -123,14 +128,16 @@ export const geminiProvider: AIProvider = {
         console.log('[geminiProvider] Function result received for:', functionCall.name);
 
         // Send function result back to AI
-        result = await chat.sendMessage([
-          {
-            functionResponse: {
-              name: functionCall.name,
-              response: functionResponse,
+        result = await withRetries(() =>
+          chat.sendMessage([
+            {
+              functionResponse: {
+                name: functionCall.name,
+                response: functionResponse,
+              },
             },
-          },
-        ]);
+          ]),
+        );
         response = await result.response;
       }
 
@@ -143,7 +150,12 @@ export const geminiProvider: AIProvider = {
         throw error;
       }
 
-      const errorMessage = error?.message || '';
+      const errorMessage = (error?.message || '').toLowerCase();
+
+      // Google 503 "high demand" bursts: clearer wording than a network blowup.
+      if (isOverloadedError(error)) {
+        throw new NetworkError('Gemini model overloaded (503).', SERVICE_BUSY_USER_MESSAGE);
+      }
 
       // Check for quota/rate limit errors
       if (
@@ -158,13 +170,14 @@ export const geminiProvider: AIProvider = {
       if (
         error?.status === 400 ||
         errorMessage.includes('invalid') ||
-        errorMessage.includes('First content should be')
+        errorMessage.includes('first content should be')
       ) {
         throw new InvalidRequestError('Gemini rejected the request payload.');
       }
 
       // Check for network errors
       if (
+        error?.status === 502 ||
         error?.status === 503 ||
         error?.status === 504 ||
         errorMessage.includes('fetch') ||
@@ -201,7 +214,9 @@ export const geminiProvider: AIProvider = {
       };
 
       const visionModel = createVisionModel(profileContext);
-      const result = await visionModel.generateContent([IMAGE_ANALYSIS_PROMPT, imagePart]);
+      const result = await withRetries(() =>
+        visionModel.generateContent([IMAGE_ANALYSIS_PROMPT, imagePart]),
+      );
       const response = await result.response;
       const text = response.text();
 
@@ -213,7 +228,11 @@ export const geminiProvider: AIProvider = {
         throw error;
       }
 
-      const errorMessage = error?.message || '';
+      const errorMessage = (error?.message || '').toLowerCase();
+
+      if (isOverloadedError(error)) {
+        throw new NetworkError('Gemini model overloaded (503).', SERVICE_BUSY_USER_MESSAGE);
+      }
 
       if (error?.status === 429 || errorMessage.includes('quota')) {
         throw new QuotaExceededError('Gemini API quota exceeded.');
@@ -223,7 +242,12 @@ export const geminiProvider: AIProvider = {
         throw new InvalidRequestError('Gemini rejected the image payload.');
       }
 
-      if (error?.status === 503 || error?.status === 504 || errorMessage.includes('network')) {
+      if (
+        error?.status === 502 ||
+        error?.status === 503 ||
+        error?.status === 504 ||
+        errorMessage.includes('network')
+      ) {
         throw new NetworkError('Could not reach the Gemini service.');
       }
 
